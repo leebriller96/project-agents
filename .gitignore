@@ -1,0 +1,24 @@
+# 프로젝트별 입력 자료·산출물은 커밋하지 않는다 (.gitkeep만 유지)
+workspace/00_inputs/*
+!workspace/00_inputs/.gitkeep
+workspace/knowledge/*
+!workspace/knowledge/.gitkeep
+workspace/slices/*
+!workspace/slices/.gitkeep
+workspace/refactor-requests/*
+!workspace/refactor-requests/.gitkeep
+workspace/reports/*
+!workspace/reports/.gitkeep
+workspace/deliverables/*
+!workspace/deliverables/.gitkeep
+workspace/state.yaml
+
+# 실제 프로젝트 설정 (example만 커밋)
+config/project.yaml
+
+# 파이썬/OS 부산물
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+venv/

@@ -1,0 +1,19 @@
+# 프로젝트 설정 예시. 복사해서 config/project.yaml 로 사용한다.
+project:
+  name: sample-project
+  mode: migration            # greenfield | migration(차세대, AS-IS 소스 있음)
+  target_dir: ../sample-project   # 생성되는 소스가 들어갈 실제 프로젝트 repo 경로
+
+stack:
+  backend: { language: java, framework: spring-boot, orm: mybatis }
+  frontend: { language: typescript, framework: react }
+  db: { engine: postgresql, migration_tool: flyway }
+
+asis:                        # mode=migration 일 때만
+  source_dir: workspace/00_inputs/asis
+  db_schema: workspace/00_inputs/asis/schema.sql
+
+conventions:
+  language: ko               # 주석·문서 언어
+  api_style: rest            # rest | graphql
+  test_frameworks: { backend: junit5, frontend: vitest }
