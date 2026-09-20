@@ -60,3 +60,4 @@
 | stage4 common-auth | reviewer PASS, low 4. developer 가 오케스트레이터 지시("/me 재호출")보다 골격 CONVENTIONS(login 응답으로 setUser)를 우선함 — reviewer 도 타당 판정 | pipeline-core §7 에 "골격 CONVENTIONS > 오케스트레이터 프롬프트. 충돌 시 developer 는 규약을 따르고 보고에 명시" 명문화 |
 | stage4 common-auth | react-query mutation variables 에 비밀번호가 gcTime(5분) 동안 잔존 (RR-0010) | `react-ts.md` 규약: "자격증명을 보내는 mutation 은 `gcTime: 0`" |
 | stage4 W2 | 프론트 병렬 developer 는 `node_modules`·`dist` 공유 → build 는 마지막 1회. vitest 는 파일 단위라 동시 실행 가능 | pipeline-core §6-6 에 프론트 버전 추가 |
+| stage4 member 검토 | reviewer medium: zod 스키마 max 길이 규칙에 테스트 없음 — "검증 규칙마다 테스트 1건" 을 developer 가 일부만 지킴. URL 복원 파라미터 길이 미검증 | `react-ts.md` 테스트 규약에 "zod 스키마의 모든 규칙(required/min/max/pattern/format)을 표로 뽑아 각 1건, 붙여넣기 경로(maxlength 제거)로 검증" + "URL 에서 복원한 검색 조건도 스키마로 정규화" 추가 |

@@ -65,4 +65,6 @@ npm run build
 ## 테스트 규약
 - msw 핸들러는 `features/<slice>/__tests__/handlers.ts` 에 계약 예시(example) 값으로 작성.
 - 페이지 테스트: 렌더 → 필드 입력 → 제출 → 요청 바디/호출 여부 검증. 에러 응답 시 메시지 노출 검증.
+- 폼 검증 테스트는 zod 스키마의 **모든 규칙**(required/min/max/pattern/format)을 표로 뽑아 각 1건. `maxLength` 속성이 막는 경우는 `removeAttribute('maxlength')` 후 붙여넣기 경로로 검증.
+- URL(search params)에서 복원한 검색 조건도 같은 zod 스키마로 정규화한다(길이·enum). 입력 필드의 `maxLength` 는 UX 용이지 검증이 아니다.
 - `it.skip`/`describe.skip` 금지. 못 만드는 테스트는 레포트에 사유.
