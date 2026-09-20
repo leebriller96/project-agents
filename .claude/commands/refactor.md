@@ -12,7 +12,7 @@ argument-hint: "[RR-0001,RR-0002 | slice:<id> | stage:<n> | all] (기본 all)"
 2. 대상 RR 결정: `python tools/rr.py list --status open` 결과에 인자 필터 적용 (RR id 목록 / `slice:<id>` / `stage:<n>` / all). 0건이면 안내 후 종료.
 3. 대상 RR 을 사용자에게 표로 보여준다 (id·severity·slice·target_stage/layer·제목). **blocker/high 가 없고 medium/low 만 있으면 진행 여부를 한 번 확인**한다.
 4. `iteration` 을 +1 하고 log 에 기록.
-5. RR 을 `(target_stage, slice)` 로 묶는다. 처리 순서: target_stage 1 → 2 → 3 → 4. 같은 stage 안에서 slice 가 다르면 §6 규칙대로 **병렬** 가능(target_stage 3 은 항상 단독).
+5. RR 을 `(target_stage, slice)` 로 묶는다. 처리 순서: target_stage 1 → 2 → 3 → 4. 단, **`blocked` 상태인 단계의 원인 RR**(예: 기준선 실패 테스트)이 있으면 그 묶음을 가장 먼저 처리하고, 끝나면 해당 단계 게이트를 재확인해 `done` 으로 되돌린다. 같은 stage 안에서 slice 가 다르면 §6 규칙대로 **병렬** 가능(target_stage 3 은 항상 단독).
    - `target_stage: 1` → 사용자에게 `/stage1 reslice` 를 권하고 이 묶음은 건너뛴다 (자동 재분류하지 않음).
    - `target_stage: 2` → `backend-developer` 를 `refactor <RR-id 목록>` 작업으로 호출 → `backend-reviewer` → FAIL 시 재호출 최대 2회.
    - `target_stage: 3` → `common-refactorer` → `backend-reviewer`(common).

@@ -37,3 +37,12 @@
 | stage2 전체 | 4 slice 모두 reviewer PASS(blocker/high 0), medium 2·low 9 → RR 7건 + common-candidates 24건. 총 225 tests. 전체 소요 약 2시간 20분, 에이전트 9회 호출 | 정상. common-candidates 가 24건이면 3단계 부담이 큼 → 골격 체크리스트에 이번 회차 C-1/C-9/C-19/C-20 을 기본 포함시켜 다음 프로젝트에서 재발 방지 |
 | stage2 stats 검토 | reviewer 가 `./gradlew test` 만 돌리면 Gradle 캐시로 `UP-TO-DATE/FROM-CACHE` 가 되어 실제 실행이 안 됨 → `cleanTest test --no-build-cache` 필요. developer 보고의 테스트 내역(Service 10/Controller 11)이 실제(9/12)와 달랐음(합계는 일치) | 프로필 명령 표에 reviewer 용 `cleanTest --no-build-cache` 추가, backend-reviewer 에이전트 지시에 명시. developer 는 테스트 수를 XML 결과에서 읽도록 |
 | stage2 stats 검토 | operationId 프로필 규칙(`<slice>_<동작>`)이 실제 관행(`getBook`)과 어긋남 — 문서가 코드보다 늦게 쓰였고 검증 안 됨 | 프로필 규칙을 실제 관행(`<동사><명사>`, 그룹 내 유일)으로 수정 (C-26) |
+
+## 2026-09-21 — library-sample (계속)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage3 기준선 | **시간 폭탄 테스트**: common-auth 테스트 3건이 "고정 시각(17:00)으로 발급한 1시간 토큰을 시스템 시계 파서로 검증" → 18시 이후 항상 실패. stage2 검토 시점(17시대)엔 통과했으므로 developer·reviewer 모두 놓침. 3단계 refactorer 가 원칙대로 테스트를 안 고치고 RR-0008(high)로 남김 → stage3 `blocked` | 프로필 테스트 규약: "시각 고정 테스트는 발급·검증 양쪽이 같은 Clock 을 본다. 시스템 시계를 쓰는 파서/검증기는 고정 시각과 섞지 않는다". reviewer 체크리스트 §D-5 에 "고정 시각 + 시스템 시계 조합" 항목 추가. 골격 `JwtTokenParser` 에 Clock 주입 |
+| stage3 | 27건 중 24건 처리, 3건 보류(추상화 과잉·요구 근거 없음·배포 항목). xlsx 전환은 §12 결정에 따른 동작 변경으로 §3 원칙 예외 명시. 계약 4개 재생성 diff 가 의도한 변경만인지 검증함 | 정상. `stage3-common` §3 에 "brief §12 결정에 따른 기능 전환은 동작 변경 예외로 허용하되 레포트에 명시" 추가 |
+| stage3 | `-Pgroup` 이 Gradle 내장 `project.group` 과 충돌 → `startParameter.projectProperties` 로 읽음 | 프로필 openApiDump 설명에 `-PapiGroup=` 으로 이름 변경 권장 |
+| /refactor | stage3 가 blocked 인 채로 /refactor 를 먼저 돌림(RR-0008 이 게이트를 막으므로). 순서: stage3 변경 커밋 → refactor 병렬(common-auth 4건 ‖ book-loan 3건) → member 1건 → stage3 게이트 재확인 | `/refactor` 명령에 "blocked 단계의 원인 RR 이 있으면 그것을 첫 묶음으로" 규칙 추가 |

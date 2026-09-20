@@ -48,7 +48,7 @@ slice id 의 하이픈은 패키지에서 제거한다 (`common-auth` → `commo
 - Flyway: `db/migration` 을 `spring.flyway.locations` 로 지정. 골격 `V0001__baseline.sql`, slice 는 `V<yyMMddHHmm>__<slice>_*.sql`.
 - OpenAPI: springdoc 으로 `/v3/api-docs` 생성 → `docs/api/<slice>.yaml` 로 저장(태그 = slice). 손으로 보완한 설명은 코드의 `@Operation/@Schema` 에 넣어 재생성해도 유지되게 한다.
   계약 생성용 기동은 **test 프로파일(H2)** 로 하고(MySQL 불필요), `OpenApiConfig` 의 `servers` 는 상대경로 `/` 로 고정해 포트가 yaml 에 남지 않게 한다.
-  H2 가 `testRuntimeOnly` 면 `bootRun` 으로는 못 띄우므로 **골격이 `openApiDump` Gradle 태스크**(test 런타임 클래스패스 JavaExec 로 기동 → `/v3/api-docs.yaml/<group>` 저장, `-Pport=`·`-Pgroup=` 인자)를 제공한다. slice 는 `./gradlew openApiDump -Pgroup=<slice> -Pport=1808N` 만 실행.
+  H2 가 `testRuntimeOnly` 면 `bootRun` 으로는 못 띄우므로 **골격이 `openApiDump` Gradle 태스크**(test 런타임 클래스패스 JavaExec 로 기동 → `/v3/api-docs.yaml/<group>` 저장, `-Pport=`·`-Pgroup=` 인자)를 제공한다. slice 는 `./gradlew openApiDump -PapiGroup=<slice> -Pport=1808N` 만 실행 (`-Pgroup` 은 Gradle 내장 `project.group` 과 충돌).
   springdoc 메모: 검색 조건 DTO 는 `@ParameterObject` 로 개별 query 파라미터 전개, query 파라미터 타입·설명은 `@Parameter`(필드의 `@Schema` 는 boolean 이 string 으로 나옴).
   모든 엔드포인트에 `@Operation(operationId = "<동사><명사>")` (예: `getBook`, `searchLoans`, `login`) 을 명시하고 springdoc 그룹 안에서 유일하게 — 자동 번호(`search_1`)는 4단계 타입 생성 시 이름이 불안정해진다.
 - Mapper 인터페이스 이름은 slice 간 빈 이름 충돌을 피해 `<Entity>Mapper` 는 테이블 소유 slice 만 쓰고, 다른 slice 가 같은 테이블을 읽으면 `<Slice><Entity>Mapper`(예: `MemberAdminMapper`).
@@ -72,6 +72,7 @@ Maven 이면 `./mvnw -q verify`, `-Dtest=...`.
 - Mapper: `@MybatisTest` + testcontainers(mysql) 또는 H2 MySQL 모드. Flyway 로 스키마 적용.
   다른 slice 소유 테이블의 테스트 데이터는 각 slice 가 JDBC 로 넣지 말고, 테이블 소유 slice 가 `src/test/resources/fixtures/<table>.sql` 을 제공하고 소비 slice 는 `@Sql` 로 읽는다.
   `@MybatisTest` 는 DataSource 를 임베디드로 교체하므로 `application-test.yml` 에 `spring.test.database.replace: none` 필수.
+- **시각 고정 테스트**: 발급·검증 양쪽이 같은 `Clock` 을 봐야 한다. 고정 시각으로 만든 토큰/만료값을 시스템 시계를 쓰는 파서(`Jwts.parser()`, `new JwtTokenParser()`)로 검증하면 실제 시각이 지난 뒤 실패하는 시간 폭탄이 된다. 골격 `JwtTokenParser` 는 Clock 주입 생성자를 제공한다.
 - Controller: `@WebMvcTest` + MockMvc. 검증 실패·에러 응답 포맷 확인.
   `@WebMvcTest` 는 SecurityConfig 를 자동 스캔하지 않음 → `@Import({SecurityConfig, JwtTokenParser})` 표준 패턴을 골격이 `JwtTestSupport` 로 제공하고 slice 테스트는 그것을 쓴다.
   JWT 필터는 `@Component` 로 두지 말고 SecurityConfig 안에서 직접 생성 (서블릿 필터 중복 등록 방지).
