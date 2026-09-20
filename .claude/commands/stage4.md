@@ -19,5 +19,6 @@ argument-hint: "<slice-id>[,<slice-id>...] | all | scaffold"
    b. `frontend-developer` 를 slice 마다 호출 (병렬 가능). 전달: `slice <id>`, target_dir 절대경로, 프로필, 계약 경로, 화면 근거 파일 경로(brief §6 에서 추출).
    c. `frontend-reviewer` 호출 (병렬 가능). FAIL 이면 developer 재호출 최대 2회 → 잔여 시 `blocked`.
    d. `state.yaml` 갱신. developer 가 만든 RR(계약 부족)은 그대로 두고 사용자에게 알린다.
+5-1. 웨이브 종료 후 reviewer 지적 중 "규칙 부재·규칙 신설로 인한 것"(예: URL 파라미터 정규화, 검증 규칙 테스트 누락)은 같은 웨이브의 **다른 slice 에도 해당하는지** 오케스트레이터가 grep 으로 확인하고, 해당하면 slice 별 RR 을 함께 만든다. 프로필 규칙을 갱신했다면 다음 웨이브 developer 프롬프트에 명시한다.
 6. 사용자에게: slice 별 결과 표(상태·화면 수·테스트 수·reviewer 결과), 계약 부족 RR 목록, blocked 사유, 레포트 경로.
 7. 안내: 계약 부족 RR 이 있으면 `/refactor` 로 BE 보강 후 재실행, 없으면 `/stage5 <slice>`.

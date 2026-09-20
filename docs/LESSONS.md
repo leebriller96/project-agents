@@ -61,3 +61,5 @@
 | stage4 common-auth | react-query mutation variables 에 비밀번호가 gcTime(5분) 동안 잔존 (RR-0010) | `react-ts.md` 규약: "자격증명을 보내는 mutation 은 `gcTime: 0`" |
 | stage4 W2 | 프론트 병렬 developer 는 `node_modules`·`dist` 공유 → build 는 마지막 1회. vitest 는 파일 단위라 동시 실행 가능 | pipeline-core §6-6 에 프론트 버전 추가 |
 | stage4 member 검토 | reviewer medium: zod 스키마 max 길이 규칙에 테스트 없음 — "검증 규칙마다 테스트 1건" 을 developer 가 일부만 지킴. URL 복원 파라미터 길이 미검증 | `react-ts.md` 테스트 규약에 "zod 스키마의 모든 규칙(required/min/max/pattern/format)을 표로 뽑아 각 1건, 붙여넣기 경로(maxlength 제거)로 검증" + "URL 에서 복원한 검색 조건도 스키마로 정규화" 추가 |
+| stage4 book-loan 검토 | reviewer PASS, medium 2 — member 와 **같은 종류**(URL 검색 조건 미정규화, zod max 규칙 1건 테스트 누락). 프로필 규칙은 member 검토 후 추가됐으나 book-loan developer 는 그 전에 시작해 못 봄(병렬 웨이브) | 같은 웨이브에서 발견된 교훈은 다음 웨이브부터 적용됨을 인정. `/stage4`·`/stage2` 명령: 웨이브 종료 후 reviewer 지적 중 "규칙 부재로 인한 것" 은 **같은 웨이브의 다른 slice 에도 해당하는지 오케스트레이터가 grep 으로 확인**해 RR 을 묶어 만든다 |
+| stage4 book-loan | 화면 5개·API 11개·테스트 77, 290k 토큰·23분. RR 없이 계약만으로 완결 — 2단계 계약 우선 원칙의 효과 | 정상 |
