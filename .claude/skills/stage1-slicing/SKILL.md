@@ -20,6 +20,8 @@ description: 1단계 업무 분류 — PROJECT_BRIEF(및 AS-IS 인벤토리)를 
 3. **AS-IS 경계**(migration): AS-IS 패키지/메뉴 구조를 1차 후보로 쓰되, 응집도 기준으로 재조정한다.
 4. **크기**: slice 하나가 API 5~20개, 화면 3~10개 정도. 넘으면 하위 slice 로 나눈다(`order-basic`, `order-return`).
 5. **공통 slice**: 인증/권한, 공통코드, 파일, 알림처럼 모두가 쓰는 것은 `common-*` 접두어로 만들고 priority 를 가장 낮은 번호로 둔다.
+   단, 소비자가 하나뿐이거나 DDL/seed 를 골격 baseline 이 담당해 slice 가 가질 것이 API 1~2개뿐이면 분리하지 않고 소비 slice 에 넣는다 (레포트에 사유).
+6. **순환 회피 우선**: 두 엔티티가 서로의 테이블을 읽어야 하면(예: 도서 목록의 "대여 가능 권수" 가 대여 테이블을 집계) 나누지 말고 한 slice 로 묶는다. 크기 상한을 넘으면 하위 slice(`order-basic`/`order-return`)로 나누되 소유 테이블은 상위가 갖는다.
 
 ## 3. 초기에 나누기 애매할 때
 

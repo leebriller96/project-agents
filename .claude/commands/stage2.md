@@ -10,7 +10,7 @@ argument-hint: "<slice-id>[,<slice-id>...] | all | scaffold"
 ## 절차
 1. `.claude/skills/pipeline-core/SKILL.md` §1·§4·§5·§6·§7 을 읽고 따른다.
    선행: stage1 `done`, `slices.yaml → approved: true`. 미승인이면 승인 요청 후 종료.
-2. **골격**: `stages.stage2_scaffold` 가 `done` 이 아니거나 인자가 `scaffold` 면
+2. **골격**: `stages.stage2_scaffold` 가 `done` 이 아니거나 인자가 `scaffold` 면, 먼저 오케스트레이터가 환경(JDK·빌드 도구·Docker·Node)을 확인해 config 와 불일치를 사용자에게 알리고 (필요 시 config 갱신), 확인된 환경 정보를 에이전트에 전달한다.
    `backend-developer` 를 `scaffold` 작업으로 호출 → 보고 → 빌드·샘플 테스트 통과 시 `stage2_scaffold: done`.
    사용자에게 골격 구조·`CONVENTIONS.md` 요약을 보여준다. 인자가 `scaffold` 였으면 여기서 종료.
 3. **대상 slice 결정** (§5): 인자 해석 → 대상 목록. 각 slice 의 `depends_on` 이 모두 `stage2_backend: done` 인지 확인. 아니면 그 slice 는 대상에서 빼고 사유를 알린다.
