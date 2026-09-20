@@ -65,3 +65,5 @@
 | stage4 book-loan | 화면 5개·API 11개·테스트 77, 290k 토큰·23분. RR 없이 계약만으로 완결 — 2단계 계약 우선 원칙의 효과 | 정상 |
 | stage4 stats | 최신 규칙(URL 정규화·zod 전수 테스트)을 프롬프트에 명시하니 developer 가 선반영 — 같은 종류 지적 재발 없음(reviewer 확인 예정). recharts 는 jsdom 에서 `ResponsiveContainer initialDimension` 으로 목 없이 렌더 검증 가능 | `react-ts.md` 알려진 문제에 recharts 항목 추가. 번들 1.1MB(recharts) → 골격 항목에 "차트/에디터 등 무거운 라이브러리는 라우트 lazy + manualChunks 기본" 추가 |
 | stage4 stats | `vi.stubGlobal('URL', {...})` 이 `new URL()` 을 깨뜨림 → `defineProperty` 로 메서드만 추가. 골격 queryClient 의 5xx 재시도가 실패 토스트 테스트를 4초 지연 | 프로필: 테스트 QueryClient 는 `retry: false`(골격 `createTestQueryClient` 가 보장) |
+| /refactor FE | react-query `gcTime: 0` 은 observer 분리 후에만 작동 — 로그인 실패 시 폼이 남아 비밀번호 variables 잔존. developer 가 소스를 읽고 `reset()` 추가 + 역검증(gcTime 제거 시 테스트 실패 확인) | 프로필 규약 보강 |
+| /refactor FE | 3 slice 가 URL 정규화를 "필드 단위 safeParse, 실패 필드만 기본값" 으로 일관 구현 — stats 선반영 패턴을 참고 지시한 효과 | 3단계 2회차에서 `shared/` 헬퍼로 승격(F 후보) |

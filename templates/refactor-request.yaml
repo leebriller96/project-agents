@@ -16,6 +16,6 @@ description: |
 suggested_fix: |
   OrderService.cancel() 안에서 StockService.restore()를 트랜잭션 내에서 호출한다.
 status: open                     # open | in_progress | done | rejected
-iteration: 1                     # 발견 당시 파이프라인 반복 회차
+iteration: 1                     # 발견 당시 파이프라인 반복 회차 (처리 회차는 resolution_note 에 적는다; rr.py set 은 이 값을 바꾸지 않음)
 resolved_at:
 resolution_note:
