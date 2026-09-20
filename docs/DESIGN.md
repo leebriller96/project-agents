@@ -67,13 +67,20 @@ slice 재분류가 필요한 경우만 1단계로 간다. 반복 회차(`iterati
 레포트를 `workspace/reports/`로 가져와 `tools/report_to_rr.py`(예정)로 요구서로 변환한다.
 (대안: 두 repo를 Claude Code 플러그인으로 묶기 — 추후 검토)
 
-## 3. 열린 질문
+## 3. 결정 사항 (2026-09-20)
 
-1. **구현 형태**: Claude Code repo(슬래시 명령 + 서브에이전트 + 스킬)로 갈지, Agent SDK 기반 독립 오케스트레이터로 갈지.
-   → 기존 두 도구와 같은 Claude Code repo 형태를 우선 제안. 상태를 파일로 두므로 나중에 SDK 오케스트레이터를 얹을 수 있음.
-2. **생성 소스 위치**: 이 repo 안(workspace/src)에 둘지, `config/project.yaml`의 `target_dir`(별도 repo)에 둘지.
-   → 실제 프로젝트는 자체 repo가 있으므로 `target_dir` 제안.
-3. **슬라이스 병렬 실행**: slice 간 의존이 없으면 2·4단계를 병렬(서브에이전트 동시 실행)로 돌릴지, 항상 순차로 갈지.
-4. **사람 개입 지점**: 0단계 brief 확인, 1단계 slices 승인 외에 추가 승인 지점이 필요한지 (예: 2단계 골격, OpenAPI 계약).
-5. **기본 스택**: 첫 대상 프로젝트의 스택(Java/Spring+MyBatis? Node? React/Vue?)에 맞춰 스킬 예시를 먼저 작성할지.
-6. **8단계 산출물 목록**: 어떤 문서(설계서·API 명세·테이블 정의서·테스트 결과서·운영 매뉴얼 등)를 기본으로 낼지, 템플릿 형식(MD/HTML/DOCX)은 무엇으로 할지.
+| 항목 | 결정 |
+|---|---|
+| 구현 형태 | Claude Code repo — `.claude/commands`(오케스트레이터) + `.claude/agents`(서브에이전트) + `.claude/skills`(방법론). 상태는 파일이므로 나중에 Agent SDK 오케스트레이터를 얹을 수 있다 |
+| 생성 소스 위치 | `config/project.yaml → project.target_dir` (별도 repo). 이 repo 의 `workspace/` 에는 메타(brief·slices·RR·레포트·state)만 |
+| 병렬 실행 | 허용. `pipeline.parallel`·`max_parallel`. depends_on 위상 정렬로 웨이브를 만들고 웨이브 안에서 동시 실행. 충돌 방지 규칙은 `pipeline-core` §6. 5단계(통합 테스트)는 포트·DB 공유 때문에 순차 |
+| 기술 스택 | 제한 없음. config 의 `stack.*.profile` 이 프로필 파일을 고른다. 기본 프로필 `spring-mybatis-mysql`(Java 17/Spring Boot 3/MyBatis/MySQL 8/Flyway) + `react-ts`(React 18/TS/Vite). 프로필이 없으면 범용 규칙 |
+| 산출물 | SI 관례 기준 13종 (`stage8-deliverables` 원천 표). config `deliverables.items` 로 선택. md+html 기본, docx 선택 |
+| 사람 개입 | stage0 brief 확인(비차단), stage1 slices 승인(차단), stage2 골격 확인(비차단), reviewer 2회 후 잔여 지적(blocked), RR rejected 는 사람만 |
+
+## 4. 남은 과제
+
+- 실제 프로젝트로 stage0→stage2 를 한 번 돌려 스킬 문구·게이트 명령이 현실과 맞는지 검증 (첫 실전 후 프로필 보정)
+- `tools/report_to_rr.py`: 6·7단계 외부 도구 레포트를 RR 로 자동 변환 (지금은 에이전트가 직접 `rr.py new` 로 생성)
+- 다른 스택 프로필 추가 (예: `spring-jpa-postgres`, `node-nest`, `vue-ts`)
+- 두 외부 도구를 Claude Code 플러그인으로 묶어 경로 설정 없이 쓰는 방안

@@ -1,0 +1,18 @@
+---
+description: 파이프라인 진행 상태를 보여줍니다 — 단계별·slice별 상태, 열린 리팩토링 요구서, 다음에 실행할 명령.
+argument-hint: "(인자 없음)"
+---
+
+# /status — 진행 상태
+
+## 절차
+1. `config/project.yaml` 과 `workspace/state.yaml` 을 읽는다. 없으면 무엇을 먼저 해야 하는지 안내(`config` 복사 → `/stage0`).
+2. `python tools/status.py` 를 실행해 요약 표를 얻는다 (실패하면 state.yaml 을 직접 읽어 같은 내용을 만든다).
+3. `python tools/rr.py list --status open` 으로 열린 RR 을 가져온다.
+4. 사용자에게 보여준다:
+   - 프로젝트명 / 모드 / iteration / 마지막 갱신
+   - 공통 단계 표 (stage0·1·2_scaffold·3·5·6·7·8)
+   - slice × 단계 매트릭스 (stage2 / stage4 / stage5), blocked 사유
+   - 열린 RR 표 (severity 순)
+   - `slices.yaml` 승인 여부
+5. **다음 명령 추천**: `.claude/skills/pipeline-core/SKILL.md` §4 게이트를 기준으로 지금 실행 가능한 명령을 1~3개 제시한다 (예: "order slice 의 stage2 가 done 이므로 `/stage4 order` 가능", "open RR 3건 → `/refactor`").

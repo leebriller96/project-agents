@@ -39,11 +39,13 @@ project-agents/
 │   ├── project.yaml.example  # 프로젝트 설정 (스택·모드·대상 repo 경로)
 │   └── tools.yaml            # 외부 도구(code-security-auditor, qa-automation) 경로
 ├── .claude/
-│   ├── commands/             # /stage0 … /stage8, /refactor, /status
-│   ├── agents/               # 단계·계층별 서브에이전트 정의
-│   └── skills/               # 단계별 방법론(SKILL.md)
-├── templates/                # 리팩토링 요구서·테스트 시나리오·산출물 템플릿
-├── tools/                    # 상태 조회, 레포트→요구서 변환 스크립트
+│   ├── commands/             # /stage0 … /stage8, /refactor, /status (오케스트레이터)
+│   ├── agents/               # 서브에이전트 11개 (ingest-analyst, slice-planner, backend-developer/reviewer,
+│   │                         #   common-refactorer, frontend-developer/reviewer, integration-tester,
+│   │                         #   security-auditor, qa-runner, deliverable-writer)
+│   └── skills/               # pipeline-core(공통 규칙) + 단계별 방법론 + 스택 프로필
+├── templates/                # state·slices·PROJECT_BRIEF·리팩토링 요구서·테스트 시나리오 템플릿
+├── tools/                    # rr.py(요구서 관리), status.py(상태 요약), build_report.py(md→html)
 └── workspace/                # 프로젝트별 작업 공간 (커밋하지 않음)
     ├── 00_inputs/            # 0단계 정적 문서·AS-IS 소스
     ├── knowledge/            # PROJECT_BRIEF.md 등 요약 지식
@@ -56,22 +58,45 @@ project-agents/
 
 생성되는 실제 서비스 소스는 `config/project.yaml`의 `target_dir`(별도 repo)에 쓴다.
 
-## 빠른 시작 (예정)
+## 빠른 시작
+
+```bash
+git clone https://github.com/leebriller96/project-agents.git
+cd project-agents
+python -m pip install -r tools/requirements.txt      # pyyaml, markdown
+cp config/project.yaml.example config/project.yaml   # 프로젝트명·모드·target_dir·스택 수정
+```
+
+`workspace/00_inputs/` 에 문서(RFP·요구사항·설계 산출물·피그마 export·스토리보드)와 (차세대라면) `asis/` 소스를 넣은 뒤,
+이 디렉토리에서 Claude Code 를 열고:
 
 ```text
-1. config/project.yaml.example → config/project.yaml 복사 후 수정
-2. workspace/00_inputs/ 에 문서·AS-IS 소스 투입
-3. Claude Code에서
-   /stage0            # 준비: PROJECT_BRIEF 생성
-   /stage1            # 업무 분류 → slices.yaml (승인)
-   /stage2 <slice>    # Backend
-   /stage3            # 공통화
-   /stage4 <slice>    # Frontend
-   /stage5 … /stage7  # 검증 → refactor-requests/ 생성
-   /refactor          # 열린 요구서를 target_stage별로 묶어 반영
-   /status            # state.yaml 요약
-   /stage8            # 산출물
+/stage0                 # 준비: PROJECT_BRIEF.md 생성 → 근거 부족·모순 표 확인
+/stage1                 # 업무 분류 → workspace/slices/slices.yaml 검토 후 approved: true 로 변경
+/stage2 all             # Backend: 골격 1회 + slice 별(의존 없는 것은 병렬) 개발·검토·게이트
+/stage3                 # 공통화 리팩토링
+/stage4 all             # Frontend: 골격 1회 + slice 별 개발·검토·게이트
+/stage5 all             # 통합 테스트 → 리팩토링 요구서(RR)
+/refactor               # 열린 RR 을 target_stage·slice 별로 반영 → 후속 단계 상태 되돌림
+/stage6                 # 보안 점검 (code-security-auditor 방법론) → RR
+/stage7                 # QA 자동화 (qa-automation 방법론) → RR
+/stage8                 # 산출물 생성
+/status                 # 진행 상태 + 다음 실행 가능한 명령
 ```
+
+`/stage2 order,member` 처럼 slice 를 지정할 수 있고, `/stage2 scaffold` 는 골격만 다시 만든다.
+
+## 기술 스택
+
+`config/project.yaml → stack` 이 결정한다. 기본 프로필은 **Java 17 / Spring Boot 3 / MyBatis / MySQL 8 / Flyway** (`spring-mybatis-mysql`) 와
+**React 18 / TypeScript / Vite** (`react-ts`) 이며, 규칙은 `.claude/skills/stage2-backend/profiles/`, `stage4-frontend/profiles/` 에 있다.
+다른 스택을 쓰려면 프로필 파일을 하나 추가하고 config 의 `profile` 값을 바꾸면 된다. 프로필이 없어도 범용 규칙으로 동작한다.
+
+## 산출물 (8단계)
+
+`config/project.yaml → deliverables.items` 로 선택한다. 기본 목록: 요구사항 추적표(RTM), 아키텍처 정의서, 업무 분류표, 테이블 정의서+ERD,
+API 명세서, 화면 정의서, 공통 모듈 명세, 단위/통합/보안/QA 결과서, (차세대) AS-IS/TO-BE 매핑표, 빌드·배포·운영 가이드.
+형식은 md 원본 + html (`tools/build_report.py`), 필요 시 docx.
 
 ## 관련 도구
 

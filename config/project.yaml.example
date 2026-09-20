@@ -1,19 +1,66 @@
 # 프로젝트 설정 예시. 복사해서 config/project.yaml 로 사용한다.
 project:
   name: sample-project
-  mode: migration            # greenfield | migration(차세대, AS-IS 소스 있음)
-  target_dir: ../sample-project   # 생성되는 소스가 들어갈 실제 프로젝트 repo 경로
+  mode: migration                 # greenfield | migration(차세대, AS-IS 소스 있음)
+  target_dir: ../sample-project   # 생성되는 소스가 들어갈 실제 프로젝트 repo 경로 (이 repo 기준 상대경로 또는 절대경로)
+  base_package: com.example.sample   # Java 패키지 루트 (backend 프로필이 Java일 때)
 
+# 기술 스택. 값은 자유롭게 바꿀 수 있고, 아래 profile 이름과 일치하는 파일이
+# .claude/skills/stage2-backend/profiles/, stage4-frontend/profiles/ 에 있으면 그 규칙을 따른다.
+# 없으면 스킬의 범용 규칙만 적용하고 레포트에 "프로필 없음"을 남긴다.
 stack:
-  backend: { language: java, framework: spring-boot, orm: mybatis }
-  frontend: { language: typescript, framework: react }
-  db: { engine: postgresql, migration_tool: flyway }
+  backend:
+    profile: spring-mybatis-mysql      # 기본 프로필
+    language: java
+    version: "17"
+    framework: spring-boot
+    framework_version: "3.3"
+    orm: mybatis
+    build: gradle                      # gradle | maven
+  frontend:
+    profile: react-ts
+    language: typescript
+    framework: react
+    build: vite
+    state: zustand                     # 상태 관리 (선택)
+    ui: mui                            # UI 라이브러리 (선택)
+  db:
+    engine: mysql
+    version: "8.0"
+    migration_tool: flyway
 
-asis:                        # mode=migration 일 때만
+asis:                                  # mode=migration 일 때만
   source_dir: workspace/00_inputs/asis
   db_schema: workspace/00_inputs/asis/schema.sql
+  language: java                       # AS-IS 언어 (예: java, egov, php, pro*c)
+
+pipeline:
+  parallel: true                       # slice 간 의존이 없으면 2·4단계를 병렬 실행
+  max_parallel: 3                      # 동시에 돌릴 slice 수 상한
+  gate:
+    require_build: true                # 2·3·4단계 완료 조건: 빌드 통과
+    require_unit_tests: true           # 2·3·4단계 완료 조건: 단위테스트 통과
+    min_coverage: 0                    # 라인 커버리지 하한(%) — 0이면 미적용
 
 conventions:
-  language: ko               # 주석·문서 언어
-  api_style: rest            # rest | graphql
+  language: ko                         # 주석·문서 언어
+  api_style: rest                      # rest | graphql
+  api_prefix: /api/v1
   test_frameworks: { backend: junit5, frontend: vitest }
+
+deliverables:                          # 8단계에서 생성할 산출물 (필요 없는 것은 지우거나 false)
+  format: [md, html]                   # md 원본 + html 변환. docx 필요 시 추가
+  items:
+    requirements_traceability: true    # 요구사항 추적표 (요구사항 ↔ slice ↔ API ↔ 화면 ↔ 테스트)
+    architecture: true                 # 아키텍처 정의서
+    slice_definition: true             # 업무 분류표
+    table_definition: true             # 테이블 정의서 (+ ERD)
+    api_spec: true                     # API 명세서 (OpenAPI 기반)
+    screen_definition: true            # 화면 정의서
+    common_module_spec: true           # 공통 모듈 명세
+    unit_test_result: true             # 단위테스트 결과서
+    integration_test_result: true      # 통합테스트 시나리오·결과서
+    security_result: true              # 보안 점검 결과서
+    qa_result: true                    # QA 결과서
+    asis_tobe_mapping: true            # (migration만) AS-IS/TO-BE 매핑표 (테이블·프로그램)
+    deploy_guide: true                 # 빌드·배포·운영 가이드
