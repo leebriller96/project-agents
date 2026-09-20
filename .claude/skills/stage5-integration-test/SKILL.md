@@ -36,6 +36,8 @@ description: 5단계 통합 테스트 — slice별 통합 테스트 시나리오
 
 ## 4. 정적 검증 (항상 수행)
 - FE 의 API 호출 목록(`features/<slice>/api/`) ↔ 계약 ↔ BE 컨트롤러 경로·메서드·필드명 3자 대조. 불일치는 즉시 RR.
+- 계약 드리프트: 기동한 BE 의 `/v3/api-docs.yaml/<slice>` 를 정규화(키 순서 무시)해 `docs/api/<slice>.yaml` 과 diff, FE `gen:api` 재생성 diff 도 확인. 둘 중 하나라도 다르면 RR.
+- slice 간 규약 일관성(생성 상태코드, 에러 포맷, 페이징) 도 대조한다 — 단일 slice 안에서는 일치해도 slice 간에 다를 수 있다.
 - FE 폼 검증 규칙 ↔ BE DTO 검증 규칙 대조 (FE 가 더 느슨하면 medium, BE 가 더 느슨하면 high).
 
 ## 5. RR 도출

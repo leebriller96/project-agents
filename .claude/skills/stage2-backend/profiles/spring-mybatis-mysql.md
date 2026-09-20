@@ -35,6 +35,9 @@ slice id 의 하이픈은 패키지에서 제거한다 (`common-auth` → `commo
 - 응답: 성공 `{ "success": true, "data": ..., "error": null }`, 실패 `{ "success": false, "data": null, "error": { "code": "ORDER_001", "message": "..." } }`.
 - 에러 코드: `<SLICE>_<3자리>`. `ErrorCode` enum 에 HTTP 상태를 함께 정의.
 - 페이징: 요청 `page`(1부터)·`size`, 응답 `PageResponse { items, page, size, total }`.
+- 상태 코드: 생성 `POST` 는 **201** 로 통일(`@ResponseStatus(CREATED)`), 행위 동사 경로(`/return`, `/extend`)는 200. slice 마다 달라지지 않도록 CONVENTIONS 에 명시.
+- LIKE 검색: 사용자 입력의 `%`·`_`·`\` 를 이스케이프하고 `LIKE ... ESCAPE '\'` 로 — 골격 `common/util/SqlLike.escape()` 제공, Mapper XML 은 `CONCAT('%', #{kw}, '%')` 에 이스케이프된 값만 바인딩.
+- `GlobalExceptionHandler` 는 `HttpMessageNotReadableException`(역직렬화 실패: 잘못된 날짜·숫자) 의 JSON 경로를 `fieldErrors[].field` 로 변환한다 — 빈 fieldErrors 로 400 을 내지 않는다.
 - 감사 컬럼: `created_at, created_by, updated_at, updated_by` 를 모든 테이블에. MyBatis 인터셉터 또는 서비스에서 세팅.
 - 네이밍: 테이블·컬럼 `snake_case`, Java `camelCase`, `map-underscore-to-camel-case: true`.
 - MyBatis: XML 매퍼 사용. `#{}` 만 사용, `${}` 는 정렬 컬럼 화이트리스트 검증 후에만. `<if>/<choose>` 동적 SQL 허용.
