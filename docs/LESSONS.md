@@ -25,3 +25,6 @@
 | stage2 common-auth 검토 | reviewer PASS, medium 1(실패 횟수 읽기-덮어쓰기 경합)·low 4. 게이트 재실행으로 보고 일치 확인. target repo 에 커밋이 없어 `git status` 로 공용 파일 변경 판별 불가 → 수정시각으로 대체 | pipeline-core §6-7 **target repo 커밋 규칙** 신설(골격·웨이브마다 오케스트레이터가 커밋). §7 에 medium/low → RR 또는 common-candidates 규칙 명문화 |
 | stage2 common-auth 검토 | `@Pattern` 앵커 누락 → OpenAPI pattern 부분 일치 (FE/BE 검증 불일치 위험) | 프로필 검증 규칙에 앵커 필수. W2 developer 프롬프트에 교훈 전달 |
 | stage2 W2 | 병렬 developer 2개가 계약 생성 기동 시 포트 충돌 가능, 전체 `gradlew test` 가 상대 컴파일 중 실패 가능 | pipeline-core §6-6: 포트 분리·자기 slice 테스트 우선·전체는 마지막 1회 |
+| stage2 member | 병렬 실행 성공: member 가 전체 115 tests 통과(상대 slice 의 진행 중 테스트 9개 포함), 공용 파일 충돌 없음. 계약 생성 포트 분리(18082) 유효 | 정상 |
+| stage2 member | H2 가 `testRuntimeOnly` 라 `bootRun` 으로 test 프로파일 기동 불가 → 프로젝트 밖 Gradle init 스크립트로 우회 (C-9) | 프로필 골격 항목에 **계약 생성용 `openApiDump` 태스크**(test 클래스패스 JavaExec 로 기동 → `/v3/api-docs.yaml/<group>` 저장 → `servers` 후처리) 추가 예정. 골격이 만들면 slice 마다 우회 불필요 |
+| stage2 member | springdoc: 검색 조건 객체는 `@ParameterObject` 필요, boolean 파라미터는 `@Schema` 아닌 `@Parameter` 로 문서화해야 타입 유지. common-auth 와 다른 slice 의 Mapper 빈 이름 충돌(`MemberMapper`) → `MemberAdminMapper` | 프로필에 springdoc 메모·Mapper 명명 규칙(`<Slice><Entity>Mapper` 또는 slice 접두어) 추가 |

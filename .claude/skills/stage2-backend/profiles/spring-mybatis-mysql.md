@@ -46,6 +46,9 @@ slice id 의 하이픈은 패키지에서 제거한다 (`common-auth` → `commo
 - Flyway: `db/migration` 을 `spring.flyway.locations` 로 지정. 골격 `V0001__baseline.sql`, slice 는 `V<yyMMddHHmm>__<slice>_*.sql`.
 - OpenAPI: springdoc 으로 `/v3/api-docs` 생성 → `docs/api/<slice>.yaml` 로 저장(태그 = slice). 손으로 보완한 설명은 코드의 `@Operation/@Schema` 에 넣어 재생성해도 유지되게 한다.
   계약 생성용 기동은 **test 프로파일(H2)** 로 하고(MySQL 불필요), `OpenApiConfig` 의 `servers` 는 상대경로 `/` 로 고정해 포트가 yaml 에 남지 않게 한다.
+  H2 가 `testRuntimeOnly` 면 `bootRun` 으로는 못 띄우므로 **골격이 `openApiDump` Gradle 태스크**(test 런타임 클래스패스 JavaExec 로 기동 → `/v3/api-docs.yaml/<group>` 저장, `-Pport=`·`-Pgroup=` 인자)를 제공한다. slice 는 `./gradlew openApiDump -Pgroup=<slice> -Pport=1808N` 만 실행.
+  springdoc 메모: 검색 조건 DTO 는 `@ParameterObject` 로 개별 query 파라미터 전개, query 파라미터 타입·설명은 `@Parameter`(필드의 `@Schema` 는 boolean 이 string 으로 나옴).
+- Mapper 인터페이스 이름은 slice 간 빈 이름 충돌을 피해 `<Entity>Mapper` 는 테이블 소유 slice 만 쓰고, 다른 slice 가 같은 테이블을 읽으면 `<Slice><Entity>Mapper`(예: `MemberAdminMapper`).
 - JWT(jjwt 0.12+): 알고리즘을 `Jwts.SIG.HS256` 으로 **명시** (키 길이에 따라 HS384/512 로 자동 선택됨). 골격은 `Clock` 빈을 제공해 시간 의존 로직(잠금·만료)을 테스트에서 고정할 수 있게 한다.
 - 실패 카운터처럼 예외를 던지면서도 남겨야 하는 갱신은 `@Transactional(noRollbackFor = BusinessException.class)` 또는 `REQUIRES_NEW`.
 - developer 의 게이트는 빌드+단위테스트까지. 실제 DB 기동 + curl smoke 는 선택이며 레포트에 "게이트 외 검증" 으로 구분 표기 (5단계와 중복 방지).
