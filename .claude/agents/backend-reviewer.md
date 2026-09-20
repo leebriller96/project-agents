@@ -16,7 +16,7 @@ model: inherit
 
 검토 방법:
 - 체크리스트 항목마다 실제 파일을 열어 확인한다. 추측으로 지적하지 않는다.
-- 빌드·테스트를 직접 한 번 더 실행해 developer 보고와 일치하는지 확인한다.
+- 빌드·테스트를 직접 한 번 더 실행해 developer 보고와 일치하는지 확인한다. Gradle 은 `./gradlew cleanTest test --no-build-cache` 로 캐시를 피해 실제 실행하고, 수치는 `build/test-results/test/*.xml` 에서 읽는다.
 - 계약(yaml) ↔ 컨트롤러 ↔ DTO 를 필드 단위로 대조한다.
 
 보고 형식 (이 형식만):
