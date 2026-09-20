@@ -41,6 +41,7 @@ slice id 의 하이픈은 패키지에서 제거한다 (`common-auth` → `commo
 - 검증: DTO 에 `jakarta.validation` 어노테이션. 검증 실패는 GlobalExceptionHandler 가 `COMMON_400` 으로 변환.
   `@Pattern` 은 반드시 `^...$` 앵커를 명시 — Java 는 전체 일치지만 생성된 OpenAPI `pattern` 은 부분 일치로 해석되어 FE 검증과 어긋난다.
 - 카운터 갱신(실패 횟수·재고 등)은 읽기→덮어쓰기 금지. `SET col = col + 1` 원자 증가 또는 `SELECT ... FOR UPDATE` 후 갱신.
+- 한도 검증(1인 N권, N회 실패 등)은 **한도의 주체 행**(회원)을 `FOR UPDATE` 로 잠근 뒤 count 한다. 자원 행(도서)만 잠그면 같은 주체의 동시 요청이 한도를 넘는다.
 - 존재하지 않는 계정의 로그인도 더미 해시로 `matches` 를 1회 수행해 타이밍 채널을 없앤다.
 - 설정: `application.yml` + `application-local.yml`, 비밀값은 환경변수 참조 (`${DB_PASSWORD}`), 파일에 직접 쓰지 않는다.
 - Flyway: `db/migration` 을 `spring.flyway.locations` 로 지정. 골격 `V0001__baseline.sql`, slice 는 `V<yyMMddHHmm>__<slice>_*.sql`.

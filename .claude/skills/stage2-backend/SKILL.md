@@ -16,7 +16,8 @@ description: 2단계 Backend 개발 — 최초 1회 프로젝트 골격(scaffold
    `config/project.yaml → stack` 과 대조한다. 불일치(예: config 17 vs 설치 21)는 **config 를 설치본에 맞추거나 사용자에게 알린 뒤** 진행하고 레포트 "환경" 절에 기록한다.
    빌드 도구가 없으면 wrapper 캐시의 배포본으로 `gradle wrapper` 를 만들고, 그것도 없으면 `blocked` (게이트를 통과할 수 없으므로).
    Docker 가 없으면 Mapper 테스트는 H2 `MODE=MySQL` 로 폴백하고 명시한다.
-1. 빌드 설정 (`<target_dir>/backend/`): 언어·프레임워크 버전은 `config/project.yaml → stack` 대로. 의존성은 프로필의 기본 목록.
+1. 빌드 설정 (`<target_dir>/backend/`): 언어·프레임워크 버전은 `config/project.yaml → stack` 대로. 의존성은 프로필의 기본 목록
+   **+ brief §7·§8 을 훑어 slice 가 필요로 할 기능성 의존성(엑셀 POI, PDF, 메일, 파일 저장, 캐시 등)을 미리 추가**한다. slice 는 `build.gradle` 을 수정할 수 없으므로 여기서 빠지면 3단계까지 대안 구현으로 버텨야 한다.
 2. 패키지 구조: `<base_package>/` 아래 `common/`(응답·예외·로깅·보안·설정) 과 slice 별 패키지 자리.
 3. 공통 뼈대 — 프로필이 정하는 것들: 공통 응답 포맷, 에러 코드 체계·전역 예외 처리, 요청/응답 로깅, 인증/인가 골격, 페이징 규약, 감사 컬럼 처리, MyBatis(또는 ORM) 설정, 프로파일별 설정(local/dev/prod).
 4. DB: `db/migration/V0001__baseline.sql` 에 공통 테이블(공통코드·감사 등 brief 에 근거가 있는 것만).

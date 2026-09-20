@@ -31,3 +31,5 @@
 | stage2 book-loan | 가장 큰 slice(API 11, 테스트 88). 274k 토큰·83 tool call·24분. 병렬 member 와 Gradle 동시 실행 충돌 없음, 전체 194 tests 통과 | slice 크기 상한(API 5~20) 안이지만 상단. `stage1-slicing` 크기 기준에 "테스트 포함 예상 파일 30개 초과면 하위 slice 분할 고려" 메모 예정 |
 | stage2 book-loan | member 와 동일하게 `bootRun` 계약 생성 우회(init 스크립트) 반복, `operationId` 자동 번호(`search_1`) 발생 → 11개 전부 명시 | 프로필: `@Operation(operationId=...)` 명시 규칙 추가. openApiDump 태스크는 골격 항목으로 이미 반영 |
 | stage2 book-loan | 타 slice 테이블(tb_member) 테스트 데이터를 각 slice 가 JDBC fixture 로 따로 삽입 (C-17) | 프로필 테스트 규약에 "골격이 `src/test/resources/fixtures/<table>.sql` 공용 fixture 제공" 추가 예정 (3단계 C-17) |
+| stage2 book-loan 검토 | reviewer PASS, medium 1(회원 단위 직렬화 없어 동시 대여 시 3권 초과 가능)·low 3. §12 결정(도서 행 잠금)만으로는 REQ-020 이 안 지켜짐 — 결정 사항이 요구를 완전히 덮는지 reviewer 가 잡아냄 | 프로필 동시성 규칙에 "한도(N권·N회) 검증은 한도의 주체(회원) 행을 잠근다" 추가 |
+| stage2 W3 준비 | 의존성 추가(POI)가 필요한 기능이 slice 에 있으면 `build.gradle` 수정 금지 규칙과 충돌 | pipeline-core §6 충돌 방지에 "의존성 추가는 common-candidates 로 요청하고 slice 는 대안 구현 또는 인터페이스만" 명문화. 골격 단계에서 brief 를 훑어 **예상 의존성(엑셀·PDF·메일 등)을 미리 build.gradle 에 넣는** 절차 추가 |
