@@ -57,3 +57,6 @@
 | stage4 골격 | 68 파일, 게이트 4개 통과(36 tests). 26분·106 tool call. 에이전트가 프로필보다 나은 설계: **라우트 자동 등록**(`import.meta.glob` 으로 `features/*/routes.tsx` 수집 → slice 가 router.tsx 를 안 건드림), `ApiError.fieldErrorMap()`, `api.download()` | 프로필 `react-ts.md` 에 자동 등록 패턴·`registerLogoutHandler` 훅 패턴 채택 |
 | stage4 골격 | vitest jsdom + react-router 데이터 라우터의 `AbortSignal` 충돌(jsdom vs undici) → 커스텀 환경 파일. jsdom `Blob.text()` 없음 → 폴백. `vitest/config` 가 `loadEnv` 미재export | 프로필 "알려진 문제" 절 신설 |
 | stage4 골격 | 생성 타입이 응답 스키마 `required` 부재로 전부 optional (F-4) — backend 계약 품질 문제 | stage2 프로필 OpenAPI 항목에 "응답 DTO 는 `@Schema(requiredMode=REQUIRED)` 또는 Java record + `@NotNull` 로 required 명시" 추가. 현재 프로젝트는 common-candidates |
+| stage4 common-auth | reviewer PASS, low 4. developer 가 오케스트레이터 지시("/me 재호출")보다 골격 CONVENTIONS(login 응답으로 setUser)를 우선함 — reviewer 도 타당 판정 | pipeline-core §7 에 "골격 CONVENTIONS > 오케스트레이터 프롬프트. 충돌 시 developer 는 규약을 따르고 보고에 명시" 명문화 |
+| stage4 common-auth | react-query mutation variables 에 비밀번호가 gcTime(5분) 동안 잔존 (RR-0010) | `react-ts.md` 규약: "자격증명을 보내는 mutation 은 `gcTime: 0`" |
+| stage4 W2 | 프론트 병렬 developer 는 `node_modules`·`dist` 공유 → build 는 마지막 1회. vitest 는 파일 단위라 동시 실행 가능 | pipeline-core §6-6 에 프론트 버전 추가 |

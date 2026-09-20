@@ -43,6 +43,7 @@ frontend/src/
 
 ## 규약
 - 공통 응답 `{ success, data, error }` 는 `client.ts` 가 언래핑해 `data` 만 반환, 실패는 `ApiError { code, message, status }` 로 throw.
+- 자격증명(비밀번호 등)을 보내는 mutation 은 `gcTime: 0` — react-query MutationCache 에 variables 가 남지 않게.
 - 인증: 토큰 저장 위치는 brief 의 인증 방식에 따름. 기본은 httpOnly 쿠키(백엔드 발급). localStorage 저장은 brief 근거가 있을 때만.
 - 라우트: `/<slice>/...`. 페이지 컴포넌트 상단 주석에 화면ID·화면명.
 - 네이밍: 컴포넌트 PascalCase, 훅 `useXxx`, 파일은 컴포넌트명과 동일.
