@@ -8,8 +8,8 @@ slice: order                     # slices.yaml의 slice id
 target_stage: 2                  # 반영할 단계 (1 슬라이스 | 2 BE | 3 공통 | 4 FE)
 target_layer: backend/service    # backend/{migration,mapper,service,api} | common | frontend/{page,component,api-client}
 severity: high                   # blocker | high | medium | low
-evidence:                        # 파일:라인 또는 실패 테스트명 (필수)
-  - src/main/java/.../OrderService.java:120
+evidence:                        # 파일:라인 또는 실패 테스트명 (필수). 수정 후 라인이 밀리므로 리비전을 덧붙인다
+  - src/main/java/.../OrderService.java:120 @a1b2c3d
   - OrderCancelIntegrationTest#shouldRestoreStock
 description: |
   주문 취소 API 호출 후 재고 테이블이 원복되지 않는다.
