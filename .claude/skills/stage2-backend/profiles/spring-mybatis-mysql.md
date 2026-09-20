@@ -37,6 +37,8 @@ slice id 의 하이픈은 패키지에서 제거한다 (`common-auth` → `commo
 - 페이징: 요청 `page`(1부터)·`size`, 응답 `PageResponse { items, page, size, total }`.
 - 상태 코드: 생성 `POST` 는 **201** 로 통일(`@ResponseStatus(CREATED)`), 행위 동사 경로(`/return`, `/extend`)는 200. slice 마다 달라지지 않도록 CONVENTIONS 에 명시.
 - LIKE 검색: 사용자 입력의 `%`·`_`·`\` 를 이스케이프하고 `LIKE ... ESCAPE '\'` 로 — 골격 `common/util/SqlLike.escape()` 제공, Mapper XML 은 `CONCAT('%', #{kw}, '%')` 에 이스케이프된 값만 바인딩.
+- 검색 조건 DTO 의 문자열 필드는 골격이 제공하는 trim 처리(예: `@InitBinder` `StringTrimmerEditor` 또는 DTO setter)로 **전 slice 동일**하게 앞뒤 공백을 제거한다 — slice 마다 다르면 5단계에서 불일치로 잡힌다.
+- `GlobalExceptionHandler` 는 타입 변환 실패(`MethodArgumentTypeMismatchException`, `page=abc`)와 enum 외 값도 한글 규격 문구(`"올바른 값이 아닙니다"`) 로 변환한다. Spring 내부 영문 메시지를 그대로 내보내지 않는다.
 - `GlobalExceptionHandler` 는 `HttpMessageNotReadableException`(역직렬화 실패: 잘못된 날짜·숫자) 의 JSON 경로를 `fieldErrors[].field` 로 변환한다 — 빈 fieldErrors 로 400 을 내지 않는다.
 - 감사 컬럼: `created_at, created_by, updated_at, updated_by` 를 모든 테이블에. MyBatis 인터셉터 또는 서비스에서 세팅.
 - 네이밍: 테이블·컬럼 `snake_case`, Java `camelCase`, `map-underscore-to-camel-case: true`.
