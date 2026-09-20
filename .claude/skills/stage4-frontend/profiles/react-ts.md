@@ -40,6 +40,11 @@ frontend/src/
 - react-router 데이터 라우터가 jsdom 의 `AbortSignal` 과 충돌 → 커스텀 환경(`src/test/jsdomEnvironment.ts`) 에서 Node 원본 `AbortController/AbortSignal` 유지.
 - jsdom `Blob` 에 `text()` 없음·`instanceof` 불일치 → 클라이언트에서 덕 타이핑 + `FileReader` 폴백.
 - `vitest/config` 는 `loadEnv` 를 재export 하지 않음 → `vite` 에서 import.
+- recharts: jsdom 에 `ResizeObserver` 없음 → `<ResponsiveContainer initialDimension={{width, height}}>` 로 목 없이 SVG 렌더 검증. 0건 막대는 생성되지 않고 눈금 텍스트는 빈 문자열 — 데이터 변환 함수 테스트로 보완.
+- `vi.stubGlobal('URL', {...})` 은 `new URL()` 을 깨뜨린다 → `Object.defineProperty(URL, 'createObjectURL', ...)` 로 메서드만 추가.
+- 테스트용 QueryClient 는 `retry: false`, `gcTime: 0` (5xx 재시도가 실패 토스트 테스트를 수 초 지연시킨다) — 골격 `createTestQueryClient()` 가 보장.
+
+- 무거운 라이브러리(차트·에디터·xlsx 파서)를 쓰는 화면은 라우트 `lazy()` + `build.rollupOptions.output.manualChunks` 로 분리 — 골격이 기본 설정을 둔다 (500 kB 청크 경고를 F-후보로 미루지 않는다).
 
 ## 규약
 - 공통 응답 `{ success, data, error }` 는 `client.ts` 가 언래핑해 `data` 만 반환, 실패는 `ApiError { code, message, status }` 로 throw.
