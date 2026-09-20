@@ -46,3 +46,7 @@
 | stage3 | 27건 중 24건 처리, 3건 보류(추상화 과잉·요구 근거 없음·배포 항목). xlsx 전환은 §12 결정에 따른 동작 변경으로 §3 원칙 예외 명시. 계약 4개 재생성 diff 가 의도한 변경만인지 검증함 | 정상. `stage3-common` §3 에 "brief §12 결정에 따른 기능 전환은 동작 변경 예외로 허용하되 레포트에 명시" 추가 |
 | stage3 | `-Pgroup` 이 Gradle 내장 `project.group` 과 충돌 → `startParameter.projectProperties` 로 읽음 | 프로필 openApiDump 설명에 `-PapiGroup=` 으로 이름 변경 권장 |
 | /refactor | stage3 가 blocked 인 채로 /refactor 를 먼저 돌림(RR-0008 이 게이트를 막으므로). 순서: stage3 변경 커밋 → refactor 병렬(common-auth 4건 ‖ book-loan 3건) → member 1건 → stage3 게이트 재확인 | `/refactor` 명령에 "blocked 단계의 원인 RR 이 있으면 그것을 첫 묶음으로" 규칙 추가 |
+| /refactor book-loan | RR-0005 동시성 결함이 testcontainers 로 **실제 재현**(잠금 제거 시 2건 성공) 후 수정 검증. `-Pmysql` 전용 테스트는 H2 에서 `@EnabledIfSystemProperty` 로 skip — "skip 금지" 규칙의 환경 조건부 예외 | pipeline-core §4 에 "환경 조건부 skip(도커 필요 등)은 조건과 사유가 어노테이션에 명시되고 해당 환경에서 실제 실행된 기록이 레포트에 있으면 허용" 예외 명문화 |
+| /refactor | Docker Desktop 이 꺼져 있어 에이전트가 직접 기동. bash `TZ=Asia/Seoul date` 가 Windows Git Bash 에서 시스템(KST) 을 UTC 로 오인해 타임스탬프 오류 | 모든 스킬의 타임스탬프 명령을 **python 한 줄**(`tools/kst_now.py` 신설) 로 통일. 환경 점검에 `docker info` 결과가 "실행 중" 이 아니면 기동 시도 |
+| /refactor common-auth | RR-0008 B안(파서 Clock 주입)은 골격에 생성자가 없어 불가 — 프로필 문서(내가 방금 추가)와 실제 골격 코드가 불일치 | 교훈 반영 시 "다음 프로젝트 골격" 과 "현재 프로젝트 후보(C-31)" 를 구분해 적어야 함. 프로필 변경은 현재 target 에 소급되지 않음 |
+| /refactor | 병렬 developer 2개가 같은 `build/test-results` 를 써서 `cleanTest` 잠금 충돌 2회 → 폴링 후 성공 | pipeline-core §6-6 에 "Gradle 은 `--project-cache-dir`/별도 `build` 디렉토리를 쓰거나, 전체 테스트는 웨이브 종료 후 오케스트레이터가 1회만" 으로 조정 |
