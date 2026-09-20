@@ -24,6 +24,9 @@ description: 5단계 통합 테스트 — slice별 통합 테스트 시나리오
 - BE: 테스트 프로파일로 기동, 시나리오 사전조건은 SQL 픽스처(`docs/test/fixtures/<slice>.sql`)로 세팅.
 - FE: Playwright(설치돼 있거나 설치 가능하면) 로 화면 조작. 불가하면 API 레벨(REST 호출)로 시나리오를 실행하고 FE 는 정적 검증.
 - 테스트 코드는 `<target_dir>/tests/integration/<slice>/` 에 저장 (재실행 가능해야 함).
+- **첫 slice 가 환경을 만든다**: `tests/integration/env-up.sh [--with-fe] [--skip-build]` / `env-down.sh` / `env.sh`(포트·계정) + `docs/test/README.md`. 이후 slice 는 README 대로 재사용. Playwright 는 `tests/integration/package.json` 에 격리 설치(프론트 `package.json` 은 공용 파일).
+- 포트는 개발 PC 의 8080/5173 이 점유될 수 있으므로 18080/5174 같은 대체값을 기본으로. Windows Git Bash 에서 기동 스크립트를 파이프(`| tee`)에 물리면 백그라운드 java 가 핸들을 물어 끝나지 않는다 — 파일 리다이렉트 + health 폴링.
+- 5단계는 open RR 중 "환경에서 확인 후 처리" 로 미룬 것(예: MySQL 한정 잠금 문제)을 **실측**해 severity 를 조정하고 evidence 를 보강한다.
 
 ## 3. 검증 항목 (시나리오별)
 - HTTP 상태·응답 스키마가 계약과 일치

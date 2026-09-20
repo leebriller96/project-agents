@@ -52,7 +52,7 @@ frontend/src/
 - 인증: 토큰 저장 위치는 brief 의 인증 방식에 따름. 기본은 httpOnly 쿠키(백엔드 발급). localStorage 저장은 brief 근거가 있을 때만.
 - 라우트: `/<slice>/...`. 페이지 컴포넌트 상단 주석에 화면ID·화면명.
 - 네이밍: 컴포넌트 PascalCase, 훅 `useXxx`, 파일은 컴포넌트명과 동일.
-- 폼 검증: zod 스키마를 `model/` 에 두고 react-hook-form 과 연결. 메시지는 한글.
+- 폼 검증: zod 스키마를 `model/` 에 두고 react-hook-form 과 연결. 메시지는 한글. 문자열 필수는 `.trim().min(1)` — `min(1)` 만 쓰면 공백만 통과해 BE `@NotBlank` 보다 느슨해진다.
 - 상태: 서버 데이터는 react-query 로만. 전역 zustand 는 인증·레이아웃(사이드바 등)만.
 - 에러: `ApiError` → 공통 토스트. 401 은 로그인으로, 403 은 권한 안내 페이지.
 - 스타일: UI 라이브러리 테마 토큰 사용. 인라인 스타일 지양.

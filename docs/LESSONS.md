@@ -67,3 +67,12 @@
 | stage4 stats | `vi.stubGlobal('URL', {...})` 이 `new URL()` 을 깨뜨림 → `defineProperty` 로 메서드만 추가. 골격 queryClient 의 5xx 재시도가 실패 토스트 테스트를 4초 지연 | 프로필: 테스트 QueryClient 는 `retry: false`(골격 `createTestQueryClient` 가 보장) |
 | /refactor FE | react-query `gcTime: 0` 은 observer 분리 후에만 작동 — 로그인 실패 시 폼이 남아 비밀번호 variables 잔존. developer 가 소스를 읽고 `reset()` 추가 + 역검증(gcTime 제거 시 테스트 실패 확인) | 프로필 규약 보강 |
 | /refactor FE | 3 slice 가 URL 정규화를 "필드 단위 safeParse, 실패 필드만 기본값" 으로 일관 구현 — stats 선반영 패턴을 참고 지시한 효과 | 3단계 2회차에서 `shared/` 헬퍼로 승격(F 후보) |
+
+## 2026-09-21 (오전) — stage5 통합 테스트
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage5 common-auth | 첫 slice 가 환경(MySQL 컨테이너·BE jar·vite preview·Playwright 격리)을 구성하고 `env-up.sh/env-down.sh` + `docs/test/README.md` 로 남김 → 이후 slice 재사용. 29분 소요 | `stage5-integration-test` §2 에 "첫 slice 가 환경 스크립트를 만들고 README 로 남긴다, Playwright 는 `tests/integration/package.json` 격리" 명문화 |
+| stage5 common-auth | 개발 PC 의 8080·5173 이 다른 프로세스에 점유 → 18080/5174 기본값. Git Bash 에서 `env-up.sh | tee` 하면 백그라운드 java 가 파이프 핸들을 물어 안 끝남 | 스킬 §2 에 포트 회피·파이프 금지 주의 추가 |
+| stage5 common-auth | **RR-0009 갭 잠금 실측**: 미존재 사번 로그인 워커 8개 부하 중 회원 등록 INSERT 가 1538ms(단독 68ms, 22.6배), 3s 부하면 기아. `performance_schema.data_locks` 로 X,GAP 459건 관측 → severity low→medium | 5단계가 "RR 의 실제 심각도 측정" 역할을 함을 확인. 프로필 동시성 규칙에 "미존재 키 `FOR UPDATE` 는 갭 잠금 → 존재 확인 후 잠금" 추가 |
+| stage5 common-auth | 정적 검증에서 FE zod `min(1)` 이 공백만 통과, BE `@NotBlank` 400 → FE 느슨(RR-0014). JDBC 세션 TZ 미고정으로 seed `NOW()` 와 앱 Clock 9시간 차(RR-0015, C-4 재확인) | `react-ts.md`: 문자열 필수 검증은 `.trim().min(1)`; 프로필 골격: JDBC URL 에 `serverTimezone=Asia/Seoul`(또는 `connectionTimeZone`) 고정 + Flyway seed 는 `CURRENT_TIMESTAMP` 대신 앱 시간대 명시 |
