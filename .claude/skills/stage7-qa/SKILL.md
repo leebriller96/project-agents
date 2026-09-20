@@ -1,30 +1,58 @@
 ---
 name: stage7-qa
-description: 7단계 QA 자동화 — 외부 repo qa-automation 의 test-automation 스킬 방법론으로 target_dir 의 통합 테스트를 자동 생성·실행하고 결함/위험을 리팩토링 요구서(RR)로 변환하는 방법론. /stage7 수행 시 사용.
+description: 7단계 QA 자동화 — 외부 repo qa-automation 의 test-automation 스킬 방법론(인벤토리→생성→실행→triage→결함/위험)으로 target_dir 의 통합 테스트를 자동 생성·실행하고 확정 결함/위험을 리팩토링 요구서(RR)로 변환하는 방법론. /stage7 수행 시 사용.
 ---
 
 # 7단계 QA 자동화 방법론
 
-목표: `qa-automation` 의 방법론으로 **도구가 스스로 도출한** 통합 테스트를 생성·실행하고 결함·잠재 위험을 RR 로 넘긴다. 5단계(우리가 쓴 시나리오)와 보완 관계다. 코드는 고치지 않는다.
+목표: `qa-automation` 의 방법론으로 **도구가 스스로 도출한** 통합 테스트를 생성·실행하고, triage 로 확정된 결함과 위험을 RR 로 넘긴다. 5단계(우리가 쓴 시나리오)와 보완 관계다. 서비스 코드는 고치지 않는다.
 
-## 1. 외부 스킬 로드
+## 1. 외부 스킬 로드 (항상 최신 것을 읽는다)
 1. `config/tools.yaml → qa_automation.path` 를 읽는다. 없으면 안내 후 중단.
-2. `<path>/<skill>` (SKILL.md), `<path>/CLAUDE.md`, `<path>/templates/report_template.md` 를 읽고 **그 방법론(서비스 인벤토리 → 환경 준비 → 생성 → 실행 → 결함/위험 분석, 모드, 등급 기준)** 을 따른다.
-3. 모드: 인자 `full|generate-only|run-only`. 기본 full. 실행 환경이 없으면 원 스킬 규칙대로 generate-only 폴백 + 사유 기록.
+2. `<path>/.claude/skills/test-automation/SKILL.md` 와 그 `references/` 전부, `<path>/CLAUDE.md`, `<path>/templates/report_template.md` 를 읽고
+   **그 방법론과 등급 체계를 그대로 따른다.** 이 문서는 project-agents 에 맞춘 차이점만 적는다 — 두 문서가 충돌하면 외부 스킬의 절차가 우선하고, 경로·산출물 위치는 이 문서가 우선한다.
+3. 모드: 인자 `full|generate-only|run-only`. 기본 full. 러너가 하나도 실행되지 않으면 외부 스킬 규칙대로 generate-only 폴백 + 사유 기록.
 
-## 2. 대상과 차이점
-- 대상은 `<target_dir>` 전체 (원 도구의 `input/` 대신). 복사하지 않는다.
-- 생성한 테스트는 `<target_dir>/tests/qa/<서비스>/` 에 둔다 (5단계의 `tests/integration/` 과 분리).
+## 2. 대상과 경로 차이
+- 대상은 `<target_dir>` 전체 (외부 도구의 `input/` 대신). 복사하지 않는다. 외부 도구의 `/qa full <대상경로>` 와 같은 의미.
+- 실행: `bash <path>/tools/run_tests.sh <target_dir 절대경로> [--timeout 초] [--keep]`
+  (Windows 는 Git Bash). 결과는 **외부 repo 의 `reports/.tests/`** 에 생긴다 → 실행 후 `summary.json`·`summary.md`·`cases.json`·`runs.tsv` 를
+  `workspace/reports/.tests/stage7/` 로 복사해 둔다. 레포트 수치는 반드시 `summary.json` 에서 가져온다 (직접 세지 않는다).
+- 집계만 다시 하려면 `python <path>/tools/summarize_results.py <path>/reports/.tests --target <target_dir>`.
+- 생성한 테스트는 `<target_dir>/tests/qa/<서비스>/` 에 둔다 (5단계의 `tests/integration/` 과 분리). 외부 스킬의 "생성 테스트 회수 안내" 는 불필요 — target_dir 이 곧 원본 저장소다.
+- full 모드는 기존 테스트(2·4단계 단위테스트, 5단계 통합테스트)도 함께 실행된다. 기존 테스트 실패도 결함 근거가 된다.
+
+## 3. 중복·특화 점검
 - 5단계 시나리오·결과(`docs/test/*-scenario.md`)와 open RR 을 먼저 읽어 **이미 알려진 결함은 중복 RR 을 만들지 않는다** (레포트에 "기존 RR-xxxx 와 동일" 표시).
-- 이 프로젝트에 특히 볼 것: slice 간 호출 경계, 트랜잭션 경계(부분 실패), 페이징·정렬 경계값, 동시성(재고 차감 등), 마이그레이션 재실행.
+- 이 프로젝트에서 특히 볼 것: slice 간 호출 경계, 트랜잭션 경계(부분 실패·미롤백), 페이징·정렬 경계값, 동시성(재고 차감 등), 마이그레이션 재실행, 공통 응답 포맷 계약 불일치.
 
-## 3. 레포트 → RR 변환
-1. 원 도구 형식 레포트를 `workspace/reports/<ts>_stage7_all_qa.md` (+html) 로 쓴다.
-2. 결함(실패 테스트)은 RR 필수. 잠재 위험은 등급 Major 이상만 RR, 그 이하는 레포트에만.
-   등급 매핑: Blocker→blocker, Critical/Major→high, Minor→medium, Trivial→low.
-3. `source_stage: 7`, `evidence` 에 실패 테스트명 + 파일:라인. `target_stage/layer` 는 원인 위치로.
+## 4. triage → RR 변환
+외부 스킬 §6 triage 를 거친 뒤에만 RR 을 만든다.
 
-## 4. 산출물 및 상태
-- 레포트(md+html), `tests/qa/`, RR 파일들
+| triage 결과 | 처리 |
+|---|---|
+| 서비스 결함 (재실행으로 확정) | RR 필수 |
+| 결함 추정(미확정) | RR 만들지 않음. 레포트에 "미확정 + 확정에 필요한 정보" |
+| 테스트 결함 | 테스트를 고쳐 재실행 (외부 규칙). RR 없음, 수정 이력 한 줄 |
+| 환경 문제 | RR 없음. 레포트 "실행 불가 사유" |
+| 플래키 | Risk 로 분류 (아래) |
+
+등급 매핑 (외부 CLAUDE.md 등급 → RR severity):
+
+| 외부 등급 | RR severity | RR 생성 |
+|---|---|---|
+| Blocker | blocker | 필수 |
+| Critical | high | 필수 |
+| Major | medium | 필수 |
+| Minor | low | 필수 |
+| Risk (잠재 위험) | low | `파일:라인` 근거가 있는 것만 (노출된 자격증명·트랜잭션 경계·계약 불일치·플래키). 나머지는 레포트에만 |
+
+- `source_stage: 7`, `evidence` 에 실패 테스트명 + `파일:라인` + summary.json 의 케이스 id. `target_stage/layer` 는 추정 원인 위치로.
+- ID 채번은 `python tools/rr.py new ...`.
+
+## 5. 산출물 및 상태
+- 레포트: 외부 `templates/report_template.md` 구조로 `workspace/reports/<ts>_stage7_all_qa.md` + `python tools/build_report.py` 로 html (생성 여부 확인).
+- 외부 스킬 §11 품질 자가 점검을 레포트 제출 전에 수행한다.
+- `workspace/reports/.tests/stage7/` (summary 복사본), `<target_dir>/tests/qa/`, RR 파일들
 - `state.yaml → stages.stage7_qa: done`
-- 사용자에게 결함/위험 건수·RR 목록·커버리지 공백을 보여주고 `/refactor` 안내
+- 사용자에게 두괄식 보고: 서비스 수, 생성/실행 테스트 수(summary.json 기준), 통과·실패·에러, 확정 결함 수(+미확정 수), RR 목록, 중복 제외 건수, Top 3 우선 조치, 커버리지 공백, 레포트 경로, `/refactor` 안내
