@@ -43,6 +43,8 @@ slice id 의 하이픈은 패키지에서 제거한다 (`common-auth` → `commo
   `@Pattern` 은 반드시 `^...$` 앵커를 명시 — Java 는 전체 일치지만 생성된 OpenAPI `pattern` 은 부분 일치로 해석되어 FE 검증과 어긋난다.
 - 카운터 갱신(실패 횟수·재고 등)은 읽기→덮어쓰기 금지. `SET col = col + 1` 원자 증가 또는 `SELECT ... FOR UPDATE` 후 갱신.
 - 한도 검증(1인 N권, N회 실패 등)은 **한도의 주체 행**(회원)을 `FOR UPDATE` 로 잠근 뒤 count 한다. 자원 행(도서)만 잠그면 같은 주체의 동시 요청이 한도를 넘는다.
+- **REPEATABLE READ 스냅숏 주의**: 잠금 뒤의 판정은 `FOR UPDATE` 조회가 **반환한** 행/집계(current read)로만 한다. 잠금 전에 읽은 값이나 잠금 없는 `COUNT(*)` 는 트랜잭션 시작 시점 스냅숏이라 상대 커밋을 못 본다 (MySQL 에서 실측: 잠금 → 일반 COUNT 는 여전히 경합 통과). 트랜잭션의 **첫 문장**을 잠금 조회로 두면 스냅숏이 잠금 이후에 잡혀 안전하다.
+- 집합 불변식(활성 관리자 ≥ 1 등)은 집합 전체를 **PK 순** `FOR UPDATE` 로 잠그고, 그 조건 컬럼에 인덱스를 둔다(없으면 전체 스캔 잠금).
 - 존재하지 않는 계정의 로그인도 더미 해시로 `matches` 를 1회 수행해 타이밍 채널을 없앤다.
 - 설정: `application.yml` + `application-local.yml`, 비밀값은 환경변수 참조 (`${DB_PASSWORD}`), 파일에 직접 쓰지 않는다.
 - Flyway: `db/migration` 을 `spring.flyway.locations` 로 지정. 골격 `V0001__baseline.sql`, slice 는 `V<yyMMddHHmm>__<slice>_*.sql`.
