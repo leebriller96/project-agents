@@ -48,6 +48,7 @@ slice id 의 하이픈은 패키지에서 제거한다 (`common-auth` → `commo
   계약 생성용 기동은 **test 프로파일(H2)** 로 하고(MySQL 불필요), `OpenApiConfig` 의 `servers` 는 상대경로 `/` 로 고정해 포트가 yaml 에 남지 않게 한다.
   H2 가 `testRuntimeOnly` 면 `bootRun` 으로는 못 띄우므로 **골격이 `openApiDump` Gradle 태스크**(test 런타임 클래스패스 JavaExec 로 기동 → `/v3/api-docs.yaml/<group>` 저장, `-Pport=`·`-Pgroup=` 인자)를 제공한다. slice 는 `./gradlew openApiDump -Pgroup=<slice> -Pport=1808N` 만 실행.
   springdoc 메모: 검색 조건 DTO 는 `@ParameterObject` 로 개별 query 파라미터 전개, query 파라미터 타입·설명은 `@Parameter`(필드의 `@Schema` 는 boolean 이 string 으로 나옴).
+  모든 엔드포인트에 `@Operation(operationId = "<slice>_<동작>")` 을 명시 — 자동 번호(`search_1`)는 4단계 타입 생성 시 이름이 불안정해진다.
 - Mapper 인터페이스 이름은 slice 간 빈 이름 충돌을 피해 `<Entity>Mapper` 는 테이블 소유 slice 만 쓰고, 다른 slice 가 같은 테이블을 읽으면 `<Slice><Entity>Mapper`(예: `MemberAdminMapper`).
 - JWT(jjwt 0.12+): 알고리즘을 `Jwts.SIG.HS256` 으로 **명시** (키 길이에 따라 HS384/512 로 자동 선택됨). 골격은 `Clock` 빈을 제공해 시간 의존 로직(잠금·만료)을 테스트에서 고정할 수 있게 한다.
 - 실패 카운터처럼 예외를 던지면서도 남겨야 하는 갱신은 `@Transactional(noRollbackFor = BusinessException.class)` 또는 `REQUIRES_NEW`.
@@ -65,6 +66,7 @@ Maven 이면 `./mvnw -q verify`, `-Dtest=...`.
 ## 단위테스트 규약
 - Service: Mockito 로 Mapper 를 목킹. `@DisplayName("REQ-011 재고 부족 시 주문 불가")`.
 - Mapper: `@MybatisTest` + testcontainers(mysql) 또는 H2 MySQL 모드. Flyway 로 스키마 적용.
+  다른 slice 소유 테이블의 테스트 데이터는 각 slice 가 JDBC 로 넣지 말고, 테이블 소유 slice 가 `src/test/resources/fixtures/<table>.sql` 을 제공하고 소비 slice 는 `@Sql` 로 읽는다.
   `@MybatisTest` 는 DataSource 를 임베디드로 교체하므로 `application-test.yml` 에 `spring.test.database.replace: none` 필수.
 - Controller: `@WebMvcTest` + MockMvc. 검증 실패·에러 응답 포맷 확인.
   `@WebMvcTest` 는 SecurityConfig 를 자동 스캔하지 않음 → `@Import({SecurityConfig, JwtTokenParser})` 표준 패턴을 골격이 `JwtTestSupport` 로 제공하고 slice 테스트는 그것을 쓴다.
