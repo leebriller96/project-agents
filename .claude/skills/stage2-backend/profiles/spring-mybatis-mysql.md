@@ -7,6 +7,8 @@
 - mybatis-spring-boot-starter, mysql-connector-j, flyway-core + flyway-mysql
 - springdoc-openapi-starter-webmvc-ui (계약 생성·확인용)
 - 테스트: spring-boot-starter-test, mybatis-spring-boot-starter-test, testcontainers(mysql) — 도커가 없으면 H2 `MODE=MySQL` 로 폴백하고 레포트에 명시
+  - **Docker Engine 29+ (API 1.55) 는 testcontainers ≥ 1.21.4 필요.** Boot 3.3 BOM 의 1.19.x 는 `NpipeSocketClientProviderStrategy ... Status 400` 으로 실패 → `gradle.properties` 또는 `ext["testcontainers.version"]="1.21.4"` 로 상향
+  - 기본 실행은 H2(빠름), `-Pmysql` 프로퍼티로 testcontainers 프로파일 전환하는 구성을 권장
 - lombok (선택, brief 컨벤션에 따름)
 
 ## 패키지 구조
@@ -53,4 +55,12 @@ Maven 이면 `./mvnw -q verify`, `-Dtest=...`.
 ## 단위테스트 규약
 - Service: Mockito 로 Mapper 를 목킹. `@DisplayName("REQ-011 재고 부족 시 주문 불가")`.
 - Mapper: `@MybatisTest` + testcontainers(mysql) 또는 H2 MySQL 모드. Flyway 로 스키마 적용.
+  `@MybatisTest` 는 DataSource 를 임베디드로 교체하므로 `application-test.yml` 에 `spring.test.database.replace: none` 필수.
 - Controller: `@WebMvcTest` + MockMvc. 검증 실패·에러 응답 포맷 확인.
+  `@WebMvcTest` 는 SecurityConfig 를 자동 스캔하지 않음 → `@Import({SecurityConfig, JwtTokenParser})` 표준 패턴을 골격이 `JwtTestSupport` 로 제공하고 slice 테스트는 그것을 쓴다.
+  JWT 필터는 `@Component` 로 두지 말고 SecurityConfig 안에서 직접 생성 (서블릿 필터 중복 등록 방지).
+
+## 골격 설계 메모 (병렬 개발 친화)
+- `ErrorCode` 는 **인터페이스**, slice 마다 `enum <Slice>ErrorCode implements ErrorCode` — 공용 enum 을 여러 slice 가 동시에 고치는 충돌을 없앤다.
+- springdoc 그룹을 slice 별로 미리 등록해 두면 slice 는 `docs/api/<slice>.yaml` 을 자기 그룹에서 뽑을 수 있다.
+- 소스 파일은 Write 도구로 작성 (Bash heredoc 다중 파일은 길이 제한으로 실패).
