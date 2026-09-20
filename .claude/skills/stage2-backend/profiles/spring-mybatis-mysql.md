@@ -72,7 +72,7 @@ Maven 이면 `./mvnw -q verify`, `-Dtest=...`.
 - Mapper: `@MybatisTest` + testcontainers(mysql) 또는 H2 MySQL 모드. Flyway 로 스키마 적용.
   다른 slice 소유 테이블의 테스트 데이터는 각 slice 가 JDBC 로 넣지 말고, 테이블 소유 slice 가 `src/test/resources/fixtures/<table>.sql` 을 제공하고 소비 slice 는 `@Sql` 로 읽는다.
   `@MybatisTest` 는 DataSource 를 임베디드로 교체하므로 `application-test.yml` 에 `spring.test.database.replace: none` 필수.
-- **시각 고정 테스트**: 발급·검증 양쪽이 같은 `Clock` 을 봐야 한다. 고정 시각으로 만든 토큰/만료값을 시스템 시계를 쓰는 파서(`Jwts.parser()`, `new JwtTokenParser()`)로 검증하면 실제 시각이 지난 뒤 실패하는 시간 폭탄이 된다. 골격 `JwtTokenParser` 는 Clock 주입 생성자를 제공한다.
+- **시각 고정 테스트**: 발급·검증 양쪽이 같은 `Clock` 을 봐야 한다. `@SpringBootTest` 통합 테스트는 `@TestConfiguration` 으로 `Clock.fixed` 빈을 override 하고, seed 데이터의 날짜는 상수가 아니라 그 Clock 기준 상대값(`LocalDate.now(clock).minusDays(n)`)으로 만든다. 고정 시각으로 만든 토큰/만료값을 시스템 시계를 쓰는 파서(`Jwts.parser()`, `new JwtTokenParser()`)로 검증하면 실제 시각이 지난 뒤 실패하는 시간 폭탄이 된다. 골격 `JwtTokenParser` 는 Clock 주입 생성자를 제공한다.
 - Controller: `@WebMvcTest` + MockMvc. 검증 실패·에러 응답 포맷 확인.
   `@WebMvcTest` 는 SecurityConfig 를 자동 스캔하지 않음 → `@Import({SecurityConfig, JwtTokenParser})` 표준 패턴을 골격이 `JwtTestSupport` 로 제공하고 slice 테스트는 그것을 쓴다.
   JWT 필터는 `@Component` 로 두지 말고 SecurityConfig 안에서 직접 생성 (서블릿 필터 중복 등록 방지).
