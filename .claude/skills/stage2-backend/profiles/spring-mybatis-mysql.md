@@ -16,8 +16,9 @@
 <base_package>/
 ├── common/
 │   ├── response/   ApiResponse<T>, PageResponse<T>
-│   ├── exception/  ErrorCode(enum), BusinessException, GlobalExceptionHandler
-│   ├── config/     WebConfig, MyBatisConfig, SecurityConfig, OpenApiConfig, ClockConfig(Clock 빈)
+│   ├── exception/  ErrorCode(인터페이스) + CommonErrorCode(enum), BusinessException, GlobalExceptionHandler
+│   │               (400 검증·404·405·406 NotAcceptable·415·500 을 모두 공통 포맷으로; 406 을 500 으로 뭉개지 않는다)
+│   ├── config/     WebConfig, MyBatisConfig, SecurityConfig, OpenApiConfig, ClockConfig(Clock 빈 — 시간대는 config/환경정보의 값으로 고정, slice 는 이 빈만 주입)
 │   ├── security/   JWT 필터·인증 유틸 (brief 에 인증 방식이 있을 때)
 │   ├── logging/    요청/응답 로깅 필터, MDC 트레이스 ID
 │   └── util/
