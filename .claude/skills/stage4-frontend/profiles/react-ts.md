@@ -31,6 +31,16 @@ frontend/src/
     └── __tests__/
 ```
 
+## 골격 설계 메모 (병렬 개발 친화)
+- **라우트 자동 등록**: `app/router.tsx` 가 `import.meta.glob('../features/*/routes.tsx', { eager: true })` 로 각 slice 의 `routes`/`publicRoutes` export 를 수집한다. slice 는 공용 파일을 한 줄도 수정하지 않는다.
+- 로그아웃·세션 복원처럼 골격이 자리만 만들고 slice 가 구현하는 것은 `registerLogoutHandler(fn)` 같은 **등록 훅**으로 연결한다.
+- `ApiError` 에 `fieldErrorMap()`(필드 오류 → react-hook-form `setError` 용), `api.download()`(첨부 파일 수신) 를 골격이 제공.
+
+## 알려진 문제 (vitest + jsdom)
+- react-router 데이터 라우터가 jsdom 의 `AbortSignal` 과 충돌 → 커스텀 환경(`src/test/jsdomEnvironment.ts`) 에서 Node 원본 `AbortController/AbortSignal` 유지.
+- jsdom `Blob` 에 `text()` 없음·`instanceof` 불일치 → 클라이언트에서 덕 타이핑 + `FileReader` 폴백.
+- `vitest/config` 는 `loadEnv` 를 재export 하지 않음 → `vite` 에서 import.
+
 ## 규약
 - 공통 응답 `{ success, data, error }` 는 `client.ts` 가 언래핑해 `data` 만 반환, 실패는 `ApiError { code, message, status }` 로 throw.
 - 인증: 토큰 저장 위치는 brief 의 인증 방식에 따름. 기본은 httpOnly 쿠키(백엔드 발급). localStorage 저장은 brief 근거가 있을 때만.

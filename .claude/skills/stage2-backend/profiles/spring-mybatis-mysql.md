@@ -52,6 +52,7 @@ slice id 의 하이픈은 패키지에서 제거한다 (`common-auth` → `commo
   계약 생성용 기동은 **test 프로파일(H2)** 로 하고(MySQL 불필요), `OpenApiConfig` 의 `servers` 는 상대경로 `/` 로 고정해 포트가 yaml 에 남지 않게 한다.
   H2 가 `testRuntimeOnly` 면 `bootRun` 으로는 못 띄우므로 **골격이 `openApiDump` Gradle 태스크**(test 런타임 클래스패스 JavaExec 로 기동 → `/v3/api-docs.yaml/<group>` 저장, `-Pport=`·`-Pgroup=` 인자)를 제공한다. slice 는 `./gradlew openApiDump -PapiGroup=<slice> -Pport=1808N` 만 실행 (`-Pgroup` 은 Gradle 내장 `project.group` 과 충돌).
   springdoc 메모: 검색 조건 DTO 는 `@ParameterObject` 로 개별 query 파라미터 전개, query 파라미터 타입·설명은 `@Parameter`(필드의 `@Schema` 는 boolean 이 string 으로 나옴).
+  응답 DTO 는 필수 필드에 `@Schema(requiredMode = REQUIRED)`(또는 Java record + `@NotNull`)를 붙여 계약의 `required` 가 채워지게 한다 — 없으면 4단계 생성 타입이 전부 optional 이 되어 FE 코드가 `?.` 투성이가 된다.
   모든 엔드포인트에 `@Operation(operationId = "<동사><명사>")` (예: `getBook`, `searchLoans`, `login`) 을 명시하고 springdoc 그룹 안에서 유일하게 — 자동 번호(`search_1`)는 4단계 타입 생성 시 이름이 불안정해진다.
 - Mapper 인터페이스 이름은 slice 간 빈 이름 충돌을 피해 `<Entity>Mapper` 는 테이블 소유 slice 만 쓰고, 다른 slice 가 같은 테이블을 읽으면 `<Slice><Entity>Mapper`(예: `MemberAdminMapper`).
 - JWT(jjwt 0.12+): 알고리즘을 `Jwts.SIG.HS256` 으로 **명시** (키 길이에 따라 HS384/512 로 자동 선택됨). 골격은 `Clock` 빈을 제공해 시간 의존 로직(잠금·만료)을 테스트에서 고정할 수 있게 한다.
