@@ -8,9 +8,16 @@
 security_auditor:
   path: C:/code-security-auditor
   skill: .claude/skills/security-audit/SKILL.md
-  command: /scan            # 원 repo 에서의 명령 (참고용)
-  sast_runner: tools/run_sast.sh
+  command: /scan            # /scan [hybrid|claude-only|sast-only]
+  sast_runner: tools/run_sast.py           # python <path>/tools/run_sast.py <target_dir>  (SEMGREP_CONFIGS, OSV_RESOLVE 환경변수)
+  sast_summarizer: tools/summarize_sast.py # 정규화 표 (원본 JSON 직접 읽지 않음)
+  sast_results_dir: reports/.sast          # 외부 repo 기준. 실행 후 workspace/reports/.sast/stage6/ 로 복사
+  exporter: tools/export_findings.py       # 레포트 md → .findings.json / .sarif  (RR 변환의 원천)
+  differ: tools/report_diff.py             # 이전/현재 레포트 비교 → 신규/잔존/해결
+  timestamp: tools/kst_now.py
+  auditignore_example: templates/auditignore.example   # <target_dir>/.auditignore 는 사람이 추가
   grades: [Critical, High, Medium, Low, Info]
+  confidence: [확실, 높음, 추정]
 
 qa_automation:
   path: C:/qa-automation
