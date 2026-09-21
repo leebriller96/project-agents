@@ -139,3 +139,12 @@
 | stage8 | `build_report.py` 가 mermaid 미포함 → html 에서 ERD·구성도가 코드로 보임 | `tools/build_report.py` 에 mermaid.js CDN + ```mermaid 블록 변환 추가(아래 반영). 두 subtree 의 build_report.py 도 동일 개선 후보 |
 | stage8 | `state.yaml` RR 카운터가 stale(iter7·8 미갱신) — `rr.py stats --write` 를 매 refactor 종료 시 호출하는 걸 빠뜨림 | `/refactor` 8항에 이미 있음 → 오케스트레이터 누락. `rr.py set` 이 done 처리 시 state 카운터를 자동 갱신하도록 도구 개선 |
 | 전체 | **library-sample 0~8단계 완료**: iteration 8, RR 42(done 41·rejected 1), BE 375·FE 341·통합 150·QA 53 tests, target 커밋 30개, project-agents 커밋 약 80개, LESSONS 약 90건, 총 에이전트 호출 약 70회 | 두 번째 샘플(차세대) 착수 — `docs/samples/sample2-migration-brief.md` |
+
+## 2026-09-21 (저녁) — secu-sample (차세대 migration) 1차 배치
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage0 migration | 요구사항 문서 0 → AS-IS 동작 계약에서 REQ 34 채번. 기능 계약 12+분기 44, 공통 인벤토리 73(사용처 0 = 10), SQL 인벤토리 18(A15/B1/C3/D1). **채점표 18/18 포착**, ⚠ 태그로 2단계 함정까지 사전 포착. §11 30건 | 방법론 유효. 두 에이전트 병렬(ingest ‖ sql-migrator) 후 수치 교차 대조가 자연스럽게 됨 — `/stage0` 명령에 "migration 이면 두 에이전트 병렬, 완료 후 statement 수 대조" 명시 |
+| stage0 migration | sql-migrator 가 카탈로그에 없는 구문 9개를 스킬에 직접 추가 — "에이전트가 방법론 파일을 갱신" 하는 첫 사례. 위험: 병렬 에이전트가 같은 파일을 고치면 충돌 | 규칙: 스킬 파일 자기 갱신은 `sql-migrator` 의 카탈로그 §2 표에만 허용, append 만, 오케스트레이터가 커밋 |
+| stage0 migration | 입력 소스에 운영 DB 비밀번호 평문(profile/prd1) — 에이전트가 값을 산출물에 복사하지 않고 위치만 기록 | `stage0-ingest` §2 에 "AS-IS 설정의 비밀값은 마스킹, 위치만" 명문화(6단계 규칙을 0단계로 앞당김) |
+| stage0 migration | §11 30건 중 slice 구조·접근 통제·인증 범위 결정이 stage1 을 막음 — 첫 샘플의 "2단계 전 결정" 이 migration 에서는 **1단계 전**으로 당겨짐 | `/stage0` 명령: migration 이면 stage0 종료 시 "stage1 전 결정 필요" 목록을 따로 제시 |
