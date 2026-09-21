@@ -148,3 +148,5 @@
 | stage0 migration | sql-migrator 가 카탈로그에 없는 구문 9개를 스킬에 직접 추가 — "에이전트가 방법론 파일을 갱신" 하는 첫 사례. 위험: 병렬 에이전트가 같은 파일을 고치면 충돌 | 규칙: 스킬 파일 자기 갱신은 `sql-migrator` 의 카탈로그 §2 표에만 허용, append 만, 오케스트레이터가 커밋 |
 | stage0 migration | 입력 소스에 운영 DB 비밀번호 평문(profile/prd1) — 에이전트가 값을 산출물에 복사하지 않고 위치만 기록 | `stage0-ingest` §2 에 "AS-IS 설정의 비밀값은 마스킹, 위치만" 명문화(6단계 규칙을 0단계로 앞당김) |
 | stage0 migration | §11 30건 중 slice 구조·접근 통제·인증 범위 결정이 stage1 을 막음 — 첫 샘플의 "2단계 전 결정" 이 migration 에서는 **1단계 전**으로 당겨짐 | `/stage0` 명령: migration 이면 stage0 종료 시 "stage1 전 결정 필요" 목록을 따로 제시 |
+| stage2 골격 (secu) | Boot 4.0.8 골격 51분·434k 토큰·180 tool call — 첫 샘플 골격의 2배. 원인: Maven 설치·wrapper 생성, Boot 4 패키지 이동·Jackson 3·Security 7 CSRF·Testcontainers 2 등 호환 이슈 8건을 전부 실측으로 해결 | 프로필 "알려진 주의" 에 실측 조합·패키지·CSRF 테스트 패턴 기록 → 다음엔 재발 없음. 골격은 1회성이라 허용 |
+| stage2 골격 (secu) | 에이전트가 permitAll 범위를 내 프롬프트(`GET /notices/**`)가 아니라 brief §12-A R11·기능 계약 FC-12(상세·첨부·분류만 공개, 목록은 인증)대로 결정 — 규약 우선순위 작동 | 정상 |
