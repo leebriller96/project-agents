@@ -18,4 +18,5 @@ argument-hint: "[all|<slice-id>] [hybrid|claude-only|sast-only] (기본 all hybr
    전달: target_dir 절대경로, 모드, 외부 스킬 경로, 이전 레포트 경로(있으면).
 6. 보고를 받아 `state.yaml` 갱신 (`done`), RR 집계 갱신(`python tools/rr.py stats --write`). blocker/high 가 있으면 log 에 "재점검 필요".
 7. 사용자에게: 모드와 도구 실행/실패/건너뜀, 심각도×확신도 건수, **RR 표**, 중복 제외 건수, (재점검) 신규/잔존/해결 수와 되돌린 RR, `.auditignore` 제안 줄(사람이 추가), 우선 조치 Top 3, 레포트(md/html/findings.json) 경로.
-8. 안내: RR 이 있으면 `/refactor` 후 `/stage6` 재실행(diff 검증), 없으면 `/stage7`.
+8. RR 중 **사양 결정이 필요한 것**(요구사항에 없는 기능 추가·정책 변경 — 예: 비밀번호 변경 기능, 토큰 폐기 정책, TLS)은 brief §12 결정 요청으로 사용자에게 옵션과 함께 제시하고, 결정 전에는 `/refactor` 에서 착수하지 않는다(RR description 에 "사업 결정 선행" 표시).
+9. 안내: RR 이 있으면 `/refactor` 후 `/stage6` 재실행(diff 검증), 없으면 `/stage7`.

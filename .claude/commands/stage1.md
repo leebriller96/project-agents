@@ -15,5 +15,5 @@ argument-hint: "[reslice] (재분류 시)"
 5. 보고를 받아 `state.yaml` 갱신: `stage1_slicing: done`, `slices` 에 새 slice 들을 `pending` 으로 추가(기존 항목 유지), log.
 6. 사용자에게 보여준다: slice 표(id·이름·priority·depends_on·엔티티/화면/API 수), 의존 그래프(텍스트), unassigned 목록, 애매했던 판단.
 7. **승인 요청**: "`workspace/slices/slices.yaml` 을 검토하고 `approved: true` 로 바꿔 주세요. 승인 전에는 `/stage2` 가 진행되지 않습니다."
-8. brief §11 중 **골격·마이그레이션·인증에 영향을 주는 항목**(인증 토큰 전달 방식, 공통코드 seed, 초기 계정, 삭제 방식, FK 정의 등)을 골라 "2단계 전 결정 필요" 로 함께 제시하고, 기본값 제안을 붙인다.
+8. brief §11 중 **골격·마이그레이션·인증에 영향을 주는 항목**(인증 토큰 전달 방식, 공통코드 seed, 초기 계정, 삭제 방식, FK 정의 등)과 **보안 사양 항목**(초기 비밀번호 정책·변경 기능, 토큰 폐기·세션 무효화, TLS/쿠키 Secure, 레이트 리밋)을 골라 "2단계 전 결정 필요" 로 함께 제시하고, 기본값 제안을 붙인다.
    사용자가 결정(또는 "기본값")하면 `PROJECT_BRIEF.md` **§12 결정 사항** 표에 기록한 뒤 `/stage2` 로 넘어간다.
