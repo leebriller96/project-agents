@@ -58,7 +58,7 @@
 - **Security 7 CSRF**: `csrf.spa()` 는 헤더를 원문 토큰으로 비교 → 테스트에서 `csrf().asHeader()`(XOR 마스킹) 는 403. 실제 쿠키/헤더 왕복(`realCsrf()` 패턴)으로 테스트. 로그인 후 재발급 CSRF 쿠키는 지연 생성이라 컨트롤러에서 `getToken()` 1회 호출.
 - `SpringApplicationBuilder.properties()` 는 yml 에 덮인다 → 포트는 `--server.port` 명령행 인자.
 - 계약 yaml 한글 깨짐 → 바이트로 저장 + `springdoc.default-produces-media-type`. 계약 생성: `./mvnw -q -pl server/<app> -am -DskipTests test-compile exec:exec@openApiDump -DapiGroup=<slice> -Dport=1809N`.
-- `mvn` CLI 없으면 Maven 바이너리를 `C:	oolspache-maven` 에 받아 `mvn -N wrapper:wrapper` 로 `mvnw` 생성(이후 `./mvnw` 만). 첫 골격은 의존성 다운로드 포함 **약 50분** — 예산에 반영.
+- `mvn` CLI 없으면 Maven 바이너리를 `C:/tools/apache-maven` 에 받아 `mvn -N wrapper:wrapper` 로 `mvnw` 생성(이후 `./mvnw` 만). 첫 골격은 의존성 다운로드 포함 **약 50분** — 예산에 반영.
 - `@WebMvcTest` 는 `@Import({SecurityConfig, MenuAuthorizationManager})` + `authentication(LoginUser)`; DTO 는 record 그대로 `resultType`.
 
 ## 알려진 주의
