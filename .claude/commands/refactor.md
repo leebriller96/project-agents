@@ -19,6 +19,8 @@ argument-hint: "[RR-0001,RR-0002 | slice:<id> | stage:<n> | layer:<backend/mappe
    - `target_stage: 3` → `common-refactorer` → `backend-reviewer`(common).
    - `target_stage: 4` → `frontend-developer` 를 `refactor <RR-id 목록>` 으로 호출 → `frontend-reviewer`.
    각 호출 전 해당 RR 을 `in_progress` 로 바꾼다(`python tools/rr.py set <id> in_progress`).
+   - 여러 slice·공용 파일에 걸친 **문서 RR**(추적표·4분류표 정합 묶음)은 항목을 소유 slice 별로 쪼개 각 developer/common-refactorer 프롬프트에 배정하고, 전부 끝난 뒤 오케스트레이터가 RR 을 닫는다(한 파일을 두 에이전트가 만지지 않게).
+   - developer 에게 라이브러리 동작(정제기·파서 등)을 단정해 지시하지 말고 기대 결과("정제 후 비면 400")만 준다 — 실측이 다르면 developer 가 규약 우선으로 바로잡는다.
 6. 결과 반영: developer 가 `done` 으로 바꾼 RR 을 확인. stage 3 공용 기반이 후속 stage 2 RR 을 자동 해결했다고 보고하면(evidence 경로의 동작을 테스트로 증명한 경우) 그 RR 은 developer 호출 없이 `done` 으로 인정하고 note 에 "공용 기반으로 해결" 을 남긴다. reviewer FAIL 잔여 지적은 새 RR 로 남기고 원 RR 은 그대로 `in_progress` 유지 + 사용자 보고.
 6-1. target_stage 2 반영으로 `docs/api/<slice>.yaml` 이 재생성됐으면 **같은 회차에** `frontend-developer` 에게 `gen:api` 재생성(+ 타입 변화에 따른 FE 수정) 작업을 자동으로 추가한다. 계약 설명(`@Operation`·`@Tag`)도 §12 정책 변경 시 stale 여부를 grep 한다.
 7. 영향받은 slice 의 후속 단계 상태를 되돌린다: target_stage 2 반영 → 그 slice 의 `stage5_integration: pending` (stage4 는 계약이 바뀐 경우에만 pending). target_stage 4 반영 → `stage5_integration: pending`. target_stage 3 → 전 slice `stage5_integration: pending`. `stage6_security`·`stage7_qa` 는 어떤 반영이든 `pending`.
