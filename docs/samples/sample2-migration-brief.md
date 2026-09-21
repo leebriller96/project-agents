@@ -40,3 +40,17 @@
 3. **변환 규칙을 brief §12 에 사전 기록**: 위 표의 각 행이 "소스가 들어왔을 때 어떻게 바꿀지" 규칙. 소스 없는 행은 "범위 외(소스 미입력)".
 4. **workspace 격리**: 현재 `workspace/` 는 단일 프로젝트 구조 → `workspace/<project>/` 로 바꾸고 library-sample 을 그 아래로 이동(pipeline-core·tools 경로 갱신). 두 번째 샘플 착수 시 첫 작업.
 5. 입력으로 받을 것: AS-IS 소스(일부라도 — 예: 업무 1~2개의 컨트롤러·서비스·매퍼·ftl·DDL), TO-BE 요구/화면 자료(있으면), 위 표(→ `04_환경정보`·`§12` 원천).
+
+## 사용자가 지목한 난제 2가지 (2026-09-21)
+
+### 1) Oracle 쿼리 → MySQL 완벽 변환 + SqlSession → Mapper
+- AS-IS 는 **전부 Oracle** 대상 쿼리였음(표의 "DB: MySQL" 은 현 운영이 아니라 드라이버 병존 표기). **Oracle 인스턴스·덤프 없음 → 정적 카탈로그 방식** 확정.
+- AS-IS 는 `sqlSession.selectList("ns.id")` 직접 호출이라 없는 id 가 컴파일에 안 잡힘 → TO-BE Mapper 는 전부 존재해야 함.
+- 설계: (a) 0단계 **SQL 호출 인벤토리** — Java 리터럴/문자열 조합 ↔ XML statement 전수, 4분류(호출·정의 / 호출·미정의=RR high / 정의·미호출=dead / 동적 id=수동); (b) 2단계 **방언 카탈로그 매핑표** — statement 마다 Oracle 구문 → MySQL 8.4 등가 또는 앱 로직 이전 + **의미 차이 태그**(''=NULL, SUBSTR/INSTR, 날짜 산술·TRUNC, NULLS FIRST/LAST, 암묵 형변환, 식별자 대소문자, ROWNUM 페이징 순서); (c) 5단계 **등가성 검증** — 정적 카탈로그 + MySQL 실행 + 의미 차이 태그 항목은 경계값 fixture(빈 문자열·NULL·월말·대소문자·중복 순서) 집중; (d) Mapper 게이트 — 인터페이스 ↔ XML id ↔ 호출처 3자 일치, resultMap 컬럼(Oracle 대문자) 매핑, MyBatis 3.4→3.5.
+- 구현: 신규 스킬 `migration-sql`(카탈로그 고정 표 + 프로젝트별 누적), 에이전트 `sql-migrator`(2단계 B-2 에서 backend-developer 가 호출하거나 별도 웨이브).
+
+### 2) 기능 무손실 + 공통 선별 계승
+- "손실 없음" 은 기준이 있어야 검증 가능 → 0단계 **기능 인벤토리 → 동작 계약**(엔드포인트/ftl/배치마다 입력→SQL→출력) 을 먼저 고정하고, 5단계 시나리오를 **AS-IS 기준으로 먼저** 작성(특성화 테스트).
+- 3단계 migration 모드 **공통 클래스 4분류표**: 계승 / 대체(TO-BE 프레임워크 기능 — LoginCheckInterceptor→Spring Security, lucy-xss→서버 검증기, dbcp→Hikari) / 개선(요구 근거) / 폐기(dead 근거) + 대체·개선 시 동작 차이 명시.
+- **기능 추적표 게이트**: AS-IS 프로그램 → TO-BE 구현 → 특성화 테스트 100% 연결이 slice done 조건. "미이관" 은 폐기 결정 없이 완료 불가.
+- 동작 차이는 §12 결정(요구 근거) 있을 때만 허용, 없으면 RR.
