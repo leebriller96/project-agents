@@ -130,3 +130,12 @@
 | stage7 | 소요 48분·421k 토큰·128 tool call — 단일 단계 최대. 1,351건 실행 + 우회 작업 | 대규모면 7단계도 "기존 테스트 실행" 과 "신규 생성·triage" 를 두 에이전트로 분할 검토 |
 | refactor iter8 | RR-0041: 내 지시 "URL socketTimeout=30000, 10초 내" 가 실측과 어긋남 — (1) URL 파라미터는 테스트가 URL 을 통째로 바꾸면 무효 → Hikari 프로퍼티, (2) 실패까지 ≈ socketTimeout×2(5회 실측), (3) statement timeout 은 무응답에 무효, (4) MyBatis-Spring 예외 변환기가 첫 예외 때 메타데이터 커넥션을 새로 얻어 +12초 → 선적재. developer 가 전부 실측으로 잡음 | 프로필 정정. "타임아웃 값은 반드시 정지 시나리오로 실측해 결정" 규칙 |
 | 외부 도구 | qa-automation `run_tests.sh` 버그 3종을 project-agents 에서 고쳐 **subtree push 로 upstream 반영**(`39f351e`). 이후 upstream 은 `sync-external.sh` 로 | 마스터 repo 워크플로 확립: 도구 버그 → external/ 수정 → `tools/push-external.sh` |
+
+## 2026-09-21 (오후) — stage8·library-sample 완료
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage8 | 12종 생성(md 2,688행). 04·05 는 마이그레이션·OpenAPI 를 스크립트 파싱. 08 은 재실행 현재 값. RTM 끊김 6건은 전부 "요구 자체가 범위 밖/비기능"(REQ-025 제외, NFR-001 부하, NFR-005 Edge) — 코드 누락 0 | 정상. `@DisplayName` REQ 표기율 130/378(34%) → 프로필 테스트 규약에 "REQ 를 다루는 테스트는 DisplayName 에 ID 필수" 를 게이트(reviewer §D-5)로 승격 |
+| stage8 | `build_report.py` 가 mermaid 미포함 → html 에서 ERD·구성도가 코드로 보임 | `tools/build_report.py` 에 mermaid.js CDN + ```mermaid 블록 변환 추가(아래 반영). 두 subtree 의 build_report.py 도 동일 개선 후보 |
+| stage8 | `state.yaml` RR 카운터가 stale(iter7·8 미갱신) — `rr.py stats --write` 를 매 refactor 종료 시 호출하는 걸 빠뜨림 | `/refactor` 8항에 이미 있음 → 오케스트레이터 누락. `rr.py set` 이 done 처리 시 state 카운터를 자동 갱신하도록 도구 개선 |
+| 전체 | **library-sample 0~8단계 완료**: iteration 8, RR 42(done 41·rejected 1), BE 375·FE 341·통합 150·QA 53 tests, target 커밋 30개, project-agents 커밋 약 80개, LESSONS 약 90건, 총 에이전트 호출 약 70회 | 두 번째 샘플(차세대) 착수 — `docs/samples/sample2-migration-brief.md` |

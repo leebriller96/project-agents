@@ -147,6 +147,15 @@ def cmd_set(args):
         d["resolution_note"] = args.note
     dump(path, d)
     print(f"{args.id} → {args.new_status}")
+    # 상태가 바뀌면 state.yaml 의 집계도 함께 갱신한다 (오케스트레이터가 stats --write 를 빠뜨려도 stale 되지 않게)
+    if os.path.exists(STATE):
+        counts = {s: 0 for s in STATUSES}
+        for p2 in rr_files():
+            s2 = load(p2).get("status", "open")
+            counts[s2 if s2 in counts else "open"] += 1
+        st = load(STATE)
+        st["refactor_requests"] = counts
+        dump(STATE, st)
 
 
 def cmd_stats(args):
