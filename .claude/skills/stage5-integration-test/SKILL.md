@@ -40,6 +40,9 @@ description: 5단계 통합 테스트 — slice별 통합 테스트 시나리오
 - slice 간 규약 일관성(생성 상태코드, 에러 포맷, 페이징) 도 대조한다 — 단일 slice 안에서는 일치해도 slice 간에 다를 수 있다.
 - FE 폼 검증 규칙 ↔ BE DTO 검증 규칙 대조 (FE 가 더 느슨하면 medium, BE 가 더 느슨하면 high).
 
+- 시각 의존 결함(월 경계·자정·UTC/KST 창)은 "재현 창(시각 범위)" 을 시나리오·README 에 명시한다. 자동 실행이 창 밖이면 통과해도 결함이 없는 게 아니다.
+- 과거 이력처럼 API 로 만들 수 없는 fixture 는 타 slice 소유 테이블에 SQL INSERT 를 허용하되 fixture 파일·시나리오에 사유를 적는다.
+
 ## 5. RR 도출
 - 실패 시나리오·불일치마다 RR 1개. `source_stage: 5`, `evidence` 에 시나리오 ID + 실패 로그/파일:라인.
 - `target_stage`/`target_layer` 판단: 응답·DB 문제 → 2/backend/*, 표시·검증 문제 → 4/frontend/*, 공통 포맷 문제 → 3/common, 계약 자체 문제 → 2/backend/api.
