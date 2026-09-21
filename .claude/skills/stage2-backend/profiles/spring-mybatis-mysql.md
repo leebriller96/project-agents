@@ -36,7 +36,8 @@ slice id 의 하이픈은 패키지에서 제거한다 (`common-auth` → `commo
 - 에러 코드: `<SLICE>_<3자리>`. `ErrorCode` enum 에 HTTP 상태를 함께 정의.
 - 페이징: 요청 `page`(1부터)·`size`, 응답 `PageResponse { items, page, size, total }`.
 - 상태 코드: 생성 `POST` 는 **201** 로 통일(`@ResponseStatus(CREATED)`), 행위 동사 경로(`/return`, `/extend`)는 200. slice 마다 달라지지 않도록 CONVENTIONS 에 명시.
-- LIKE 검색: 사용자 입력의 `%`·`_`·`\` 를 이스케이프하고 `LIKE ... ESCAPE '\'` 로 — 골격 `common/util/SqlLike.escape()` 제공, Mapper XML 은 `CONCAT('%', #{kw}, '%')` 에 이스케이프된 값만 바인딩.
+- LIKE 검색: 사용자 입력의 `%`·`_`·이스케이프 문자를 이스케이프하고 `LIKE ... ESCAPE '!'` 로 — 골격 `common/util/SqlLike.escape()` 제공, Mapper XML 은 `CONCAT('%', #{kw}, '%')` 에 이스케이프된 값만 바인딩.
+  이스케이프 문자는 **`!`** 를 쓴다: `ESCAPE '\'` 는 MySQL 만, `ESCAPE ''` 는 H2 만 동작해 같은 XML 을 테스트/운영에 쓸 수 없다(실측).
 - 검색 조건 DTO 의 문자열 필드는 골격이 제공하는 trim 처리(예: `@InitBinder` `StringTrimmerEditor` 또는 DTO setter)로 **전 slice 동일**하게 앞뒤 공백을 제거한다 — slice 마다 다르면 5단계에서 불일치로 잡힌다.
 - `GlobalExceptionHandler` 는 타입 변환 실패(`MethodArgumentTypeMismatchException`, `page=abc`)와 enum 외 값도 한글 규격 문구(`"올바른 값이 아닙니다"`) 로 변환한다. Spring 내부 영문 메시지를 그대로 내보내지 않는다.
 - `GlobalExceptionHandler` 는 `HttpMessageNotReadableException`(역직렬화 실패: 잘못된 날짜·숫자) 의 JSON 경로를 `fieldErrors[].field` 로 변환한다 — 빈 fieldErrors 로 400 을 내지 않는다.
@@ -49,7 +50,8 @@ slice id 의 하이픈은 패키지에서 제거한다 (`common-auth` → `commo
 - 카운터 갱신(실패 횟수·재고 등)은 읽기→덮어쓰기 금지. `SET col = col + 1` 원자 증가 또는 `SELECT ... FOR UPDATE` 후 갱신.
 - 한도 검증(1인 N권, N회 실패 등)은 **한도의 주체 행**(회원)을 `FOR UPDATE` 로 잠근 뒤 count 한다. 자원 행(도서)만 잠그면 같은 주체의 동시 요청이 한도를 넘는다.
 - 미존재 키에 대한 `FOR UPDATE` 는 InnoDB **갭 잠금**을 걸어 그 범위의 INSERT 를 막는다(실측: 미존재 사번 로그인 부하 중 회원 등록 22배 지연). 존재 여부를 먼저 일반 조회로 확인하고, 존재할 때만 잠금 조회한다.
-- JDBC URL 에 세션 시간대를 고정한다(`connectionTimeZone=Asia/Seoul&forceConnectionTimeZoneToSession=true`). Flyway seed 의 `NOW()` 는 서버 TZ 를 따르므로 앱 `Clock` 과 어긋날 수 있다 — 감사 컬럼 seed 는 명시 값 또는 `CONVERT_TZ`.
+- JDBC URL 에 세션 시간대를 고정한다(`connectionTimeZone=Asia/Seoul&forceConnectionTimeZoneToSession=true`). 명명 TZ 는 MySQL 시간대 테이블이 없으면 접속이 실패하므로 배포 가이드에 `mysql_tzinfo_to_sql` 적재를 명시(공식 이미지는 기본 적재).
+- 쿼리 파라미터 trim 은 골격 `@ControllerAdvice` + `StringTrimmerEditor(false)` 로 전 slice 자동 적용. Flyway seed 의 `NOW()` 는 서버 TZ 를 따르므로 앱 `Clock` 과 어긋날 수 있다 — 감사 컬럼 seed 는 명시 값 또는 `CONVERT_TZ`.
 - **REPEATABLE READ 스냅숏 주의**: 잠금 뒤의 판정은 `FOR UPDATE` 조회가 **반환한** 행/집계(current read)로만 한다. 잠금 전에 읽은 값이나 잠금 없는 `COUNT(*)` 는 트랜잭션 시작 시점 스냅숏이라 상대 커밋을 못 본다 (MySQL 에서 실측: 잠금 → 일반 COUNT 는 여전히 경합 통과). 트랜잭션의 **첫 문장**을 잠금 조회로 두면 스냅숏이 잠금 이후에 잡혀 안전하다.
 - 집합 불변식(활성 관리자 ≥ 1 등)은 집합 전체를 **PK 순** `FOR UPDATE` 로 잠그고, 그 조건 컬럼에 인덱스를 둔다(없으면 전체 스캔 잠금).
 - 존재하지 않는 계정의 로그인도 더미 해시로 `matches` 를 1회 수행해 타이밍 채널을 없앤다.
