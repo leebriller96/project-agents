@@ -26,3 +26,5 @@ AS-IS 샘플 소스(24 파일) 에 의도적으로 심은 함정. 파이프라�
 
 
 **0단계 채점**: 0단계 대상 함정 18/18 포착(2단계 대상 4~10 은 ⚠ 태그로 사전 포착). 카탈로그 신규 9행·태그 2종. §11 30건 중 사람 확인 필요 항목이 stage1 전 결정 대상(11-07/09/10 접근 통제, 11-16/19/20 스키마·slice 구조, 11-25 인증 범위).
+
+**2단계(sql-convert) 채점**: 4 TIE_ORDER→PK tie-breaker+기본 정렬 ✅ / 5 EMPTY_NULL·CONCAT_NULL→NULLIF·TITLE_DISP 폐기 ✅ / 6 SUBSTR0→컬럼 폐기(소비 0) ✅ / 7 MERGE_KEY→PK 신설+단순 UPDATE(NOT MATCHED 도달 불가) ✅ / 8 NULL_ORDER 명시 ✅ / 9 SEQ→useGeneratedKeys ✅ / 10 `${sortColumn}`→enum 화이트리스트 ✅ / 11 M-38 이름 변환 ✅. 매핑표 19/19 행, statement 18 전부 테스트, ⚠ 경계값 MySQL 실측(GROUP_CONCAT 절단 실제 재현 → C-04). 카탈로그 +4행.
