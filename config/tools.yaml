@@ -1,12 +1,12 @@
 # 외부 도구 연동 설정
-# 보안 점검(6단계)·QA 자동화(7단계)는 별도 repo 의 스킬을 그대로 사용한다.
-# 각 단계 에이전트는 실행 시점에 아래 경로의 SKILL.md(및 references/)를 읽어 최신 방법론을 따르고,
-# 결과 레포트를 workspace/reports/ 로 가져온 뒤 리팩토링 요구서로 변환한다.
-# → 외부 repo 를 업데이트하면 자동으로 반영된다. 단, 파일 경로·모드·등급 체계가 바뀌면
+# 보안 점검(6단계)·QA 자동화(7단계)는 external/ 아래에 git subtree 로 편입된 도구 repo 를 그대로 사용한다.
+# → project-agents 하나만 clone 하면 된다. 경로는 이 repo 루트 기준 상대경로.
+# 업데이트: `bash tools/sync-external.sh` (git subtree pull --squash). 파일 경로·모드·등급 체계가 바뀌면
 #    .claude/skills/stage6-security, stage7-qa 의 "차이점" 절과 등급 매핑 표를 함께 갱신할 것.
+# 각 도구의 파이썬 의존성: `python -m pip install -r external/<도구>/tools/requirements.txt`
 
 security_auditor:
-  path: C:/code-security-auditor
+  path: external/code-security-auditor   # git subtree (upstream: https://github.com/leebriller96/code-security-auditor)
   skill: .claude/skills/security-audit/SKILL.md
   command: /scan            # /scan [hybrid|claude-only|sast-only]
   sast_runner: tools/run_sast.py           # python <path>/tools/run_sast.py <target_dir>  (SEMGREP_CONFIGS, OSV_RESOLVE 환경변수)
@@ -20,7 +20,7 @@ security_auditor:
   confidence: [확실, 높음, 추정]
 
 qa_automation:
-  path: C:/qa-automation
+  path: external/qa-automation   # git subtree (upstream: https://github.com/leebriller96/qa-automation)
   skill: .claude/skills/test-automation/SKILL.md
   references: .claude/skills/test-automation/references/   # fixture-patterns.md 등
   command: /qa              # /qa [full|generate-only|run-only] [대상경로]

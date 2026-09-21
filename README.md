@@ -37,7 +37,7 @@ project-agents/
 ├── docs/DESIGN.md            # 상세 설계 · 열린 질문
 ├── config/
 │   ├── project.yaml.example  # 프로젝트 설정 (스택·모드·대상 repo 경로)
-│   └── tools.yaml            # 외부 도구(code-security-auditor, qa-automation) 경로
+│   └── tools.yaml            # 외부 도구 경로 (external/ 상대경로)
 ├── .claude/
 │   ├── commands/             # /stage0 … /stage8, /refactor, /status (오케스트레이터)
 │   ├── agents/               # 서브에이전트 11개 (ingest-analyst, slice-planner, backend-developer/reviewer,
@@ -45,7 +45,8 @@ project-agents/
 │   │                         #   security-auditor, qa-runner, deliverable-writer)
 │   └── skills/               # pipeline-core(공통 규칙) + 단계별 방법론 + 스택 프로필
 ├── templates/                # state·slices·PROJECT_BRIEF·리팩토링 요구서·테스트 시나리오 템플릿
-├── tools/                    # rr.py(요구서 관리), status.py(상태 요약), build_report.py(md→html)
+├── tools/                    # rr.py(요구서 관리), status.py(상태 요약), build_report.py(md→html), sync-external.sh
+├── external/                 # git subtree: qa-automation, code-security-auditor
 └── workspace/                # 프로젝트별 작업 공간 (커밋하지 않음)
     ├── 00_inputs/            # 0단계 정적 문서·AS-IS 소스
     ├── knowledge/            # PROJECT_BRIEF.md 등 요약 지식
@@ -98,9 +99,13 @@ cp config/project.yaml.example config/project.yaml   # 프로젝트명·모드·
 API 명세서, 화면 정의서, 공통 모듈 명세, 단위/통합/보안/QA 결과서, (차세대) AS-IS/TO-BE 매핑표, 빌드·배포·운영 가이드.
 형식은 md 원본 + html (`tools/build_report.py`), 필요 시 docx.
 
-## 관련 도구
+## 외부 도구 (external/ — git subtree)
 
-- [code-security-auditor](https://github.com/leebriller96/code-security-auditor) — 6단계 보안 점검
-- [qa-automation](https://github.com/leebriller96/qa-automation) — 7단계 QA 자동화
+6·7단계가 쓰는 도구 repo 는 `external/` 아래에 **git subtree** 로 편입되어 있어 이 repo 하나만 clone 하면 된다.
+
+- `external/code-security-auditor` ← [code-security-auditor](https://github.com/leebriller96/code-security-auditor) — 6단계 보안 점검
+- `external/qa-automation` ← [qa-automation](https://github.com/leebriller96/qa-automation) — 7단계 QA 자동화
+
+upstream 갱신: `bash tools/sync-external.sh [qa|security]`. 의존성: `python -m pip install -r external/<도구>/tools/requirements.txt`.
 
 상세 설계와 아직 결정되지 않은 사항은 [docs/DESIGN.md](docs/DESIGN.md) 참고.

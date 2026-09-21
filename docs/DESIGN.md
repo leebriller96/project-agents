@@ -83,4 +83,4 @@ slice 재분류가 필요한 경우만 1단계로 간다. 반복 회차(`iterati
 - 실제 프로젝트로 stage0→stage2 를 한 번 돌려 스킬 문구·게이트 명령이 현실과 맞는지 검증 (첫 실전 후 프로필 보정)
 - `tools/report_to_rr.py`: 6·7단계 외부 도구 레포트를 RR 로 자동 변환 (지금은 에이전트가 직접 `rr.py new` 로 생성)
 - 다른 스택 프로필 추가 (예: `spring-jpa-postgres`, `node-nest`, `vue-ts`)
-- 두 외부 도구를 Claude Code 플러그인으로 묶어 경로 설정 없이 쓰는 방안
+- ~~두 외부 도구를 Claude Code 플러그인으로 묶어 경로 설정 없이 쓰는 방안~~ → 2026-09-21 git subtree 로 `external/` 에 편입 (`tools/sync-external.sh` 로 갱신)

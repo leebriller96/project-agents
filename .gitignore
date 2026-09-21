@@ -22,3 +22,7 @@ __pycache__/
 .DS_Store
 .venv/
 venv/
+
+# external/ subtree 도구의 실행 산출물 (각 도구의 .gitignore 도 적용됨)
+external/*/reports/.sast/
+external/*/reports/.tests/

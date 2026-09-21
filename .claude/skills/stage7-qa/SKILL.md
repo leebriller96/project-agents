@@ -1,6 +1,6 @@
 ---
 name: stage7-qa
-description: 7단계 QA 자동화 — 외부 repo qa-automation 의 test-automation 스킬 방법론(인벤토리→생성→실행→triage→결함/위험)으로 target_dir 의 통합 테스트를 자동 생성·실행하고 확정 결함/위험을 리팩토링 요구서(RR)로 변환하는 방법론. /stage7 수행 시 사용.
+description: 7단계 QA 자동화 — external/qa-automation(subtree) 의 test-automation 스킬 방법론(인벤토리→생성→실행→triage→결함/위험)으로 target_dir 의 통합 테스트를 자동 생성·실행하고 확정 결함/위험을 리팩토링 요구서(RR)로 변환하는 방법론. /stage7 수행 시 사용.
 ---
 
 # 7단계 QA 자동화 방법론
@@ -16,7 +16,7 @@ description: 7단계 QA 자동화 — 외부 repo qa-automation 의 test-automat
 ## 2. 대상과 경로 차이
 - 대상은 `<target_dir>` 전체 (외부 도구의 `input/` 대신). 복사하지 않는다. 외부 도구의 `/qa full <대상경로>` 와 같은 의미.
 - 실행: `bash <path>/tools/run_tests.sh <target_dir 절대경로> [--timeout 초] [--keep]`
-  (Windows 는 Git Bash). 결과는 **외부 repo 의 `reports/.tests/`** 에 생긴다 → 실행 후 `summary.json`·`summary.md`·`cases.json`·`runs.tsv` 를
+  (Windows 는 Git Bash). 결과는 **`external/qa-automation/reports/.tests/`**(gitignore) 에 생긴다 → 실행 후 `summary.json`·`summary.md`·`cases.json`·`runs.tsv` 를
   `workspace/reports/.tests/stage7/` 로 복사해 둔다. 레포트 수치는 반드시 `summary.json` 에서 가져온다 (직접 세지 않는다).
 - 집계만 다시 하려면 `python <path>/tools/summarize_results.py <path>/reports/.tests --target <target_dir>`.
 - 생성한 테스트는 `<target_dir>/tests/qa/<서비스>/` 에 둔다 (5단계의 `tests/integration/` 과 분리). 외부 스킬의 "생성 테스트 회수 안내" 는 불필요 — target_dir 이 곧 원본 저장소다.

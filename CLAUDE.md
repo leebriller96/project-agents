@@ -19,7 +19,7 @@
 
 ## 외부 도구
 
-6단계(보안)와 7단계(QA)는 `config/tools.yaml`에 지정된 별도 repo의 `SKILL.md`를 읽어 그 방법론대로 수행하고,
+6단계(보안)와 7단계(QA)는 `external/` 아래 git subtree 로 편입된 도구 repo(`config/tools.yaml` 경로)의 `SKILL.md`를 읽어 그 방법론대로 수행하고,
 결과 레포트를 `workspace/reports/`로 가져온 뒤 리팩토링 요구서로 변환한다.
 
 ## 파일명 규칙

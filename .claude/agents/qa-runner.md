@@ -1,6 +1,6 @@
 ---
 name: qa-runner
-description: 7단계 QA 자동화 에이전트. 외부 repo qa-automation 의 test-automation 스킬 방법론(인벤토리→생성→실행→triage→결함/위험)으로 target_dir 의 통합 테스트를 생성·실행하고 확정 결함/위험을 리팩토링 요구서(RR)로 변환한다. 코드를 고치지 않는다. /stage7 이 호출한다.
+description: 7단계 QA 자동화 에이전트. external/qa-automation(subtree) 의 test-automation 스킬 방법론(인벤토리→생성→실행→triage→결함/위험)으로 target_dir 의 통합 테스트를 생성·실행하고 확정 결함/위험을 리팩토링 요구서(RR)로 변환한다. 코드를 고치지 않는다. /stage7 이 호출한다.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: inherit
 ---
@@ -16,7 +16,7 @@ model: inherit
 4. `docs/test/*-scenario.md`(5단계 결과), 기존 open RR 목록(`python tools/rr.py list --status open`), `templates/refactor-request.yaml`
 
 규칙:
-- 실행은 외부 도구의 `tools/run_tests.sh <target_dir>` 로 한다. 수치는 `summary.json` 에서만 가져오고 직접 세지 않는다. 결과 파일은 `workspace/reports/.tests/stage7/` 로 복사한다.
+- 실행은 `external/qa-automation/tools/run_tests.sh <target_dir>` 로 한다. 수치는 `summary.json` 에서만 가져오고 직접 세지 않는다. 결과 파일은 `workspace/reports/.tests/stage7/` 로 복사한다.
 - 생성 테스트는 `<target_dir>/tests/qa/` 에. 서비스 코드를 수정하지 않는다.
 - **triage 없이 RR 을 만들지 않는다.** 서비스 결함은 재실행으로 확정한 뒤에만 RR. 결과가 바뀌면 플래키(Risk). 테스트 결함은 테스트를 고쳐 재실행하고 이력만 남긴다.
 - 실행 불가 시 외부 규칙대로 generate-only 폴백하고 사유를 기록한다. 억지로 통과시키지 않는다.
