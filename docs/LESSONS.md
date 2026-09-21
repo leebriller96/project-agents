@@ -119,3 +119,12 @@
 | stage5 r2 | 첫 slice 가 만든 `provisionChanged()`(A안 초기 상태 해제) 헬퍼를 나머지 3 slice 가 import 로 재사용 — 헬퍼 인계 규칙이 작동 | 정상 |
 | stage5 r2 | RR 5건 중 3건이 **계약/타입 stale**(BE 계약 재생성 후 FE `gen:api` 미실행, 계약 설명이 정책 변경 미반영). `/refactor` 가 BE 계약을 바꾸면 FE 타입 재생성을 자동으로 붙여야 함 | `/refactor` 7항에 "target_stage 2 반영으로 `docs/api/*.yaml` 이 바뀌면 같은 회차에 FE `gen:api` 재생성 작업을 자동 추가" 규칙. 계약 설명 문구도 정책 결정(§12) 변경 시 grep 대상 |
 | stage5 r2 | TZ 재현 창(00~09 KST) 밖 실행이라 SQL `CURDATE()` 케이스 직접 재확인 불가 → 커넥션 time_zone·seed 값·세션 CURDATE 로 간접 확인 | 시각 의존 시나리오는 "재현 창 밖이면 간접 증거 3종" 패턴을 스킬에 예시로 |
+
+## 2026-09-21 (오후) — stage7 QA
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage7 | external/qa-automation 첫 사용(subtree). 1,351건 실행(BE 368·FE 341·통합 153·생성 53). 확정 결함 2 + 플래키 1 — **DB 응답 정지 시 무기한 대기**(JDBC socketTimeout 미설정, 30초 재현), `/error` 디스패치 비-ApiResponse, `Auditable.markUpdated` 가 Clock 빈 미사용 | 프로필 골격: datasource `connectTimeout/socketTimeout` + MyBatis `defaultStatementTimeout`, `ErrorController` 를 ApiResponse 로, `Auditable` 은 Clock 주입. 셋 다 첫 샘플 골격 결함 → 다음 골격 체크리스트 |
+| stage7 | **외부 도구 버그**: `run_tests.sh` 가 Windows(cygpath)에서 Gradle 결과 glob `*` 를 제거해 0건 집계, `./gradlew test` UP-TO-DATE 를 ran 으로 기록. 에이전트가 `cleanTest` + runs.tsv 보정으로 우회 | **upstream 수정 후보** → qa-automation repo 이슈로: (1) Windows glob 처리, (2) Gradle 은 `cleanTest test` 강제, (3) `-Pmysql` 같은 프로파일 인자 전달 옵션. 수정되면 `tools/sync-external.sh` 로 가져옴 |
+| stage7 | 러너가 `tests/integration` 을 설정 없이 Playwright 로 실행해 에러 5·스킵 19 → 환경 문제로 분류(정상 환경 24/24) | qa-automation 에 "환경 기동 훅(pre-run 스크립트) 지정" 옵션 upstream 후보. 파이프라인: `docs/test/README.md` 의 env-up 을 7단계 프롬프트에 명시(이미 함) |
+| stage7 | 소요 48분·421k 토큰·128 tool call — 단일 단계 최대. 1,351건 실행 + 우회 작업 | 대규모면 7단계도 "기존 테스트 실행" 과 "신규 생성·triage" 를 두 에이전트로 분할 검토 |
