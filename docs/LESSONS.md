@@ -164,3 +164,16 @@
 | stage2 convert | 근거 부족 S-1(collation) 을 매핑표가 `brief §11 "3"` 으로 인용했으나 brief §11 에 항목 자체가 없었음(실제 출처 SQL 인벤토리 §10) → 사람 확인 누락 위험 | brief §11-31 추가. sql-migrator 규칙: §11 에 없는 근거 부족은 "brief §11 후보" 로 분리 보고, 인용은 실제 출처 |
 | stage2 convert | 매핑표 행 수 표기 혼선(보고 19 / 실제 20 = fragment 포함) | 통계 형식 고정 "statement N(정의 n + B m) + fragment k = 행 수" |
 
+## 2026-09-22 — secu-sample stage2 W2 (notice user ‖ notice-admin admin)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage2 notice | 다운로드 `Content-Length` 를 DB `file_size` 로 내보냄(AS-IS 는 `realFile.length()`). 통합 테스트가 실물 5B vs fixture 1024 불일치를 만들면서도 헤더를 단언하지 않아 통과 — **테스트가 결함을 재현하고도 못 잡은 사례** | 프로필: `Resource.contentLength()`, 특성화 테스트 "실물 바이트 == Content-Length" 단언 규칙. 추적표에 비기능 세부도 동작 차이로 기록 |
+| stage2 notice | 분류 트리 permitAll 을 "근거 부족(N-1)" 으로 올렸으나 brief §12-A R11 이 이미 결정(상태 "확인 요청"). §12-B 만 보고 판단 → 3단계에 불필요한 C-08 | stage2 §B-2-1: 근거 부족 전 §12-A R행(확인 요청 포함) 전부 grep 대조 |
+| stage2 notice | 골격 테스트 `UserApplicationTest` 가 "핸들러 없어 404" 를 전제 → slice 가 골격 테스트를 수정하게 됨(공용 규칙 위반 아님이지만 결합) | 골격 §A-8: 빈 상태 전제 금지, "401 아님 + 봉투" 수준 |
+| stage2 notice | 한 모듈의 `@SpringBootTest` 2개가 같은 H2 인메모리 DB(`secu_user`) 를 공유해 fixture 누출 → developer 가 IT 의 datasource url 을 `properties` 로 override. **그 override 가 `-Pmysql` 프로파일보다 우선해 웨이브 MySQL 게이트에서 9건 컨텍스트 실패** — 모듈 단위 게이트(H2)만 보고 통과시킨 결함 | 골격 §A-8: URL override 금지, `cleanup.sql` + `@Sql(AFTER_TEST_METHOD)` 패턴. 프로필 "알려진 주의" 에 명시 |
+| stage2 병렬 | 두 developer 가 `common-candidates.md` 에 동시에 C-08/09 를 써서 번호 충돌 → admin 이 C-10~13 으로 재번호 | pipeline-core §6: 병렬 웨이브는 C-번호 대역을 프롬프트로 사전 배정 |
+| stage2 병렬 | Maven 멀티모듈에서 두 developer 가 각각 `-pl <자기모듈> -am` 으로 common/domain-notice 를 동시 재컴파일 — 이번엔 충돌 없이 통과했으나 `target/classes` 경합 위험 | 관찰 중. 문제 생기면 웨이브 시작 시 오케스트레이터가 `./mvnw -q -pl server/common,server/domain-* install -DskipTests` 후 developer 는 `-am` 없이 || stage2 notice-admin | 통합 테스트의 `(Timestamp) row.get("mod_dt")` 캐스트가 H2 전용 → `-Pmysql` 에서 3/7 error. developer 는 "MySQL 전용 구문 없음" 을 이유로 `-Pmysql` 을 건너뜀 — **SQL 이식성과 테스트 이식성은 별개 축** | 프로필: `queryForObject(sql, LocalDateTime.class)`; reviewer 가 slice IT 를 `-Pmysql` 로 1회 실행. `/stage2` e 항: 게이트에 걸리는 medium 은 같은 단계에서 수정 |
+| stage2 notice-admin | 원자성 REQ-020 의 롤백을 목 예외→보상만으로 "증명" — 실제 DB 롤백은 어노테이션 신뢰뿐 | 프로필: 두 번째 INSERT 실제 실패(컬럼 길이 초과) 케이스로 롤백 증명 |
+| stage2 도구 | RR 생성 후 본문을 정규식 치환으로 넣다가 백틱이 YAML 을 깨뜨림(`rr.py stats` 전체 실패) | `rr.py new` 에 `--evidence/--description/--fix` 추가, pipeline-core 에 "YAML 문자열 치환 금지" |
+

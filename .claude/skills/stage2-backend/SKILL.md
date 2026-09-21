@@ -24,6 +24,7 @@ description: 2단계 Backend 개발 — 최초 1회 프로젝트 골격(scaffold
 5. 테스트 기반: 단위테스트 프레임워크 설정, 테스트용 DB(H2 MySQL 모드 또는 testcontainers) 설정, 샘플 테스트 1개.
 6. `<target_dir>/backend/CONVENTIONS.md`: 패키지 규칙, 네이밍, 응답/에러 규약, 트랜잭션 경계, 테스트 규약. 이후 모든 slice 와 reviewer 가 이 문서를 기준으로 삼는다.
 7. 게이트: 빌드 + 샘플 테스트 통과. 통과하면 `stage2_scaffold: done`, 사용자에게 구조 요약을 보여준다.
+8. 골격 테스트는 slice 가 채워도 깨지지 않게 쓴다 — "핸들러 없어 404" 같은 빈 상태 전제 대신 "401 아님 + 응답 봉투" 수준. 모듈에 `@SpringBootTest` 가 둘 이상이면 DB 상태를 공유하므로 골격이 `src/test/resources/cleanup.sql` + `@Sql(executionPhase=AFTER_TEST_METHOD)` 패턴을 제공한다. **`@SpringBootTest(properties="spring.datasource.url=jdbc:h2:mem:…")` 로 DB 를 분리하지 말 것** — 테스트 속성이 `-Pmysql` 프로파일보다 우선해 MySQL 게이트에서 컨텍스트가 깨진다.
 
 brief §3 컨벤션과 프로필 기본값이 다르면 brief 를 우선한다.
 
@@ -46,6 +47,8 @@ brief §3 컨벤션과 프로필 기본값이 다르면 brief 를 우선한다.
 ### B-2-1. 기능 추적표 (migration 게이트)
 - `docs/deliverables/mapping/<slice>-function-mapping.md`: `ASIS_FUNCTION_CONTRACTS.md` 의 이 slice 행마다 → TO-BE 구현(컨트롤러 메서드·서비스·Mapper)·동작 차이(없음 | §12 결정 근거 | RR)·특성화 테스트 ID. **모든 행이 채워져야 slice done** — "미이관" 은 §12 폐기 결정 근거 없이는 허용하지 않는다(조용한 기능 누락 차단).
 - 동작이 AS-IS 와 달라지는 곳은 요구사항/§12 근거가 있을 때만 허용. 근거 없으면 AS-IS 동작을 유지하고 개선 제안은 RR(low).
+- "근거 부족" 으로 올리기 전에 brief **§12-A R행(상태 "확인 요청" 포함)과 §12-B/C 전부**를 grep 으로 대조한다. 이미 결정된 항목을 근거 부족으로 올리면 3단계에 불필요한 결정 요청이 생긴다.
+- AS-IS 와 다른 **비기능 세부**(다운로드 `Content-Length` 산출원, 정렬 오류 처리, 오류 코드)도 동작 차이 열에 적는다 — "기능이 같다" 로 넘기지 않는다.
 
 ### B-3. Service
 - 트랜잭션 경계는 서비스 메서드. 비즈니스 규칙은 요구사항 ID 를 주석으로 단다 (`// REQ-011: 재고 부족 시 주문 불가`).
@@ -64,7 +67,8 @@ brief §3 컨벤션과 프로필 기본값이 다르면 brief 를 우선한다.
 ### B-6. 단위테스트
 - Service: 비즈니스 규칙마다 최소 1개 (정상 + 경계/예외). Mapper: 주요 쿼리 실제 DB(테스트 DB)로. Controller: 요청 검증·응답 포맷.
 - 테스트 이름은 한글 설명 허용(`@DisplayName`). 요구사항 ID 를 테스트에 연결한다.
-- 외부 연동은 테스트 더블. 실서버·실데이터 금지.
+- 외부 연동은 테스트 더블. 실서버·실데이터 금지. "파일 없음" 더블은 플랫폼 경로 리터럴(`Z:/no/such`) 이 아니라 `Resource` 목(`exists()=false`).
+- 파일 다운로드 특성화 테스트는 **실물 바이트 수 == `Content-Length`** 를 단언한다(DB 크기 컬럼은 표시용, 헤더는 `Resource.contentLength()`).
 
 ## C. 게이트 및 산출물
 

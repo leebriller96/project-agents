@@ -106,9 +106,9 @@ def cmd_new(args):
         "target_stage": args.target if args.target is not None else "",
         "target_layer": args.layer or "",
         "severity": args.severity or "",
-        "evidence": [],
-        "description": "",
-        "suggested_fix": "",
+        "evidence": list(args.evidence or []),
+        "description": args.description or "",
+        "suggested_fix": args.fix or "",
         "status": "open",
         "iteration": current_iteration(),
         "resolved_at": None,
@@ -214,6 +214,9 @@ def main():
     p.add_argument("--title"); p.add_argument("--slice"); p.add_argument("--layer")
     p.add_argument("--source", type=int); p.add_argument("--target", type=int)
     p.add_argument("--severity", choices=SEVERITIES)
+    p.add_argument("--evidence", action="append", help="근거(파일:라인). 반복 지정")
+    p.add_argument("--description", help="현상 설명")
+    p.add_argument("--fix", help="수정 제안")
     p.set_defaults(fn=cmd_new)
 
     p = sub.add_parser("list")

@@ -59,6 +59,9 @@
 - `SpringApplicationBuilder.properties()` 는 yml 에 덮인다 → 포트는 `--server.port` 명령행 인자.
 - 계약 yaml 한글 깨짐 → 바이트로 저장 + `springdoc.default-produces-media-type`. 계약 생성: `./mvnw -q -pl server/<app> -am -DskipTests test-compile exec:exec@openApiDump -DapiGroup=<slice> -Dport=1809N`.
 - `mvn` CLI 없으면 Maven 바이너리를 `C:/tools/apache-maven` 에 받아 `mvn -N wrapper:wrapper` 로 `mvnw` 생성(이후 `./mvnw` 만). 첫 골격은 의존성 다운로드 포함 **약 50분** — 예산에 반영.
+- `JdbcTemplate.queryForMap` 의 DATETIME 은 H2=`Timestamp`, Connector/J=`LocalDateTime` → 테스트는 `queryForObject(sql, LocalDateTime.class)` 로 읽는다(캐스트 금지). developer 가 "MySQL 전용 구문 없음" 을 이유로 `-Pmysql` 을 건너뛰어도 reviewer 는 그 slice 의 `@SpringBootTest` 를 `-Pmysql -Dtest=<IT> -Dsurefire.failIfNoSpecifiedTests=false` 로 1회 돌린다 — SQL 이식성과 테스트 이식성은 별개.
+- 테스트 클래스의 `properties="spring.datasource.url=…"` override 금지(`test-mysql` 프로파일을 덮어 MySQL 게이트가 깨짐). fixture 격리는 `cleanup.sql` + `@Sql(AFTER_TEST_METHOD)`.
+- 원자성 REQ(공지+첨부 한 트랜잭션 류)는 목 예외→보상 테스트만으로 부족 — 실제 DB 에서 두 번째 INSERT 를 실패시켜(컬럼 길이 초과 등) 롤백을 증명한다.
 - `@WebMvcTest` 는 `@Import({SecurityConfig, MenuAuthorizationManager})` + `authentication(LoginUser)`; DTO 는 record 그대로 `resultType`.
 
 ## 알려진 주의
