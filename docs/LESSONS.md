@@ -85,3 +85,4 @@
 | /refactor 순서 | 규칙은 target_stage 1→2→3→4 이지만, 이번엔 stage 2 RR(LIKE·trim)이 stage 3 공용 유틸에 의존 → 3 을 먼저 | `/refactor` 명령: "stage 2 RR 이 공용 기반을 필요로 하면(suggested_fix 에 common/ 언급) stage 3 묶음을 먼저" 규칙 추가 |
 | /refactor iter4 common | RR 4건 + 공용 기반 처리, **RR-0019 가 공용 trim advice 로 자동 해결**(slice 코드 무변경). LIKE 이스케이프 문자 `\` 는 H2/MySQL 에서 서로 다르게 동작해 `!` 로 결정(실측) — 내가 프로필에 쓴 `\` 규칙이 틀림 | 프로필 LIKE 규칙 `!` 로 정정. "공용 기반이 slice RR 을 자동 해결하면 developer 호출 없이 done 처리(테스트로 증명)" 를 `/refactor` 에 명시 |
 | /refactor iter4 common | 명명 TZ 강제(`connectionTimeZone=Asia/Seoul`)는 시간대 테이블 없으면 접속 실패 — 조용한 드리프트 대신 즉시 실패가 낫다는 판단 | 배포 가이드 항목으로 8단계에 전달 |
+| /refactor iter4 common-auth | RR-0009 갭 잠금: 존재 확인 후 잠금으로 부하 중 INSERT **1540ms → 82ms(1.1배)**. 수정 전 코드로 되돌려 같은 테스트가 실패함을 확인(5단계 실측 1538ms 와 일치) — 결함 재현·수정·회귀 테스트가 한 사이클로 닫힘 | 정상. 테스트 JVM stdout cp949 로 한글 로그 깨짐 → C-37(`stdout.encoding=UTF-8`), 프로필 골격 build.gradle 항목에 추가 |

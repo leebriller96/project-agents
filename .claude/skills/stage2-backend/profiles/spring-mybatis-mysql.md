@@ -11,6 +11,8 @@
   - 기본 실행은 H2(빠름), `-Pmysql` 프로퍼티로 testcontainers 프로파일 전환하는 구성을 권장
 - lombok (선택, brief 컨벤션에 따름)
 
+- 골격 `build.gradle` test 태스크: `systemProperty 'file.encoding','UTF-8'`, `'stdout.encoding','UTF-8'`, `jvmArgs '-Dsun.stdout.encoding=UTF-8'` — Windows 에서 테스트 로그·XML 의 한글이 깨지지 않게.
+
 ## 패키지 구조
 ```
 <base_package>/
