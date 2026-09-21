@@ -86,3 +86,5 @@
 | /refactor iter4 common | RR 4건 + 공용 기반 처리, **RR-0019 가 공용 trim advice 로 자동 해결**(slice 코드 무변경). LIKE 이스케이프 문자 `\` 는 H2/MySQL 에서 서로 다르게 동작해 `!` 로 결정(실측) — 내가 프로필에 쓴 `\` 규칙이 틀림 | 프로필 LIKE 규칙 `!` 로 정정. "공용 기반이 slice RR 을 자동 해결하면 developer 호출 없이 done 처리(테스트로 증명)" 를 `/refactor` 에 명시 |
 | /refactor iter4 common | 명명 TZ 강제(`connectionTimeZone=Asia/Seoul`)는 시간대 테이블 없으면 접속 실패 — 조용한 드리프트 대신 즉시 실패가 낫다는 판단 | 배포 가이드 항목으로 8단계에 전달 |
 | /refactor iter4 common-auth | RR-0009 갭 잠금: 존재 확인 후 잠금으로 부하 중 INSERT **1540ms → 82ms(1.1배)**. 수정 전 코드로 되돌려 같은 테스트가 실패함을 확인(5단계 실측 1538ms 와 일치) — 결함 재현·수정·회귀 테스트가 한 사이클로 닫힘 | 정상. 테스트 JVM stdout cp949 로 한글 로그 깨짐 → C-37(`stdout.encoding=UTF-8`), 프로필 골격 build.gradle 항목에 추가 |
+| /refactor iter4 FE | RR-0014: 내 지시 `.trim().min(1)` 은 비밀번호 값을 변환해 전송하는 문제 — developer 가 RR evidence("BE 는 trim 없이 BCrypt")를 근거로 `refine` 선택. 규약 우선순위(evidence·근거 > 프롬프트 세부)가 작동 | 프로필: 비밀번호류는 `refine` |
+| /refactor iter4 FE | 201 후속: 통합 테스트 기대값 변경이 지시(2곳)보다 많음(18곳) — developer 가 grep 으로 전수 수정. 통합 테스트 실제 재실행은 안 함 | 6·7단계 전에 5단계 재실행 필요 항목으로 기록. `/refactor` 명령 7항에 "stage 2 반영 → 그 slice 의 stage5 pending" 규칙대로 book-loan·member·common-auth stage5 를 pending 으로 되돌림 |
