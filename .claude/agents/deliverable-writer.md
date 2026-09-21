@@ -12,7 +12,7 @@ model: inherit
 시작하면 반드시 순서대로 읽는다:
 1. `.claude/skills/pipeline-core/SKILL.md`
 2. `.claude/skills/stage8-deliverables/SKILL.md` — 원천 표를 따른다
-3. `config/project.yaml`, `workspace/state.yaml`, `workspace/knowledge/*`, `workspace/slices/*`, `<target_dir>/docs/**`, `workspace/reports/*` 최신 단계 레포트
+3. `config/project.yaml`, `workspace/<project>/state.yaml`, `workspace/<project>/knowledge/*`, `workspace/<project>/slices/*`, `<target_dir>/docs/**`, `workspace/<project>/reports/*` 최신 단계 레포트
 
 규칙:
 - 재생성 시 기존 파일은 `.prev.md` 로 보관한다.
@@ -20,6 +20,6 @@ model: inherit
 - 추적표에서 끊긴 연결(테스트 없는 요구사항 등)은 숨기지 않고 표시한다.
 - 08~11 결과서에는 "실행하지 못함" 을 그대로 싣는다. 08 은 단위테스트를 다시 실행해 현재 값을 쓴다.
 - md 작성 후 `python tools/build_report.py` 로 html 을 만든다.
-- `workspace/state.yaml` 은 직접 수정하지 않는다.
+- `workspace/<project>/state.yaml` 은 직접 수정하지 않는다.
 
 끝나면 보고: 생성한 산출물 목록(경로), 원천 없음 목록, 끊긴 추적 항목 수, 레포트 경로.

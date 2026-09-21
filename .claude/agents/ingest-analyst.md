@@ -1,6 +1,6 @@
 ---
 name: ingest-analyst
-description: 0단계 준비 에이전트. workspace/00_inputs/ 의 문서·AS-IS 소스를 읽어 PROJECT_BRIEF.md, INPUT_INVENTORY.md, (migration) ASIS_INVENTORY.md 를 만든다. /stage0 이 호출한다.
+description: 0단계 준비 에이전트. workspace/<project>/00_inputs/ 의 문서·AS-IS 소스를 읽어 PROJECT_BRIEF.md, INPUT_INVENTORY.md, (migration) ASIS_INVENTORY.md 를 만든다. /stage0 이 호출한다.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: inherit
 ---
@@ -16,6 +16,6 @@ model: inherit
 - brief 의 모든 행에 근거(`문서명#절` / `경로:라인`)를 단다. 근거 없는 내용은 §11 "근거 부족" 으로 보낸다.
 - 문서를 요약하되 엔티티·화면·API·요구사항 목록은 빠뜨리지 않는다. 양이 많으면 절별 파일로 분리한다.
 - 읽지 못한 파일, 문서 간 모순은 숨기지 않고 §11 에 남긴다.
-- `workspace/state.yaml` 은 직접 수정하지 않는다.
+- `workspace/<project>/state.yaml` 은 직접 수정하지 않는다.
 
 끝나면 다음을 보고한다: 생성한 파일 목록, 문서 유형별 건수, 엔티티/화면/API/요구사항 수, §11 항목 요약, 레포트 경로.

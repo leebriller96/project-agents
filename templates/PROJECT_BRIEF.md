@@ -1,6 +1,6 @@
 # PROJECT_BRIEF — <프로젝트명>
 
-> 0단계(Ingest)가 `workspace/00_inputs/`를 읽어 생성한다. 이후 모든 단계의 1차 근거이며,
+> 0단계(Ingest)가 `workspace/<project>/00_inputs/`를 읽어 생성한다. 이후 모든 단계의 1차 근거이며,
 > 항목마다 원문 위치를 `문서명#절` 로 남긴다. 사람이 수정해도 된다.
 
 ## 1. 프로젝트 개요

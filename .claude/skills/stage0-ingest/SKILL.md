@@ -1,6 +1,6 @@
 ---
 name: stage0-ingest
-description: 0단계 준비 — workspace/00_inputs/ 의 RFP·요구사항·설계/분석 산출물·피그마/스토리보드·AS-IS 소스를 읽어 PROJECT_BRIEF.md 로 압축하는 방법론. /stage0 수행 시 사용.
+description: 0단계 준비 — workspace/<project>/00_inputs/ 의 RFP·요구사항·설계/분석 산출물·피그마/스토리보드·AS-IS 소스를 읽어 PROJECT_BRIEF.md 로 압축하는 방법론. /stage0 수행 시 사용.
 ---
 
 # 0단계 준비 (Ingest) 방법론
@@ -9,7 +9,7 @@ description: 0단계 준비 — workspace/00_inputs/ 의 RFP·요구사항·설�
 
 ## 1. 입력 인벤토리
 
-`workspace/00_inputs/` 를 재귀적으로 훑어 파일을 유형별로 분류한 표를 만든다.
+`workspace/<project>/00_inputs/` 를 재귀적으로 훑어 파일을 유형별로 분류한 표를 만든다.
 
 | 유형 | 판별 기준 | 읽는 방법 |
 |---|---|---|
@@ -29,13 +29,13 @@ description: 0단계 준비 — workspace/00_inputs/ 의 RFP·요구사항·설�
 
 - 모든 행에 **근거(`문서명#절` 또는 `파일경로:라인`)** 를 단다. 근거 없는 내용은 쓰지 않는다.
 - 기술 스택은 `config/project.yaml → stack` 이 최우선이고, 문서와 다르면 §11 모순 항목에 적는다.
-- 엔티티·화면·API 후보·요구사항 목록은 **빠짐없이** 뽑되 설명은 한 줄로. 목록이 200행을 넘으면 절별로 `workspace/knowledge/brief/<절>.md` 로 분리하고 brief 에는 요약과 링크만 둔다.
+- 엔티티·화면·API 후보·요구사항 목록은 **빠짐없이** 뽑되 설명은 한 줄로. 목록이 200행을 넘으면 절별로 `workspace/<project>/knowledge/brief/<절>.md` 로 분리하고 brief 에는 요약과 링크만 둔다.
 - 용어집은 문서 간 표기가 다른 용어(예: 회원/고객/사용자)를 통일한 결과를 담는다.
 - 코드 컨벤션(§3)은 문서에 없으면 프로필 기본값(`stage2-backend/profiles/*`, `stage4-frontend/profiles/*`)을 제안값으로 적고 "제안" 표시.
 
 ## 3. AS-IS 분석 (mode=migration)
 
-`asis.source_dir` 를 대상으로 `workspace/knowledge/ASIS_INVENTORY.md` 를 만든다.
+`asis.source_dir` 를 대상으로 `workspace/<project>/knowledge/ASIS_INVENTORY.md` 를 만든다.
 
 1. 언어/프레임워크/빌드 도구 식별, 디렉토리 구조 요약(깊이 3).
 2. 프로그램 인벤토리: 진입점(Controller/Action/JSP/서블릿/배치) 목록 — 경로, 역할 한 줄, 호출하는 테이블.
@@ -44,7 +44,7 @@ description: 0단계 준비 — workspace/00_inputs/ 의 RFP·요구사항·설�
 5. 이관 리스크: 저장 프로시저, 동적 SQL, 파일 I/O, 외부 연동, 하드코딩된 설정.
 6. 규모: 프로그램 수, 테이블 수, 대략의 LOC.
 
-프로그램 수가 많으면(300개 이상) 패키지 단위로 묶어 요약하고 상세는 `workspace/knowledge/asis/<패키지>.md` 로 분리한다.
+프로그램 수가 많으면(300개 이상) 패키지 단위로 묶어 요약하고 상세는 `workspace/<project>/knowledge/asis/<패키지>.md` 로 분리한다.
 
 ## 4. 근거 부족·모순 (§11)
 
@@ -53,8 +53,8 @@ description: 0단계 준비 — workspace/00_inputs/ 의 RFP·요구사항·설�
 
 ## 5. 산출물 및 상태
 
-- `workspace/knowledge/PROJECT_BRIEF.md` (+ 분리 파일)
-- `workspace/knowledge/ASIS_INVENTORY.md` (migration)
-- `workspace/knowledge/INPUT_INVENTORY.md` (§1 표)
-- 레포트 `workspace/reports/<ts>_stage0_all_ingest.md`
+- `workspace/<project>/knowledge/PROJECT_BRIEF.md` (+ 분리 파일)
+- `workspace/<project>/knowledge/ASIS_INVENTORY.md` (migration)
+- `workspace/<project>/knowledge/INPUT_INVENTORY.md` (§1 표)
+- 레포트 `workspace/<project>/reports/<ts>_stage0_all_ingest.md`
 - `state.yaml → stages.stage0_ingest: done`

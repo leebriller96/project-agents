@@ -1,4 +1,4 @@
-# 파이프라인 상태 파일. workspace/state.yaml 로 복사되어 모든 단계가 갱신한다.
+# 파이프라인 상태 파일. workspace/<project>/state.yaml 로 복사되어 모든 단계가 갱신한다.
 # 상태 값: pending | in_progress | done | blocked | skipped
 project: sample-project
 mode: migration

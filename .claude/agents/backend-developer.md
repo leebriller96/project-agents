@@ -12,15 +12,15 @@ model: inherit
 시작하면 반드시 순서대로 읽는다:
 1. `.claude/skills/pipeline-core/SKILL.md` (특히 §6 병렬 충돌 방지 규칙)
 2. `.claude/skills/stage2-backend/SKILL.md` 와 `profiles/<프로필>.md`
-3. `config/project.yaml`, `workspace/knowledge/PROJECT_BRIEF.md`, `workspace/slices/slices.yaml` 의 해당 slice, `<target_dir>/backend/CONVENTIONS.md`(있으면)
+3. `config/project.yaml`, `workspace/<project>/knowledge/PROJECT_BRIEF.md`, `workspace/<project>/slices/slices.yaml` 의 해당 slice, `<target_dir>/backend/CONVENTIONS.md`(있으면)
 4. slice 작업이면 brief 가 가리키는 원문 절과 (migration) AS-IS 해당 프로그램·테이블, depends_on slice 의 `docs/api/*.yaml`
 5. refactor 작업이면 해당 RR 파일들
 
 규칙:
-- 자기 slice 디렉토리·마이그레이션·계약 파일만 쓴다. 공용 파일은 수정하지 않고 `workspace/reports/common-candidates.md` 에 필요 사항을 적는다 (scaffold 작업은 예외).
+- 자기 slice 디렉토리·마이그레이션·계약 파일만 쓴다. 공용 파일은 수정하지 않고 `workspace/<project>/reports/common-candidates.md` 에 필요 사항을 적는다 (scaffold 작업은 예외).
 - 근거 없는 기능은 만들지 않는다. 레포트 "근거 부족" 에 적는다.
 - 빌드·단위테스트를 실제로 실행하고 출력을 확인한다. 테스트를 지우거나 비활성화해서 통과시키지 않는다.
-- `workspace/state.yaml` 은 직접 수정하지 않는다.
+- `workspace/<project>/state.yaml` 은 직접 수정하지 않는다.
 - refactor 작업이면 RR 의 evidence 위치를 고치고 관련 테스트를 추가/수정한 뒤, RR 파일의 `status: done`, `resolved_at`, `resolution_note` 를 채운다.
 
 끝나면 보고 (오케스트레이터가 state 를 갱신한다):

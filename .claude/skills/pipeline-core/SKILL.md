@@ -11,10 +11,10 @@ description: project-agents 파이프라인의 공통 규칙 — 설정·상태�
 
 1. `config/project.yaml` 을 읽는다. 없으면 "config/project.yaml.example 을 복사해 config/project.yaml 을 만들어 주세요" 안내 후 **중단**.
 2. `config/tools.yaml` 을 읽는다 (6·7단계만 필수).
-3. `workspace/state.yaml` 을 읽는다. 없으면 `templates/state.yaml` 을 복사해 project·mode 를 채우고 slices 는 비워 둔다.
+3. `workspace/<project>/state.yaml` 을 읽는다. 없으면 `templates/state.yaml` 을 복사해 project·mode 를 채우고 slices 는 비워 둔다.
 4. 선행 단계 조건을 확인한다 (아래 §4). 미충족이면 무엇을 먼저 실행해야 하는지 안내 후 중단.
 5. 시작 시 `state.yaml` 의 해당 항목을 `in_progress` 로 바꾸고 `log` 에 한 줄 남긴다.
-6. 끝나면 결과(`done` | `blocked`)와 `updated_at` 을 갱신하고, 레포트를 `workspace/reports/` 에 남긴다.
+6. 끝나면 결과(`done` | `blocked`)와 `updated_at` 을 갱신하고, 레포트를 `workspace/<project>/reports/` 에 남긴다.
 
 ## 2. 경로
 
@@ -30,16 +30,16 @@ description: project-agents 파이프라인의 공통 규칙 — 설정·상태�
   ├── docs/test/<slice>-scenario.md   # 통합 테스트 시나리오 (5단계)
   └── docs/deliverables/  # 8단계 산출물
   ```
-- 파이프라인 메타(brief, slices, 요구서, 레포트, 상태)는 항상 이 repo 의 `workspace/` 에 둔다.
+- 파이프라인 메타(brief, slices, 요구서, 레포트, 상태)는 항상 이 repo 의 **`workspace/<project>/`** 에 둔다 (`<project>` = `config/project.yaml → project.name`). 프로젝트가 바뀌면 config 만 바꾸면 되고 이전 프로젝트의 workspace 는 그대로 남는다. `tools/rr.py`·`status.py` 는 config 에서 프로젝트명을 읽어 경로를 정한다. 에이전트에게는 항상 **절대경로**로 전달한다.
 
 ## 3. 파일 형식
 
 | 파일 | 형식 | 템플릿 |
 |---|---|---|
-| `workspace/state.yaml` | 파이프라인 상태 | `templates/state.yaml` |
-| `workspace/knowledge/PROJECT_BRIEF.md` | 프로젝트 요약 지식 | `templates/PROJECT_BRIEF.md` |
-| `workspace/slices/slices.yaml` | 업무 분류 | `templates/slices.yaml` |
-| `workspace/refactor-requests/RR-NNNN.yaml` | 리팩토링 요구서 | `templates/refactor-request.yaml` |
+| `workspace/<project>/state.yaml` | 파이프라인 상태 | `templates/state.yaml` |
+| `workspace/<project>/knowledge/PROJECT_BRIEF.md` | 프로젝트 요약 지식 | `templates/PROJECT_BRIEF.md` |
+| `workspace/<project>/slices/slices.yaml` | 업무 분류 | `templates/slices.yaml` |
+| `workspace/<project>/refactor-requests/RR-NNNN.yaml` | 리팩토링 요구서 | `templates/refactor-request.yaml` |
 | `<target_dir>/docs/test/<slice>-scenario.md` | 통합 테스트 시나리오 | `templates/test-scenario.md` |
 
 템플릿의 키를 빼거나 이름을 바꾸지 않는다. 값이 없으면 빈 값으로 둔다.
@@ -48,7 +48,7 @@ description: project-agents 파이프라인의 공통 규칙 — 설정·상태�
 
 | 명령 | 선행 조건 |
 |---|---|
-| /stage0 | `workspace/00_inputs/` 에 파일이 1개 이상 |
+| /stage0 | `workspace/<project>/00_inputs/` 에 파일이 1개 이상 |
 | /stage1 | stage0 `done` |
 | /stage2 `<slice>` | stage1 `done` **and** `slices.yaml → approved: true`; 골격(stage2_scaffold) 미완료면 먼저 골격 수행; `depends_on` slice 의 stage2 가 `done` |
 | /stage3 | stage2 가 `done` 인 slice 가 1개 이상 |
@@ -81,7 +81,7 @@ description: project-agents 파이프라인의 공통 규칙 — 설정·상태�
    - 자기 slice 패키지/디렉토리(`backend/.../<slice>/`, `frontend/src/features/<slice>/`, `db/migration/V<n>__<slice>_*.sql`)와
      자기 계약 파일(`docs/api/<slice>.yaml`)만 쓴다.
    - 공용 파일(빌드 설정, common 패키지, 라우터 루트, 공용 타입)은 **수정하지 않는다.**
-     필요한 공용 변경은 `workspace/reports/common-candidates.md` 에 "무엇이·왜 필요한지" 를 적고 slice 안에 임시 구현한다. 3단계가 이를 흡수한다.
+     필요한 공용 변경은 `workspace/<project>/reports/common-candidates.md` 에 "무엇이·왜 필요한지" 를 적고 slice 안에 임시 구현한다. 3단계가 이를 흡수한다.
      빌드 의존성 추가도 공용 변경이다 — slice 는 대안 구현(예: xlsx 대신 CSV) 또는 인터페이스만 만들고 후보로 남긴다.
    - 마이그레이션 버전 번호는 충돌을 피하기 위해 `V<yyMMddHHmm>__<slice>_<설명>.sql` 형식을 쓴다.
 5. `state.yaml` 갱신은 오케스트레이터(명령 본문)가 웨이브 종료 시점에 한 번에 한다. 서브에이전트는 state.yaml 을 직접 쓰지 않고 결과를 보고한다.
@@ -112,7 +112,7 @@ description: project-agents 파이프라인의 공통 규칙 — 설정·상태�
 
 ## 9. 레포트
 
-- 위치: `workspace/reports/`, 파일명 `yymmddhhmm_stage<N>_<slice|all>_<설명>.md` (KST).
+- 위치: `workspace/<project>/reports/`, 파일명 `yymmddhhmm_stage<N>_<slice|all>_<설명>.md` (KST).
 - HTML 변환: `python tools/build_report.py <md파일>`.
 - 타임스탬프는 항상 `python tools/kst_now.py` (파일명용 `yyMMddHHmm`; `--full` 은 본문용 `YYYY-MM-DD HH:MM`). bash `TZ=... date` 는 Windows Git Bash 에서 틀린다.
 - 레포트에는 항상 포함: 대상·입력 근거·수행 내용·게이트 결과(빌드/테스트 명령과 출력 요약)·미완료/근거 부족 항목·다음 단계 안내.

@@ -31,9 +31,23 @@ except ImportError:
     sys.exit("[rr] pyyaml 패키지가 필요합니다. 설치: python -m pip install pyyaml")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RR_DIR = os.path.join(ROOT, "workspace", "refactor-requests")
+
+
+def _workspace():
+    # workspace/<project>/ — 프로젝트명은 config/project.yaml → project.name. 없으면 workspace/ 바로 아래(구 구조).
+    cfg = os.path.join(ROOT, "config", "project.yaml")
+    try:
+        with open(cfg, encoding="utf-8") as f:
+            name = yaml.safe_load(f)["project"]["name"]
+        return os.path.join(ROOT, "workspace", name)
+    except Exception:
+        return os.path.join(ROOT, "workspace")
+
+
+WS = _workspace()
+RR_DIR = os.path.join(WS, "refactor-requests")
 TEMPLATE = os.path.join(ROOT, "templates", "refactor-request.yaml")
-STATE = os.path.join(ROOT, "workspace", "state.yaml")
+STATE = os.path.join(WS, "state.yaml")
 
 KST = datetime.timezone(datetime.timedelta(hours=9), name="KST")
 STATUSES = ("open", "in_progress", "done", "rejected")

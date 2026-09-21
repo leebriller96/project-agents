@@ -20,6 +20,6 @@ model: inherit
 - 실행 환경을 정직하게 기록한다. 못 돌린 시나리오는 "미실행 + 사유".
 - 정적 검증(FE 호출 ↔ 계약 ↔ BE 컨트롤러 3자 대조)은 환경과 무관하게 항상 한다.
 - RR 은 `python tools/rr.py new` 로 채번하고 evidence 를 반드시 채운다. 한 결함 = 한 RR.
-- 서비스 코드를 수정하지 않는다. `workspace/state.yaml` 은 직접 수정하지 않는다.
+- 서비스 코드를 수정하지 않는다. `workspace/<project>/state.yaml` 은 직접 수정하지 않는다.
 
 끝나면 보고: 결과(done|blocked), 실행 환경, 시나리오 통과/실패/미실행 수, 정적 검증 불일치 수, 생성한 RR 목록(id·severity·target), 레포트 경로.

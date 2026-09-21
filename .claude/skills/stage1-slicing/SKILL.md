@@ -9,9 +9,9 @@ description: 1단계 업무 분류 — PROJECT_BRIEF(및 AS-IS 인벤토리)를 
 
 ## 1. 입력
 
-- `workspace/knowledge/PROJECT_BRIEF.md` (엔티티·화면·API·요구사항 목록)
-- `workspace/knowledge/ASIS_INVENTORY.md` (migration)
-- 기존 `workspace/slices/slices.yaml` 이 있으면 **재분류 모드**: 이미 `done` 인 slice 는 id 를 바꾸지 않는다.
+- `workspace/<project>/knowledge/PROJECT_BRIEF.md` (엔티티·화면·API·요구사항 목록)
+- `workspace/<project>/knowledge/ASIS_INVENTORY.md` (migration)
+- 기존 `workspace/<project>/slices/slices.yaml` 이 있으면 **재분류 모드**: 이미 `done` 인 slice 는 id 를 바꾸지 않는다.
 
 ## 2. 분류 기준
 
@@ -43,8 +43,8 @@ description: 1단계 업무 분류 — PROJECT_BRIEF(및 AS-IS 인벤토리)를 
 
 ## 6. 산출물 및 상태
 
-- `workspace/slices/slices.yaml` (`approved: false`)
-- `workspace/knowledge/SLICE_MAP.md`: slice ↔ 엔티티 ↔ 화면 ↔ API ↔ 요구사항 ↔ AS-IS 매트릭스 (8단계 추적표의 원천)
-- 레포트 `workspace/reports/<ts>_stage1_all_slicing.md` — 분류 근거, 애매했던 판단, unassigned 목록
+- `workspace/<project>/slices/slices.yaml` (`approved: false`)
+- `workspace/<project>/knowledge/SLICE_MAP.md`: slice ↔ 엔티티 ↔ 화면 ↔ API ↔ 요구사항 ↔ AS-IS 매트릭스 (8단계 추적표의 원천)
+- 레포트 `workspace/<project>/reports/<ts>_stage1_all_slicing.md` — 분류 근거, 애매했던 판단, unassigned 목록
 - `state.yaml → stages.stage1_slicing: done`, `slices` 에 각 slice 항목을 `pending` 으로 추가
 - 사용자에게 slices.yaml 을 보여주고 **`approved: true` 로 바꿔 달라고 요청**한다. (재분류 모드면 approved 를 false 로 되돌린다)

@@ -8,7 +8,7 @@ description: 3단계 공통화 리팩토링 — 완료된 slice 들에서 중복
 목표: slice 들이 각자 임시로 만든 공통성 코드를 **한 곳으로 모으고**, 동작은 바꾸지 않는다.
 
 ## 1. 입력
-- `workspace/reports/common-candidates.md` (2단계 developer 들이 남긴 공용 변경 요청)
+- `workspace/<project>/reports/common-candidates.md` (2단계 developer 들이 남긴 공용 변경 요청)
 - `stage2_backend: done` 인 slice 들의 소스
 - `<target_dir>/backend/CONVENTIONS.md`
 
@@ -35,7 +35,7 @@ description: 3단계 공통화 리팩토링 — 완료된 slice 들에서 중복
 - `<target_dir>/docs/deliverables/common-module-spec.md`: 공통 모듈 목록·용도·사용법 (8단계 산출물의 원천). 기존 파일이 있으면 갱신.
 - `common-candidates.md` 의 처리된 항목은 "처리됨(회차 N)" 표시.
 - 게이트: 빌드 + **전체** 단위테스트 통과.
-- 레포트 `workspace/reports/<ts>_stage3_all_common.md`: 추출 목록·보류 목록·테스트 결과.
+- 레포트 `workspace/<project>/reports/<ts>_stage3_all_common.md`: 추출 목록·보류 목록·테스트 결과.
 - `state.yaml → stages.stage3_common: done|blocked` (반복 실행되므로 log 에 회차를 남긴다)
 
 ## 5. reviewer 체크리스트

@@ -17,7 +17,7 @@ description: 7단계 QA 자동화 — external/qa-automation(subtree) 의 test-a
 - 대상은 `<target_dir>` 전체 (외부 도구의 `input/` 대신). 복사하지 않는다. 외부 도구의 `/qa full <대상경로>` 와 같은 의미.
 - 실행: `bash <path>/tools/run_tests.sh <target_dir 절대경로> [--timeout 초] [--keep]`
   (Windows 는 Git Bash). 결과는 **`external/qa-automation/reports/.tests/`**(gitignore) 에 생긴다 → 실행 후 `summary.json`·`summary.md`·`cases.json`·`runs.tsv` 를
-  `workspace/reports/.tests/stage7/` 로 복사해 둔다. 레포트 수치는 반드시 `summary.json` 에서 가져온다 (직접 세지 않는다).
+  `workspace/<project>/reports/.tests/stage7/` 로 복사해 둔다. 레포트 수치는 반드시 `summary.json` 에서 가져온다 (직접 세지 않는다).
 - 집계만 다시 하려면 `python <path>/tools/summarize_results.py <path>/reports/.tests --target <target_dir>`.
 - 생성한 테스트는 `<target_dir>/tests/qa/<서비스>/` 에 둔다 (5단계의 `tests/integration/` 과 분리). 외부 스킬의 "생성 테스트 회수 안내" 는 불필요 — target_dir 이 곧 원본 저장소다.
 - full 모드는 기존 테스트(2·4단계 단위테스트, 5단계 통합테스트)도 함께 실행된다. 기존 테스트 실패도 결함 근거가 된다.
@@ -51,8 +51,8 @@ description: 7단계 QA 자동화 — external/qa-automation(subtree) 의 test-a
 - ID 채번은 `python tools/rr.py new ...`.
 
 ## 5. 산출물 및 상태
-- 레포트: 외부 `templates/report_template.md` 구조로 `workspace/reports/<ts>_stage7_all_qa.md` + `python tools/build_report.py` 로 html (생성 여부 확인).
+- 레포트: 외부 `templates/report_template.md` 구조로 `workspace/<project>/reports/<ts>_stage7_all_qa.md` + `python tools/build_report.py` 로 html (생성 여부 확인).
 - 외부 스킬 §11 품질 자가 점검을 레포트 제출 전에 수행한다.
-- `workspace/reports/.tests/stage7/` (summary 복사본), `<target_dir>/tests/qa/`, RR 파일들
+- `workspace/<project>/reports/.tests/stage7/` (summary 복사본), `<target_dir>/tests/qa/`, RR 파일들
 - `state.yaml → stages.stage7_qa: done`
 - 사용자에게 두괄식 보고: 서비스 수, 생성/실행 테스트 수(summary.json 기준), 통과·실패·에러, 확정 결함 수(+미확정 수), RR 목록, 중복 제외 건수, Top 3 우선 조치, 커버리지 공백, 레포트 경로, `/refactor` 안내

@@ -1,4 +1,4 @@
-# 업무 분류 (1단계 산출물). workspace/slices/slices.yaml
+# 업무 분류 (1단계 산출물). workspace/<project>/slices/slices.yaml
 # 사람이 승인(approved: true)해야 2단계 이후가 진행된다.
 approved: false
 approved_by:

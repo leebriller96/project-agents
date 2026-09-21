@@ -6,7 +6,7 @@ argument-hint: "(인자 없음)"
 # /status — 진행 상태
 
 ## 절차
-1. `config/project.yaml` 과 `workspace/state.yaml` 을 읽는다. 없으면 무엇을 먼저 해야 하는지 안내(`config` 복사 → `/stage0`).
+1. `config/project.yaml` 과 `workspace/<project>/state.yaml` 을 읽는다. 없으면 무엇을 먼저 해야 하는지 안내(`config` 복사 → `/stage0`).
 2. `python tools/status.py` 를 실행해 요약 표를 얻는다 (실패하면 state.yaml 을 직접 읽어 같은 내용을 만든다).
 3. `python tools/rr.py list --status open` 으로 열린 RR 을 가져온다.
 4. 사용자에게 보여준다:

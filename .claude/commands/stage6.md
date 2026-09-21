@@ -10,7 +10,7 @@ argument-hint: "[all|<slice-id>] [hybrid|claude-only|sast-only] (기본 all hybr
 ## 절차
 1. `.claude/skills/pipeline-core/SKILL.md` §1·§6·§8. 선행: `stage5_integration: done` 인 slice 1개 이상. `config/tools.yaml → security_auditor.path` 존재 확인 (없으면 안내 후 종료).
 2. 모드 결정: 인자 없으면 hybrid. `python <path>/tools/run_sast.py --help` 등으로 도구 존재를 확인하고, SAST 가 하나도 없으면 claude-only 로 폴백하고 알린다.
-3. 재점검 여부: `workspace/reports/` 에 이전 `*_stage6_all_security.md` 가 있으면 그 경로를 에이전트에 넘긴다.
+3. 재점검 여부: `workspace/<project>/reports/` 에 이전 `*_stage6_all_security.md` 가 있으면 그 경로를 에이전트에 넘긴다.
 4. `stages.stage6_security: in_progress`.
 5. **규모 판단**: 대상 소스 파일 수(제외 디렉토리 빼고)를 센다.
    - 150개 이하 또는 인자가 slice 하나 → `security-auditor` 를 `scan all`(또는 `scan <slice>`) 로 1회 호출.

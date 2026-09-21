@@ -14,8 +14,8 @@
 
 | 단계 | 이름 | 입력 | 출력 | 게이트 |
 |---|---|---|---|---|
-| 0 | 준비 (Ingest) | RFP·요구사항·설계/분석 산출물·피그마/스토리보드·환경 정보·(차세대) AS-IS 소스 | `workspace/knowledge/PROJECT_BRIEF.md` — 기술스택·컨벤션·용어집·엔티티/화면/API 목록 요약 | 사람 확인 |
-| 1 | 업무 분류 (Slicing) | 0단계 + AS-IS | `workspace/slices/slices.yaml` — 슬라이스 목록·의존관계·우선순위 (+ 데이터 모델 초안) | **사람 승인** |
+| 0 | 준비 (Ingest) | RFP·요구사항·설계/분석 산출물·피그마/스토리보드·환경 정보·(차세대) AS-IS 소스 | `workspace/<project>/knowledge/PROJECT_BRIEF.md` — 기술스택·컨벤션·용어집·엔티티/화면/API 목록 요약 | 사람 확인 |
+| 1 | 업무 분류 (Slicing) | 0단계 + AS-IS | `workspace/<project>/slices/slices.yaml` — 슬라이스 목록·의존관계·우선순위 (+ 데이터 모델 초안) | **사람 승인** |
 | 2 | Backend | brief + slice | (최초 1회) 프로젝트 골격 → slice별 Migration → Mapper → Service → API + **OpenAPI 계약** + 단위테스트 | 빌드·테스트 통과 |
 | 3 | 공통화 리팩토링 | 2단계 결과 전체 | common 모듈 추출, 중복 제거, 컨벤션 정렬 | 빌드·테스트 통과 |
 | 4 | Frontend | 피그마/스토리보드 + OpenAPI 계약 | slice별 화면·컴포넌트·API 클라이언트 + 단위테스트 | 빌드·테스트 통과 |
@@ -47,7 +47,7 @@ project-agents/
 ├── templates/                # state·slices·PROJECT_BRIEF·리팩토링 요구서·테스트 시나리오 템플릿
 ├── tools/                    # rr.py(요구서 관리), status.py(상태 요약), build_report.py(md→html), sync-external.sh
 ├── external/                 # git subtree: qa-automation, code-security-auditor
-└── workspace/                # 프로젝트별 작업 공간 (커밋하지 않음)
+└── workspace/<project>/      # 프로젝트별 작업 공간 (커밋하지 않음, <project> = config 의 project.name)
     ├── 00_inputs/            # 0단계 정적 문서·AS-IS 소스
     ├── knowledge/            # PROJECT_BRIEF.md 등 요약 지식
     ├── slices/               # slices.yaml
@@ -68,12 +68,12 @@ python -m pip install -r tools/requirements.txt      # pyyaml, markdown
 cp config/project.yaml.example config/project.yaml   # 프로젝트명·모드·target_dir·스택 수정
 ```
 
-`workspace/00_inputs/` 에 문서(RFP·요구사항·설계 산출물·피그마 export·스토리보드)와 (차세대라면) `asis/` 소스를 넣은 뒤,
+`workspace/<project>/00_inputs/` 에 문서(RFP·요구사항·설계 산출물·피그마 export·스토리보드)와 (차세대라면) `asis/` 소스를 넣은 뒤,
 이 디렉토리에서 Claude Code 를 열고:
 
 ```text
 /stage0                 # 준비: PROJECT_BRIEF.md 생성 → 근거 부족·모순 표 확인
-/stage1                 # 업무 분류 → workspace/slices/slices.yaml 검토 후 approved: true 로 변경
+/stage1                 # 업무 분류 → workspace/<project>/slices/slices.yaml 검토 후 approved: true 로 변경
 /stage2 all             # Backend: 골격 1회 + slice 별(의존 없는 것은 병렬) 개발·검토·게이트
 /stage3                 # 공통화 리팩토링
 /stage4 all             # Frontend: 골격 1회 + slice 별 개발·검토·게이트

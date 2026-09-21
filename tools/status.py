@@ -20,8 +20,22 @@ except ImportError:
     sys.exit("[status] pyyaml 패키지가 필요합니다. 설치: python -m pip install pyyaml")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATE = os.path.join(ROOT, "workspace", "state.yaml")
-SLICES = os.path.join(ROOT, "workspace", "slices", "slices.yaml")
+
+
+def _workspace():
+    # workspace/<project>/ — 프로젝트명은 config/project.yaml → project.name. 없으면 workspace/ 바로 아래(구 구조).
+    cfg = os.path.join(ROOT, "config", "project.yaml")
+    try:
+        with open(cfg, encoding="utf-8") as f:
+            name = yaml.safe_load(f)["project"]["name"]
+        return os.path.join(ROOT, "workspace", name)
+    except Exception:
+        return os.path.join(ROOT, "workspace")
+
+
+WS = _workspace()
+STATE = os.path.join(WS, "state.yaml")
+SLICES = os.path.join(WS, "slices", "slices.yaml")
 CONFIG = os.path.join(ROOT, "config", "project.yaml")
 
 MARK = {"done": "✅", "in_progress": "🔄", "blocked": "⛔", "pending": "·", "skipped": "－", None: "·", "": "·"}

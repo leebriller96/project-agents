@@ -36,5 +36,5 @@ description: 8단계 산출물 작성 — 파이프라인이 남긴 brief·slice
 
 ## 3. 산출물 및 상태
 - `<target_dir>/docs/deliverables/NN_*.md|html`
-- 레포트 `workspace/reports/<ts>_stage8_all_deliverables.md`: 생성 목록, 원천 없음 목록, 끊긴 추적 항목 수
+- 레포트 `workspace/<project>/reports/<ts>_stage8_all_deliverables.md`: 생성 목록, 원천 없음 목록, 끊긴 추적 항목 수
 - `state.yaml → stages.stage8_deliverables: done`

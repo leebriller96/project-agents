@@ -43,8 +43,8 @@ description: 4단계 Frontend 개발 — 피그마/스토리보드와 slice 의 
 
 ## C. 게이트 및 산출물
 - 빌드 + 린트 + 타입체크 + 단위테스트. 실패하면 고치고 재실행. 못 고치면 `blocked`.
-- 공용 파일 변경 필요 사항은 `workspace/reports/common-candidates.md` 에 (frontend 섹션).
-- 레포트 `workspace/reports/<ts>_stage4_<slice>_frontend.md`: 화면 표, 컴포넌트 목록, 사용한 API, 테스트 결과, 계약 부족(RR 목록), 근거 부족.
+- 공용 파일 변경 필요 사항은 `workspace/<project>/reports/common-candidates.md` 에 (frontend 섹션).
+- 레포트 `workspace/<project>/reports/<ts>_stage4_<slice>_frontend.md`: 화면 표, 컴포넌트 목록, 사용한 API, 테스트 결과, 계약 부족(RR 목록), 근거 부족.
 - `state.yaml → slices.<slice>.stage4_frontend: done|blocked`.
 
 ## D. reviewer 체크리스트 (frontend-reviewer)

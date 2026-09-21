@@ -1,5 +1,5 @@
 # 리팩토링 요구서 (Refactor Request)
-# 파일명: workspace/refactor-requests/RR-<4자리>.yaml
+# 파일명: workspace/<project>/refactor-requests/RR-<4자리>.yaml
 id: RR-0001
 title: 주문 취소 시 재고 원복 누락
 source_stage: 5                  # 발견 단계 (5 통합테스트 | 6 보안 | 7 QA)

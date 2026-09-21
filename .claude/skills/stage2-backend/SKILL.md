@@ -64,8 +64,8 @@ brief §3 컨벤션과 프로필 기본값이 다르면 brief 를 우선한다.
 ## C. 게이트 및 산출물
 
 - 빌드 + 단위테스트 실행. 명령과 출력 요약을 레포트에 싣는다. 실패하면 고치고 다시 돌린다. 못 고치면 `blocked`.
-- 공용 파일 변경이 필요했던 것은 `workspace/reports/common-candidates.md` 에 누적 기록 (3단계 입력).
-- 레포트 `workspace/reports/<ts>_stage2_<slice>_backend.md`: 만든 파일 목록, 테이블, API 표, 테스트 수/결과, 근거 부족, 공통 후보.
+- 공용 파일 변경이 필요했던 것은 `workspace/<project>/reports/common-candidates.md` 에 누적 기록 (3단계 입력).
+- 레포트 `workspace/<project>/reports/<ts>_stage2_<slice>_backend.md`: 만든 파일 목록, 테이블, API 표, 테스트 수/결과, 근거 부족, 공통 후보.
 - `state.yaml → slices.<slice>.stage2_backend: done|blocked`.
 
 ## D. reviewer 체크리스트 (backend-reviewer 가 사용)

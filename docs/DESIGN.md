@@ -23,10 +23,10 @@
 
 | 산출물 | 위치 | 생산 | 소비 |
 |---|---|---|---|
-| `PROJECT_BRIEF.md` | workspace/knowledge/ | 0 | 전 단계 |
-| `slices.yaml` | workspace/slices/ | 1 | 2·4·5, /refactor |
+| `PROJECT_BRIEF.md` | workspace/<project>/knowledge/ | 0 | 전 단계 |
+| `slices.yaml` | workspace/<project>/slices/ | 1 | 2·4·5, /refactor |
 | OpenAPI 계약 (slice별) | target_dir/docs/api/<slice>.yaml | 2 | 4·5·8 |
-| `RR-xxxx.yaml` 리팩토링 요구서 | workspace/refactor-requests/ | 5·6·7 | /refactor → 1~4 |
+| `RR-xxxx.yaml` 리팩토링 요구서 | workspace/<project>/refactor-requests/ | 5·6·7 | /refactor → 1~4 |
 | `state.yaml` | workspace/ | 전 단계 | /status, 재개 |
 
 특히 **리팩토링 요구서를 단일 스키마**(`templates/refactor-request.yaml`)로 통일하면 5·6·7단계가 같은 형식을 뱉고,
@@ -64,7 +64,7 @@ slice 재분류가 필요한 경우만 1단계로 간다. 반복 회차(`iterati
 ### 2-8. 외부 도구 연동 방식
 `code-security-auditor`, `qa-automation`은 별도 repo이고 슬래시 명령은 repo 밖에서 호출할 수 없다.
 → `config/tools.yaml`에 경로를 두고, 6·7단계 에이전트가 해당 repo의 `SKILL.md`를 읽어 방법론대로 수행한 뒤,
-레포트를 `workspace/reports/`로 가져와 `tools/report_to_rr.py`(예정)로 요구서로 변환한다.
+레포트를 `workspace/<project>/reports/`로 가져와 `tools/report_to_rr.py`(예정)로 요구서로 변환한다.
 (대안: 두 repo를 Claude Code 플러그인으로 묶기 — 추후 검토)
 
 ## 3. 결정 사항 (2026-09-20)
