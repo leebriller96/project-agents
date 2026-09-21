@@ -184,5 +184,6 @@
 | stage3 | 모듈 간 fixture 공유를 `test-jar` 로 하려다 `./mvnw test`(package 전) 리액터에서 test-jar 의존이 `target/test-classes` 디렉터리 전체로 해석 → `DomainNoticeTestApplication` 이 user IT 의 `@SpringBootConfiguration` 으로 잡혀 9건 오류 | 프로필: test-jar 금지, `maven-resources-plugin` 복사(`copy-shared-fixtures`) — 골격이 user/admin pom 에 미리 넣음 |
 | stage3 | C-04 `connection-init-sql: SET SESSION group_concat_max_len` 을 H2 MODE=MySQL 이 거부 | 프로필: test 프로파일 `""` 덮기 + test-mysql 재설정 |
 | stage3 | 2단계 RR(공용 `MailMessage` 다수 수신자)을 3단계가 흡수 — 공용 변경은 3단계만 가능하므로 자연스러움 | stage3 스킬 §3: 2단계 RR 중 공용 변경 필요분은 3단계가 흡수하고 `/refactor` 는 slice 잔여만 |
-| stage3 | 4분류표 74행 중 대체·개선 8건은 증명 테스트 없음(Hikari 풀·ShedLock·세션 타임아웃·logback 등 설정성) | 5단계 특성화 시나리오 입력으로 넘김(레포트 §7) |
+| stage3 | 4분류표 74행 중 대체·개선 8건은 증명 테스트 없음(Hikari 풀·ShedLock·세션 타임아웃·logback 등 설정성) | 5단계 특성화 시나리오 입력으로 넘김(레포트 §7) || stage3 검토 | MySQL 세션 변수 테스트가 1024 로 내린 뒤 원복 안 함 → 풀 커넥션 오염(순서 의존). 3단계 이전엔 "올리기만" 해서 무해했던 것이 갱신으로 방향이 생김 | 프로필: `finally` 원복 규칙. RR-0006 |
+| stage3 검토 | 4분류표 증명 테스트 ID 72건 중 1건 오기 — reviewer 가 스크립트 전수 대조로 검출 | stage3 reviewer 체크 5 추가. 문서 정합 low 6건은 RR-0007 로 묶음 |
 
