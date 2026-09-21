@@ -66,4 +66,7 @@
 
 ## 알려진 주의
 - Boot 4.0: Jakarta EE 11, Spring Framework 7 — `HttpStatusCode`, `RestClient` 기본, `@MockitoBean`. Boot 3.x 용 서드파티(springdoc 2.x, p6spy-spring-boot-starter 구버전)는 4.x 대응 버전으로.
+- **모듈 간 test resources 공유는 test-jar 로 하지 말 것** — `./mvnw test`(package 전) 리액터에서 test-jar 의존은 `target/test-classes` 디렉터리 전체로 해석되어 `includes` 필터가 무력, 소유 모듈의 `@SpringBootConfiguration` 테스트 부트 클래스가 소비 모듈 IT 에 잡힌다(9건 실측). 소비 모듈 pom 에 `maven-resources-plugin` `copy-shared-fixtures`(generate-test-resources 단계, 소유 모듈 `src/test/resources/fixtures` → `target/test-classes/fixtures`) 로 복사. 골격이 이 실행을 user/admin pom 에 미리 넣는다.
+- H2 `MODE=MySQL` 은 `SET SESSION <mysql 변수>`(`group_concat_max_len` 등) 를 거부 → `hikari.connection-init-sql` 은 운영 yml 에 두고 `application-test.yml` 에서 `""`(빈 문자열, null 아님) 로 덮고 `test-mysql` 프로파일이 재설정.
+- 공용 클래스 생성자에 인자를 추가할 때 기존 생성자를 남기고 `@Autowired` 를 새 생성자에 두면 slice 테스트 무수정으로 동작 보존.
 - Maven 멀티모듈 병렬 developer: 각 slice 는 자기 모듈의 자기 패키지·XML·Flyway 대역만. 부모 POM·common·`mvnw` 는 공용. 전체 `./mvnw test` 는 웨이브 종료 후 1회.

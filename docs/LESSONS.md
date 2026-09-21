@@ -177,3 +177,12 @@
 | stage2 notice-admin | 원자성 REQ-020 의 롤백을 목 예외→보상만으로 "증명" — 실제 DB 롤백은 어노테이션 신뢰뿐 | 프로필: 두 번째 INSERT 실제 실패(컬럼 길이 초과) 케이스로 롤백 증명 |
 | stage2 도구 | RR 생성 후 본문을 정규식 치환으로 넣다가 백틱이 YAML 을 깨뜨림(`rr.py stats` 전체 실패) | `rr.py new` 에 `--evidence/--description/--fix` 추가, pipeline-core 에 "YAML 문자열 치환 금지" |
 
+## 2026-09-22 — secu-sample stage3 (공통화 회차 1)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage3 | 모듈 간 fixture 공유를 `test-jar` 로 하려다 `./mvnw test`(package 전) 리액터에서 test-jar 의존이 `target/test-classes` 디렉터리 전체로 해석 → `DomainNoticeTestApplication` 이 user IT 의 `@SpringBootConfiguration` 으로 잡혀 9건 오류 | 프로필: test-jar 금지, `maven-resources-plugin` 복사(`copy-shared-fixtures`) — 골격이 user/admin pom 에 미리 넣음 |
+| stage3 | C-04 `connection-init-sql: SET SESSION group_concat_max_len` 을 H2 MODE=MySQL 이 거부 | 프로필: test 프로파일 `""` 덮기 + test-mysql 재설정 |
+| stage3 | 2단계 RR(공용 `MailMessage` 다수 수신자)을 3단계가 흡수 — 공용 변경은 3단계만 가능하므로 자연스러움 | stage3 스킬 §3: 2단계 RR 중 공용 변경 필요분은 3단계가 흡수하고 `/refactor` 는 slice 잔여만 |
+| stage3 | 4분류표 74행 중 대체·개선 8건은 증명 테스트 없음(Hikari 풀·ShedLock·세션 타임아웃·logback 등 설정성) | 5단계 특성화 시나리오 입력으로 넘김(레포트 §7) |
+
