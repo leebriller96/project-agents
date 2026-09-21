@@ -56,7 +56,8 @@ statement 마다 사용된 구문을 태깅하고 아래 규칙으로 변환한�
 | `ROWNUM AS RNUM` 을 결과 컬럼으로 노출(화면 번호) | `ROW_NUMBER() OVER (ORDER BY …) AS rnum` 또는 앱에서 `offset + index` | ⚠ `TIE_ORDER` — ORDER BY 가 조건부(`<if>`)면 무정렬 시 번호 의미 없음. 정렬 키가 없는 경로는 기본 정렬을 사람 확인 |
 | `<if>` 로 감싼 조건부 `ORDER BY` (없으면 무정렬 + 힌트 인덱스 순 의존) | 기본 정렬 키를 **명시**(PK DESC 등) | ⚠ `TIE_ORDER` — AS-IS 는 "운영에서 그렇게 보임" 수준의 미정 순서. 기본 정렬 결정은 근거 부족으로 기록 후 사람 확인 |
 | `ROW_NUMBER() OVER (…)` 등 분석 함수 | 동일(MySQL 8 윈도우 함수) | |
-| `LISTAGG(x, ',') WITHIN GROUP (ORDER BY y)` | `GROUP_CONCAT(x ORDER BY y SEPARATOR ',')` | ⚠ `group_concat_max_len` 기본 1024 → 설정 |
+| `LISTAGG(x, ',') WITHIN GROUP (ORDER BY y)` | `GROUP_CONCAT(x ORDER BY y SEPARATOR ',')` | ⚠ `group_concat_max_len` 기본 1024 **바이트** → 설정. Oracle `VARCHAR2(n BYTE)` 컬럼이 MySQL `VARCHAR(n)`(문자) 로 넓어지면 한글은 3배 → AS-IS 에서 여유였던 길이도 초과함(secu-sample 실측: 300자×2 절단). 세션 상향은 `spring.datasource.hikari.connection-init-sql: SET SESSION group_concat_max_len = 4096`. H2 는 상한 없음이라 **MySQL 테스트로만 검출** |
+| `SYSDATE`/`TRUNC(SYSDATE)` 를 조건·저장 값으로 쓰는 statement | DB `NOW()`/`CURRENT_DATE` 대신 서비스가 `Clock` 으로 잡은 `#{baseDate}`/`#{regDt}`/`#{modDt}` 바인드 (XML 은 `<choose>` 로 null 이면 `CURRENT_DATE` 폴백) | ⚠ `SESSION_TZ` 일원화(앱 Clock = JDBC TZ) + 고정 Clock 으로 경계값 fixture 를 결정적으로 검증 가능. MyBatis 동일 세션 재조회는 로컬 캐시에 잡히므로 테스트에서 세션 변수 변경 후 재조회할 때는 쓰기 statement 로 캐시를 비운다 |
 | `WM_CONCAT` | `GROUP_CONCAT` | |
 | `MINUS` | `EXCEPT` (8.0.31+) | |
 | `INTERSECT` | 동일(8.0.31+) | |
@@ -64,6 +65,8 @@ statement 마다 사용된 구문을 태깅하고 아래 규칙으로 변환한�
 | `(+)` 외부 조인 | `LEFT/RIGHT JOIN … ON` | ⚠ `(+)` 가 WHERE 조건에 섞이면 조인 조건 vs 필터 조건 분리 필요 |
 | `CONNECT BY PRIOR … START WITH` | `WITH RECURSIVE` CTE | `LEVEL`→깊이 컬럼, `SYS_CONNECT_BY_PATH`→경로 누적, `ORDER SIBLINGS BY`→CTE 안 정렬 키 |
 | `ORDER SIBLINGS BY sort_no` | CTE 에 경로 정렬키 누적: `CONCAT(p.path_key, LPAD(c.sort_no, 5, '0'), LPAD(c.id, 10, '0'))` 후 `ORDER BY path_key` | ⚠ `TIE_ORDER` — 형제 SORT_NO 동순위는 Oracle 도 미정. PK 를 경로키에 덧붙여 고정 |
+| 재귀 CTE 안의 문자열 누적 컬럼(경로키·`SYS_CONNECT_BY_PATH`) | 앵커에서 `RPAD(CONCAT(…), 240, ' ')` 로 폭을 고정하고 재귀부는 `RPAD(CONCAT(RTRIM(t.path_key), …), 240, ' ')`. CTE 는 `WITH RECURSIVE t (col, …) AS (` 컬럼 목록 명시 | MySQL 은 **앵커 컬럼의 길이로 CTE 컬럼 타입을 정해** 재귀부에서 길어진 값을 절단(strict 면 오류). `CAST(… AS CHAR(n))` 은 H2 가 공백 패딩이라 양쪽 공용 불가 → RPAD/RTRIM. H2 는 CTE 컬럼 목록이 없으면 구문 오류 (secu-sample 실측) |
+| 숫자 → `LPAD` 인자 | `LPAD(CONCAT('', n), 5, '0')` | H2 `LPAD` 는 문자열 인자만 받으므로 `CONCAT('', n)` 으로 문자열화(양쪽 공용) |
 | `CONNECT_BY_ISLEAF` | 외부 SELECT 에서 `NOT EXISTS (SELECT 1 FROM t c WHERE c.parent_id = n.id)` → 1/0 | 소비 코드가 `'1'` 문자열 비교(ftl `?string == '1'`)면 반환 타입(정수) 유지 |
 | `LPAD(' ', (LEVEL-1)*2, ' ') \|\| name` (들여쓰기) | `CONCAT(REPEAT(' ', (depth-1)*2), name)` | ⚠ `CONCAT_NULL` — Oracle `LPAD(x, 0)` 은 NULL 이지만 `NULL \|\| name` = name 이라 결과 동일. MySQL `REPEAT(' ',0)` = `''` → 동일. 판정 "동작 동일" |
 | `MERGE INTO … WHEN MATCHED/NOT MATCHED` | `INSERT … ON DUPLICATE KEY UPDATE` | ⚠ UNIQUE 키가 조인 조건과 같아야 함. 아니면 앱 로직(조회 후 분기) |
