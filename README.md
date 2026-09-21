@@ -83,7 +83,10 @@ cp config/project.yaml.example config/project.yaml   # 프로젝트명·모드·
 /stage7                 # QA 자동화 (qa-automation 방법론) → RR
 /stage8                 # 산출물 생성
 /status                 # 진행 상태 + 다음 실행 가능한 명령
+/rerun slice:<id>       # 특정 업무만 다시 (stage2→4→5), /rerun common (공통만), /rerun layer:backend/mapper slice:<id> (한 계층만)
 ```
+
+한 바퀴 돌렸다고 끝이 아니다 — 문제가 보이면 `/rerun`·`/refactor` 로 **해당 업무·계층만** 다시 돌리고, 그때마다 드러난 지침을 스킬에 반영한다(`docs/LESSONS.md`).
 
 `/stage2 order,member` 처럼 slice 를 지정할 수 있고, `/stage2 scaffold` 는 골격만 다시 만든다.
 

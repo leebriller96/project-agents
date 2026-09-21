@@ -127,6 +127,8 @@ def matches(d, args) -> bool:
         return False
     if args.stage is not None and str(d.get("target_stage")) != str(args.stage):
         return False
+    if getattr(args, "layer", None) and not str(d.get("target_layer", "")).startswith(args.layer):
+        return False
     return True
 
 
@@ -216,6 +218,7 @@ def main():
 
     p = sub.add_parser("list")
     p.add_argument("--status", choices=STATUSES); p.add_argument("--slice"); p.add_argument("--stage", type=int)
+    p.add_argument("--layer", help="target_layer 접두어 필터 (예: backend/mapper, frontend, common)")
     p.set_defaults(fn=cmd_list)
 
     p = sub.add_parser("set")

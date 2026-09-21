@@ -15,6 +15,9 @@
   `workspace/<project>/refactor-requests/`에 기록한다. 요구서 없이 코드를 직접 고치지 않는다.
 - **상태는 파일로**: 진행 상황은 `workspace/<project>/state.yaml`에만 기록한다. 대화 기억에 의존하지 않는다.
 - **정직한 보고**: 실행하지 못한 테스트, 구성하지 못한 환경은 통과시키지 말고 그 사실을 레포트에 남긴다.
+- **부분 재실행 가능**: 전수 변환이 기본이 아니다. `/rerun`·`/refactor` 의 slice·layer 필터로 지정 범위만 돌리고 나머지는 건드리지 않는다.
+- **재실행 = 업그레이드**: 다시 돌릴 때마다 왜 처음에 못 잡았는지를 `docs/LESSONS.md` 에 적고 해당 stage 의 스킬·프로필·에이전트를 같은 회차에 갱신한다.
+- **git 에는 스킬만**: `workspace/<project>/`(입력·AS-IS·산출물)와 `target_dir`(변환 소스)는 절대 커밋하지 않는다. `.gitignore` 가 막고 있으며, 커밋 전 `git ls-files | grep workspace/` 가 비어 있어야 한다.
 - 모든 레포트·문서·코드 주석은 **한글**로 작성한다.
 
 ## 외부 도구
