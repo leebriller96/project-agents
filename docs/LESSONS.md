@@ -99,3 +99,11 @@
 | stage6 merge | 병렬 4 scan 24건 → 병합 20건(통합 5·신규 1). 같은 근본 원인(초기 비밀번호·비활성 토큰·PageParam)이 3 slice 에서 각각 잡혀 merge 가 하나로 묶음. 경계 흐름 5개 중 확정 3·부분 1·기각 1(잠금 순환 없음) | merge 방식 유효. `stage6-security` §5 merge 규칙에 "통합 시 근본 원인 위치를 대표로, sink 는 evidence 로" 예시 추가 |
 | stage6 결과 | High 2건 모두 **0단계 §11 근거 부족(11-08 초기 비밀번호)** 에서 이미 표시됐던 사양 문제. 코드 결함이 아니라 요구사항 결정 부재 → RR 은 만들되 "사업 결정 선행" 표시 | `/stage6` 명령: RR 중 "사양 결정 필요" 는 brief §12 결정 요청으로 사용자에게 올리고 `/refactor` 에서 결정 전 착수 금지. `/stage1` 8항(2단계 전 결정 필요 항목)에 "보안 관련 §11 항목(초기 비밀번호·토큰 폐기·TLS)은 반드시 포함" 추가 — 6단계까지 미루지 않도록 |
 | stage6 | 6단계 실행 시간 약 1시간 10분(scan 4 병렬 2웨이브 + merge). 토큰 약 900k | 정상. hybrid 였다면 SAST 결과 검증 시간이 더 필요 |
+
+## 2026-09-21 (오후) — refactor iteration 5 (보안 RR)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| iter5 common | RR 5건 + A안 공용 기반. Boot 3.3.5→**3.4.13** 상향 성공(springdoc 2.8 동반, `@MockBean→@MockitoBean`), lockfile 도입. 306 tests(+39), `-Pmysql` 전체 통과. 31분·114 tool call | 프로필: 골격 기본 버전을 Boot 3.4.x + springdoc 2.8 + `springdoc.api-docs.version=openapi_3_0` 고정(2.8 기본 3.1 이 계약 형식을 흔듦), `dependencyLocking` 기본 |
+| iter5 common | 인메모리 rate limit 이 통합 테스트(한 IP 수백 회 로그인)를 막음 → env-up.sh 에 `..._ENABLED=false` | 프로필: "보안 필터는 설정으로 끌 수 있게, 통합 테스트 환경은 rate limit 비활성" |
+| iter5 common | OriginCheck 는 nginx `proxy_set_header Host $host` 없으면 전부 403 — 배포 가이드 필수 항목 | 8단계 배포 가이드 체크리스트에 추가 |

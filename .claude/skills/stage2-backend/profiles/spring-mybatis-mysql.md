@@ -3,6 +3,8 @@
 `config/project.yaml → stack.backend.profile: spring-mybatis-mysql` 일 때 적용한다. 버전은 config 값을 우선한다.
 
 ## 기본 의존성 (Gradle 기준)
+- 버전 기준: Spring Boot **3.4.x**(OSS 지원 중인 라인) + springdoc **2.8.x** + `springdoc.api-docs.version: openapi_3_0`(2.8 기본 3.1 은 계약 형식을 바꿈) + `dependencyLocking { lockAllConfigurations() }` 와 `gradle.lockfile` 커밋. Boot 3.4 부터 `@MockBean` 대신 `@MockitoBean`.
+- 보안 골격 기본 포함: 인증 필터의 회원 상태 조회(비활성·잠금 즉시 401), 로그인 IP rate limit(설정으로 on/off — 통합 테스트 환경은 off), 상태 변경 요청 Origin/Referer 검증(nginx `proxy_set_header Host $host` 필수 — 배포 가이드), 페이징 `page` 상한.
 - spring-boot-starter-web, -validation, -security(인증 골격), -actuator
 - mybatis-spring-boot-starter, mysql-connector-j, flyway-core + flyway-mysql
 - springdoc-openapi-starter-webmvc-ui (계약 생성·확인용)
