@@ -93,7 +93,7 @@ Maven 이면 `./mvnw -q verify`, `-Dtest=...`.
   `@MybatisTest` 는 DataSource 를 임베디드로 교체하므로 `application-test.yml` 에 `spring.test.database.replace: none` 필수.
 - **시각 고정 테스트**: 발급·검증 양쪽이 같은 `Clock` 을 봐야 한다. `@SpringBootTest` 통합 테스트는 `@TestConfiguration` 으로 `Clock.fixed` 빈을 override 하고, seed 데이터의 날짜는 상수가 아니라 그 Clock 기준 상대값(`LocalDate.now(clock).minusDays(n)`)으로 만든다. 고정 시각으로 만든 토큰/만료값을 시스템 시계를 쓰는 파서(`Jwts.parser()`, `new JwtTokenParser()`)로 검증하면 실제 시각이 지난 뒤 실패하는 시간 폭탄이 된다. 골격 `JwtTokenParser` 는 Clock 주입 생성자를 제공한다.
 - MySQL **세션 변수를 바꾸는 테스트**(`SET SESSION …`)는 `finally` 로 원복 — `@MybatisTest` 롤백은 세션 변수를 되돌리지 않고 그 물리 커넥션이 풀로 돌아가 다른 테스트가 물려받는다(실행 순서 의존).
-- 계약 강화(최소 길이 등)는 `@Schema(minLength=…)` 같은 **문서 전용** 수단을 먼저 쓴다. Bean Validation 제약을 추가하면 런타임 동작(중복 fieldErrors·문구)이 바뀌므로 `""`·`"  "`·`null` 세 경계를 컨트롤러 테스트에 넣는다. `@NotBlank` 와 `@Size(min=1)` 을 겹치지 않는다.
+- 계약 강화(최소 길이 등)는 `@Schema(minLength=…)` 같은 **문서 전용** 수단을 먼저 쓴다. Bean Validation 제약을 추가하면 런타임 동작(중복 fieldErrors·문구)이 바뀌므로 `""`·`"  "`·`null` 세 경계를 컨트롤러 테스트에 넣는다. `@NotBlank` 와 `@Size(min=1)` 을 겹치지 않는다. **swagger-core(springdoc) 는 `@Size` 가 있으면 `@Schema(minLength)` 를 `size.min()`(=0) 으로 무조건 덮어쓴다** → 계약 minLength 를 살리려면 길이 검증을 Hibernate `@Length(max)` 로 두고 `@Schema(minLength=1, maxLength=…)` 로 계약 공급(실측 swagger-core 2.2.47).
 - 다운로드 API: `Content-Length` 는 `Resource.contentLength()`(실물), `Content-Disposition` 은 RFC 5987 `filename*=UTF-8''`. 저장소 키 검증 예외(`IllegalArgumentException`) 는 500 이 아니라 404 로 변환.
 - Controller: `@WebMvcTest` + MockMvc. 검증 실패·에러 응답 포맷 확인.
   `@WebMvcTest` 는 SecurityConfig 를 자동 스캔하지 않음 → `@Import({SecurityConfig, JwtTokenParser})` 표준 패턴을 골격이 `JwtTestSupport` 로 제공하고 slice 테스트는 그것을 쓴다.
