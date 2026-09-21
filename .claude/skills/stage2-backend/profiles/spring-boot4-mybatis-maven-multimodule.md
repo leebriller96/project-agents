@@ -33,7 +33,7 @@
 - **M-38 표준 컬럼**: 모든 테이블 `use_yn CHAR(1) DEFAULT 'Y'`, `del_yn CHAR(1) DEFAULT 'N'`, `reg_id VARCHAR(20)`, `reg_dt DATETIME`, `mod_id`, `mod_dt`. `Auditable` 은 이 이름으로 매핑(`created_*` 아님). AS-IS 의 제각각 감사 컬럼은 매핑표에서 표준 컬럼으로 **이름 변환**하고 값은 이관 규칙 명시.
 - **논리 삭제**: `del_yn='Y'`. 모든 조회는 `del_yn='N'` 조건 (Mapper `<sql id="notDeleted">` fragment).
 - **코드마스터**: 업무 구분 숫자 코드(AS-IS `wj_class_id` 류)는 코드마스터 `<GROUP>_CD` 로 치환. 매핑표에 숫자→코드 대응.
-- **Flyway 대역**: `db/migration/<대역>/V1_0_<대역><NNN>__<slice>_<설명>.sql` — 100 공통/코드마스터, 200 사용자·인증, 300~700 업무 slice(slices.yaml 의 순서대로 배정), 800 데이터 이관·보정. `flyway.locations` 에 폴더 전부 나열. 대역은 slice 마다 하나씩 고정해 병렬 충돌을 없앤다.
+- **Flyway 대역**: `db/migration/<대역>/V1_0_<대역><NNN>__<slice>_<설명>.sql` — 100 공통/코드마스터, 200 사용자·인증, 300~700 업무 slice(slices.yaml 의 순서대로 배정), 800 데이터 이관·보정(번호는 **FK 참조 순 — 부모 테이블 먼저** 로 골격이 매기고, slice 규칙 문서가 골격 README 와 다르면 "지시와 다른 결정" 으로 명시). `flyway.locations` 에 폴더 전부 나열. 대역은 slice 마다 하나씩 고정해 병렬 충돌을 없앤다.
 - **외부 연동**: `RestClient` 빈(공용 `RestClientConfig`: 타임아웃·로깅 인터셉터·traceId 전파). AS-IS Axis/Jersey/httpclient3 호출은 **소스가 들어온 것만** RestClient 로 치환하고, WSDL 기반 SOAP 은 `spring-ws` 또는 최소 XML 템플릿으로(매핑표에 결정 기록).
 - **메일**: 소스가 들어오면 `MailPort` 인터페이스 + 구현(MGS API)로 치환, 템플릿은 DB 테이블. 소스 없으면 범위 외.
 - **파일 업로드**: 1단계 저장 `{base}/{구획}/yyyy/MM/dd/FILE_<yyyyMMddHHmmssSSS>_<8hex>.<ext>`, 웹 문서루트 밖, 원본 파일명은 DB 에만. AS-IS 2단계(temp→renameTo) 경로·`wj_class_id` 폴더는 매핑표에 "폐기, 파일 이관 규칙".

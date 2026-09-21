@@ -150,3 +150,17 @@
 | stage0 migration | §11 30건 중 slice 구조·접근 통제·인증 범위 결정이 stage1 을 막음 — 첫 샘플의 "2단계 전 결정" 이 migration 에서는 **1단계 전**으로 당겨짐 | `/stage0` 명령: migration 이면 stage0 종료 시 "stage1 전 결정 필요" 목록을 따로 제시 |
 | stage2 골격 (secu) | Boot 4.0.8 골격 51분·434k 토큰·180 tool call — 첫 샘플 골격의 2배. 원인: Maven 설치·wrapper 생성, Boot 4 패키지 이동·Jackson 3·Security 7 CSRF·Testcontainers 2 등 호환 이슈 8건을 전부 실측으로 해결 | 프로필 "알려진 주의" 에 실측 조합·패키지·CSRF 테스트 패턴 기록 → 다음엔 재발 없음. 골격은 1회성이라 허용 |
 | stage2 골격 (secu) | 에이전트가 permitAll 범위를 내 프롬프트(`GET /notices/**`)가 아니라 brief §12-A R11·기능 계약 FC-12(상세·첨부·분류만 공개, 목록은 인증)대로 결정 — 규약 우선순위 작동 | 정상 |
+
+## 2026-09-22 — secu-sample stage2 W1 (domain-notice: sql-migrator convert → reviewer)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage2 convert | Oracle 18 statement 변환 첫 실전: 매핑표 20행 100%, ⚠ 16건 전부 `파일:라인` 근거(reviewer 무작위 대조 16건 일치), MySQL 실측으로 GROUP_CONCAT 절단(1024B) 실제 재현. **채점표 2단계 함정 8/8**. 카탈로그 +4행 | 방법론 유효. 실측 후 ⚠ 결론이 뒤집힌 곳의 **XML 주석**은 옛 결론 그대로 남음 → sql-migrator 규칙 "실측 후 주석 동기화", reviewer "주석↔매핑표 상충 grep" |
+| stage2 convert | API·서비스가 없는 **공유 도메인 slice**(domain-notice) 는 developer 단계가 없어 기능 추적표(FB-07~13) 를 아무도 안 만듦 → reviewer FAIL(high). 산출물 경계가 비면 게이트가 통째로 빠진다 | `sql-migrator` 규칙: 공유 도메인 slice 는 convert 가 function-mapping 까지. reviewer D-4 에 "API 없는 slice 도 추적표" 추가 |
+| stage2 convert | `USE_YN` → `use_yn`+`del_yn` 분리 후 옵션(`includeDeleted`) 으로 포함시킨 삭제 행을 목록 DTO 가 구분 못 함(delYn 없음) → 관리자 화면 FB-35/36 재현 불가 | 카탈로그 규칙: 컬럼 분리 변환 시 옵션 포함 행을 구분할 컬럼을 행 DTO 에 함께 반환. reviewer 체크 추가 |
+| stage2 convert | `SYSDATE → Clock 바인드` 변환에서 `null → CURRENT_DATE` 폴백을 넣음 → 서비스가 Clock 바인드를 빠뜨려도 조용히 통과(§4 now() 금지 우회 경로). 테스트도 고정 기준일과 DB 시계가 한 메서드에 섞임 | 폴백 제거(fail-fast), 카탈로그 행에 권장 명시. 테스트는 시계 경로별로 분리 |
+| stage2 convert | 테스트 `@DisplayName` REQ 번호 오연결 3건(트리→REQ-004 상단고정, 페이징→REQ-002 검색) — 8단계 추적표 원천 오염 | sql-migrator·reviewer 에 "REQ 번호 ↔ brief §8 제목 대조". 후보: `tools/trace_check.py` 기계 대조 |
+| stage2 convert | 800 이관 대역 번호가 골격 README(notice→file→class) 와 slice 규칙 문서(class→notice→file, FK 순) 에서 다름. FK 순이 맞음 | 프로필: 800 번호는 FK 참조 순으로 골격이 매김. 골격 README 정정은 C-07(공용 파일) |
+| stage2 convert | 근거 부족 S-1(collation) 을 매핑표가 `brief §11 "3"` 으로 인용했으나 brief §11 에 항목 자체가 없었음(실제 출처 SQL 인벤토리 §10) → 사람 확인 누락 위험 | brief §11-31 추가. sql-migrator 규칙: §11 에 없는 근거 부족은 "brief §11 후보" 로 분리 보고, 인용은 실제 출처 |
+| stage2 convert | 매핑표 행 수 표기 혼선(보고 19 / 실제 20 = fragment 포함) | 통계 형식 고정 "statement N(정의 n + B m) + fragment k = 행 수" |
+
