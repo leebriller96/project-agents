@@ -110,3 +110,12 @@
 | iter5 BE 검토 | reviewer **FAIL(high 2)**: ① `@Primary` provider 가 MyBatis 세션이라 `@Transactional` 테스트 안에서 **1차 캐시** 로 stale 상태 반환 → 공용 회귀 테스트 실패(developer 는 slice 부분 실행만 해서 못 봄, 오케스트레이터가 고친 C-47 단언도 이 실패는 못 잡음). ② rate limit 이 `X-Forwarded-For` **첫 값**을 키로 — nginx 표준은 클라이언트 값 뒤에 실 IP 를 덧붙이므로 스푸핑 가능 → 내 프롬프트 지시("첫 값 사용")가 틀렸음 | 프로필: "인증/상태 조회 Mapper 는 `flushCache=true useCache=false`", "XFF 는 신뢰 프록시 홉 수 기준 **마지막 값**". 병렬 웨이브 후 전체 테스트를 reviewer 전에 오케스트레이터가 1회 돌려 먼저 잡는 게 낫다 — pipeline-core §6-6 에 "웨이브 종료 시 오케스트레이터가 전체 테스트 1회, 실패면 reviewer 전에 developer 재작업" 명시 |
 | stage6 재점검 | `report_diff`: 해결 10·잔존 10·신규 1. 해결 10건 전부 코드로 실확인, 놓친 것 0. 신규 코드(비밀번호 변경 API·필터 3종·runner)를 새 공격면으로 점검 → Low/추정 1건뿐. 되돌린 RR 0 | 재점검 절차(§5) 유효. 남은 것은 운영 배포 전 확정 항목(TLS·ADMIN_INITIAL_PASSWORD·XFF 신뢰 설정) → 8단계 배포 가이드 체크리스트로 |
 | 구조 | 사용자 지시: 외부 도구를 별도 clone 하지 않고 project-agents 하나만 받아 쓰게 → **git subtree** 로 `external/` 편입 (submodule 은 `--recursive` 필요라 제외). 경로는 tools.yaml 상대경로, `tools/sync-external.sh` 로 upstream 갱신 | 도구의 `reports/.sast`·`.tests` 산출물은 gitignore. 도구 안의 `.claude/`·`CLAUDE.md` 는 루트가 아니라 자동 로드되지 않음(의도) |
+
+## 2026-09-21 (오후) — stage5 재실행(r2)·refactor iter7
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage5 r2 | 4 slice **API 126/126, UI 24/24**(r1 101/102·19/19). 재실행이 refactor 4·5 의 효과를 전부 실측으로 확인: 갭 잠금 22.6배→1.3배, 비활성 토큰 200→401, Content-Type 통과, ISBN 동시 등록 201+409, export 상한 10k, A안 흐름. 신규 RR 5건 전부 low(문서·타입 stale) | 재실행 = 회귀 게이트로 유효. `stage5-integration-test` 에 "재실행(rN) 은 이전 결과 병기, 기대값 변경 건수 보고" 규칙 추가 |
+| stage5 r2 | 첫 slice 가 만든 `provisionChanged()`(A안 초기 상태 해제) 헬퍼를 나머지 3 slice 가 import 로 재사용 — 헬퍼 인계 규칙이 작동 | 정상 |
+| stage5 r2 | RR 5건 중 3건이 **계약/타입 stale**(BE 계약 재생성 후 FE `gen:api` 미실행, 계약 설명이 정책 변경 미반영). `/refactor` 가 BE 계약을 바꾸면 FE 타입 재생성을 자동으로 붙여야 함 | `/refactor` 7항에 "target_stage 2 반영으로 `docs/api/*.yaml` 이 바뀌면 같은 회차에 FE `gen:api` 재생성 작업을 자동 추가" 규칙. 계약 설명 문구도 정책 결정(§12) 변경 시 grep 대상 |
+| stage5 r2 | TZ 재현 창(00~09 KST) 밖 실행이라 SQL `CURDATE()` 케이스 직접 재확인 불가 → 커넥션 time_zone·seed 값·세션 CURDATE 로 간접 확인 | 시각 의존 시나리오는 "재현 창 밖이면 간접 증거 3종" 패턴을 스킬에 예시로 |

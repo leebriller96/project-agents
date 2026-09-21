@@ -43,6 +43,9 @@ description: 5단계 통합 테스트 — slice별 통합 테스트 시나리오
 - 시각 의존 결함(월 경계·자정·UTC/KST 창)은 "재현 창(시각 범위)" 을 시나리오·README 에 명시한다. 자동 실행이 창 밖이면 통과해도 결함이 없는 게 아니다.
 - 과거 이력처럼 API 로 만들 수 없는 fixture 는 타 slice 소유 테이블에 SQL INSERT 를 허용하되 fixture 파일·시나리오에 사유를 적는다.
 
+- **재실행(rN)**: 시나리오 문서에 이전 결과를 병기하고, 기대값이 바뀐 건수·신규 건수를 레포트에 명시한다. 이전 RR 의 resolution_note 를 근거로 기대값을 갱신하며, 갱신 없이 통과한 항목은 회귀 확인으로 기록.
+- 시각 의존 시나리오가 재현 창 밖이면 간접 증거(커넥션 세션 TZ, seed 컬럼 값, 세션 TZ 지정 SQL 결과)로 대체하고 "창 안 재확인 필요" 를 남긴다.
+
 ## 5. RR 도출
 - 실패 시나리오·불일치마다 RR 1개. `source_stage: 5`, `evidence` 에 시나리오 ID + 실패 로그/파일:라인.
 - `target_stage`/`target_layer` 판단: 응답·DB 문제 → 2/backend/*, 표시·검증 문제 → 4/frontend/*, 공통 포맷 문제 → 3/common, 계약 자체 문제 → 2/backend/api.
