@@ -34,13 +34,18 @@ brief §3 컨벤션과 프로필 기본값이 다르면 brief 를 우선한다.
 ### B-1. Migration (DDL)
 - slice 의 엔티티를 테이블로 설계한다. 근거: 테이블정의서/ERD > 요구사항 > AS-IS DDL.
 - 파일: `db/migration/V<yyMMddHHmm>__<slice>_<설명>.sql`. 골격 baseline 은 수정하지 않는다.
-- migration 모드: `docs/deliverables/mapping/<slice>-table-mapping.md` 에 AS-IS 테이블·컬럼 → TO-BE 매핑표를 쓴다 (유지/변경/폐기/신규 표시, 변환 규칙).
+- migration 모드: `docs/deliverables/mapping/<slice>-table-mapping.md` 에 AS-IS 테이블·컬럼 → TO-BE 매핑표를 쓴다 (유지/변경/폐기/신규 표시, 변환 규칙). 표준 컬럼(M-38 등) 도입 시 AS-IS 감사 컬럼 → 표준 컬럼 이름·값 변환 규칙, 업무 구분 숫자 코드 → 코드마스터 대응을 포함. 데이터 이관 SQL 은 Flyway 800 대역(또는 별도 스크립트)으로 분리.
 - 다른 slice 소유 테이블은 참조(FK)만 하고 만들지 않는다.
 
 ### B-2. Mapper / Repository
 - 테이블당 Mapper 1개를 기본으로. 쿼리는 slice 가 필요로 하는 것만 만든다.
 - 동적 SQL 은 프로필 규칙대로. 문자열 결합 SQL 금지(6단계에서 잡힌다).
 - AS-IS 에 SQL 이 있으면 의미를 유지하되 TO-BE 스키마에 맞춰 다시 쓴다. 저장 프로시저는 서비스 로직으로 옮기고 매핑표에 기록.
+- **migration + Oracle 방언**: `sql-migrator` 를 `convert <slice>` 로 먼저 호출해 Mapper 인터페이스·XML·DTO·매핑표(`<slice>-sql-mapping.md`)·Mapper 테스트를 받은 뒤, backend-developer 는 그 시그니처로 서비스를 만든다(`migration-sql` 스킬). `sqlSession` 직접 호출 잔존 0.
+
+### B-2-1. 기능 추적표 (migration 게이트)
+- `docs/deliverables/mapping/<slice>-function-mapping.md`: `ASIS_FUNCTION_CONTRACTS.md` 의 이 slice 행마다 → TO-BE 구현(컨트롤러 메서드·서비스·Mapper)·동작 차이(없음 | §12 결정 근거 | RR)·특성화 테스트 ID. **모든 행이 채워져야 slice done** — "미이관" 은 §12 폐기 결정 근거 없이는 허용하지 않는다(조용한 기능 누락 차단).
+- 동작이 AS-IS 와 달라지는 곳은 요구사항/§12 근거가 있을 때만 허용. 근거 없으면 AS-IS 동작을 유지하고 개선 제안은 RR(low).
 
 ### B-3. Service
 - 트랜잭션 경계는 서비스 메서드. 비즈니스 규칙은 요구사항 ID 를 주석으로 단다 (`// REQ-011: 재고 부족 시 주문 불가`).
@@ -73,7 +78,7 @@ brief §3 컨벤션과 프로필 기본값이 다르면 brief 를 우선한다.
 1. 계약 일치: `docs/api/<slice>.yaml` 의 경로·스키마·에러가 컨트롤러와 같은가.
 2. 근거 일치: 구현된 규칙마다 REQ ID 또는 문서 근거가 있는가. 근거 없는 기능이 있는가.
 3. 경계 준수: 남의 slice Mapper 직접 사용, 공용 파일 수정, 골격 규약 위반.
-4. 데이터: 마이그레이션이 재실행 가능하고 baseline 을 건드리지 않는가. 매핑표(migration)가 있는가.
+4. 데이터: 마이그레이션이 재실행 가능하고 baseline 을 건드리지 않는가. 매핑표(migration)가 있는가 — 테이블·SQL·기능 매핑표 3종의 행이 100% 채워졌는가, ⚠ 판정에 근거가 있는가, `sqlSession`·`${}`·Oracle 대문자 별칭 잔존 0 인가.
 5. 테스트: 규칙마다 테스트가 있는가. 비활성화된 테스트가 있는가. 요구사항을 다루는 테스트의 `@DisplayName` 에 REQ ID 가 있는가(8단계 추적표의 원천 — 없으면 끊긴 연결로 표시된다). 고정 시각(`Clock.fixed`, 상수 Instant)과 시스템 시계를 쓰는 검증기가 한 테스트에 섞여 있지 않은가(시간 폭탄).
 6. 기본 보안: SQL 문자열 결합, 입력 미검증, 인증 누락 엔드포인트, 민감정보 로깅.
 7. 컨벤션: `CONVENTIONS.md` 위반.

@@ -1,0 +1,37 @@
+# Frontend 프로필: react19-vite-tailwind-pnpm
+
+`config/project.yaml → stack.frontend.profile: react19-vite-tailwind-pnpm`. 차세대(migration) 프로젝트용 — React 19 / Vite 7 / TypeScript 5.9 / Tailwind 3 / **pnpm 워크스페이스**(user·admin 앱 분리) / 세션+CSRF 인증 / Tiptap·마크다운 에디터 / SSE.
+`react-ts.md` 의 규칙(라우트 자동 등록·등록 훅·zod 전수 테스트·URL 정규화·gcTime 0+reset·비밀번호 refine·vitest/jsdom 알려진 문제·무거운 라이브러리 lazy)은 **그대로 상속**하고, 아래는 차이점만.
+
+## 기본 구조 (pnpm 워크스페이스)
+```
+<target_dir>/apps/
+├── pnpm-workspace.yaml          packages: ["user", "admin", "shared"]
+├── package.json                 루트 스크립트: pnpm -r lint/typecheck/test/build, gen:api
+├── shared/                      공용 패키지 (@app/shared): api 클라이언트·CSRF·UI 컴포넌트(Figma 기준)·hooks·types(생성)
+├── user/                        사용자 앱 (Vite) — src/app, src/features/<slice>
+└── admin/                       관리자 앱 (Vite) — src/app, src/features/<slice>
+```
+- slice 는 backend 소유 모듈과 같은 앱(user 또는 admin)에만 화면을 둔다. 양쪽에 화면이 있으면 slice 를 나눈다.
+- 계약 타입: `pnpm gen:api -- <slice>` → `shared/src/api/types/<slice>.d.ts` (앱이 공유).
+- 명령: `pnpm install --frozen-lockfile`, `pnpm -r lint`, `pnpm -r typecheck`, `pnpm -r test -- --run`, `pnpm -r build`, 앱 단위는 `pnpm --filter @app/user test -- --run src/features/<slice>`.
+
+## 규약 차이
+- **인증**: 세션 쿠키(JSESSIONID, httpOnly) + **CSRF**: `shared/api/client.ts` 인터셉터가 `XSRF-TOKEN` 쿠키를 읽어 상태 변경 요청에 `X-CSRF-TOKEN` 헤더 부착. 403 CSRF 실패는 토큰 재요청 후 1회 재시도. 토큰을 JS 에서 다루지만 인증 토큰이 아니라 CSRF 토큰(설계상 허용).
+- **메뉴 권한**: 서버가 `/api/v1/auth/me` 에 허용 메뉴 코드 목록을 내려주고, 사이드 메뉴·라우트 가드(`RequireMenu('MENU_CD')`)가 그 목록으로 판단. 롤만으로 판단하지 않는다(사번 허용 목록 포함).
+- **스타일**: Tailwind 3 + 자체 공용 컴포넌트(`shared/ui` — Figma 기준). MUI 안 씀. 디자인 토큰은 `tailwind.config` theme 에. 화면 근거가 ftl(서버 렌더링 템플릿)이면 **ftl 의 필드·버튼·검증·조건 분기를 화면 근거로 추출**(`docs/screens/<slice>.md` 에 ftl 파일:라인 근거).
+- **에디터**: 리치텍스트는 Tiptap(허용 마크 화이트리스트 = 서버 `HtmlContentValidator` 와 동일), 마크다운은 별도 에디터 컴포넌트. AS-IS CKEditor/SmartEditor2 HTML 은 서버가 정제해 내려주고 FE 는 `dangerouslySetInnerHTML` **금지** — 정제된 HTML 도 `shared/ui/SafeHtml`(DOMPurify) 로만 렌더.
+- **SSE**: 소스가 들어온 경우만 — `shared/api/sse.ts`(EventSource + 재연결 + AbortController), 테스트는 msw `http.get` 스트림 응답.
+- **jQuery 제거**: AS-IS 인라인 스크립트(dataTables·AUIGrid·FusionCharts·dtree)는 화면 근거로만 읽고 **동일 기능을 React 컴포넌트로**(표 = 공용 DataTable, 차트 = recharts, 트리 = 공용 Tree). 라이브러리 이름이 아니라 **동작**(정렬·필터·페이징·행 선택·차트 종류)을 매핑표에 적는다.
+- **폼 전송 → REST**: AS-IS `<form method=post action=…>` 는 계약의 JSON API 로. 파일 업로드는 `multipart/form-data` 단일 요청(2단계 temp 업로드 폐기).
+- **레거시 URL**: AS-IS `.do`/`.jsp` 스타일 URL 은 라우트 표에 "AS-IS URL → TO-BE 라우트" 대응을 남긴다(북마크·외부 링크 대비, 리다이렉트는 nginx — 소스 없으면 범위 외).
+
+## 테스트 규약 차이
+- 워크스페이스라 앱별 vitest 설정. `shared` 의 클라이언트·CSRF 인터셉터·SafeHtml 은 shared 에서 테스트.
+- CSRF 재시도(403 → 토큰 갱신 → 1회 재시도) 테스트 필수. 메뉴 가드는 허용 목록 유무 각 1건.
+- ftl 근거 화면은 **ftl 의 조건 분기(`<#if>`) 마다** 렌더 테스트 1건(AS-IS 동작 보존의 FE 측 근거).
+
+## 알려진 주의
+- React 19: `forwardRef` 불필요, `use()`·Actions 는 팀 규약 확정 전엔 안 씀(근거 부족). react-router 7(데이터 라우터) 기본.
+- Vite 7 + vitest 3: `react-ts.md` 의 jsdom 문제 동일. pnpm 은 `shamefully-hoist` 없이 워크스페이스 의존 명시.
+- Tailwind 3 → 4 는 breaking(설정 방식) — config 가 3 이면 3 으로 고정.

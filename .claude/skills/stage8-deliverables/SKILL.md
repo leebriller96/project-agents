@@ -24,7 +24,7 @@ description: 8단계 산출물 작성 — 파이프라인이 남긴 brief·slice
 | 09 | 통합테스트 시나리오·결과서 | `docs/test/*-scenario.md`, 5단계 레포트 |
 | 10 | 보안 점검 결과서 | 6단계 레포트 + 관련 RR 상태(done 여부) |
 | 11 | QA 결과서 | 7단계 레포트 + 관련 RR 상태 |
-| 12 | AS-IS/TO-BE 매핑표 | `docs/deliverables/mapping/*-table-mapping.md`, `ASIS_INVENTORY.md`, `slices.yaml → asis` — 테이블 매핑 + 프로그램 매핑 (migration 모드만) |
+| 12 | AS-IS/TO-BE 매핑표 | `docs/deliverables/mapping/*-{table,sql,function}-mapping.md`, `common-inheritance.md`, `ASIS_INVENTORY.md`·`ASIS_SQL_INVENTORY.md`·`ASIS_FUNCTION_CONTRACTS.md`·`ASIS_COMMON_INVENTORY.md`, `slices.yaml → asis` — 테이블·SQL(방언 변환·⚠ 판정)·기능(동작 차이)·공통 클래스(4분류) 매핑 + 이관 커버리지(기능 행 100%, SQL A 항목 실행률) (migration 모드만) |
 | 13 | 빌드·배포·운영 가이드 | 프로필 명령, 설정 파일·환경변수 목록(값 제외), 마이그레이션 절차, 헬스체크 |
 | 00 | 산출물 목록·이력 | 위 파일 목록, 생성 시각, 파이프라인 iteration, open RR 수 |
 

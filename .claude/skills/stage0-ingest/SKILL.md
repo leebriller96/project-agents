@@ -46,6 +46,11 @@ description: 0단계 준비 — workspace/<project>/00_inputs/ 의 RFP·요구�
 
 프로그램 수가 많으면(300개 이상) 패키지 단위로 묶어 요약하고 상세는 `workspace/<project>/knowledge/asis/<패키지>.md` 로 분리한다.
 
+7. **기능 인벤토리 → 동작 계약** (`ASIS_FUNCTION_CONTRACTS.md`): 컨트롤러 엔드포인트·화면 템플릿(ftl/jsp)·배치 job 마다 한 행 — `입력(파라미터·세션·파일) → 호출 SQL(namespace.id 목록) → 출력(뷰 모델/JSON/파일/메일/리다이렉트) → 부수효과(DB 변경·외부 호출)`. 조건 분기(`<#if>`, 권한 분기)도 행으로. **이 표가 "기능 무손실" 의 기준**이자 5단계 특성화 시나리오의 원천이다. 근거 없는 추정은 쓰지 않고 `파일:라인`.
+8. **SQL 호출 인벤토리**: `sql-migrator` 를 `inventory` 로 호출해 `ASIS_SQL_INVENTORY.md`(4분류) 를 만든다(`migration-sql` 스킬). B(호출·미정의) 는 RR(high) 로.
+9. **공통 클래스 인벤토리** (`ASIS_COMMON_INVENTORY.md`): 유틸·인터셉터·필터·BaseDAO/BaseController·예외·응답·세션·설정 XML 마다 — 역할, 사용처 수, TO-BE 대응 후보(계승/대체/개선/폐기 초안 — 확정은 3단계). 설정 XML(dispatcher·context·scheduler·properties)의 빈·인터셉터·스케줄 job 목록 포함.
+10. **범위 원칙**: 들어온 소스가 곧 범위. TO-BE 배경 정보(신규 기능·배포·서버)는 §2 환경과 §12 변환 규칙의 근거로만 쓰고, 해당 AS-IS 소스가 없는 항목은 brief §1 에 "범위 외(소스 미입력)" 로 명시한다.
+
 ## 4. 근거 부족·모순 (§11)
 
 - 문서 간 충돌(예: 화면정의서에는 있는데 요구사항에 없는 화면), 누락(엔티티는 있는데 테이블 정의가 없음), 읽지 못한 파일을 표로 남긴다.

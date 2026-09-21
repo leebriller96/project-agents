@@ -17,6 +17,7 @@ argument-hint: "<slice-id>[,<slice-id>...] | all | scaffold"
 4. **웨이브 구성** (§6): `pipeline.parallel` 이 true 면 depends_on 위상 정렬로 웨이브를 만들고, 웨이브 안에서 `max_parallel` 개까지 동시에 실행한다. false 면 priority 순 순차.
 5. 웨이브마다:
    a. 대상 slice 들의 `stage2_backend: in_progress` 기록.
+   a-1. `mode: migration` 이면 slice 마다 `sql-migrator` 를 `convert <slice>` 로 먼저 호출(병렬 가능) → Mapper·XML·DTO·`<slice>-sql-mapping.md`·Mapper 테스트 → 그 시그니처를 developer 프롬프트에 전달.
    b. `backend-developer` 를 slice 마다 호출 (병렬이면 한 메시지에서 여러 Agent 호출). 전달: `slice <id>`, target_dir 절대경로, 프로필 이름, depends_on slice 의 계약 경로.
    c. 각 보고를 받은 뒤 `backend-reviewer` 를 slice 마다 호출 (병렬 가능). 전달: `slice <id>`, target_dir, 프로필, developer 보고 전문.
    d. reviewer 가 FAIL 이면 지적 목록을 붙여 `backend-developer` 를 다시 호출 (최대 2회). 여전히 FAIL 이면 `blocked` + `blocked_reason` 에 잔여 지적.

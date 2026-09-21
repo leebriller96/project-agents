@@ -30,6 +30,19 @@ description: 3단계 공통화 리팩토링 — 완료된 slice 들에서 중복
 - 공통 모듈에는 slice 의존이 들어가면 안 된다 (`common` → `<slice>` import 금지).
 - 컨벤션 위반(네이밍, 패키지 위치)은 이 단계에서 일괄 정렬한다.
 
+## 3-1. migration 모드 — 공통 클래스 4분류표
+`ASIS_COMMON_INVENTORY.md` 의 항목마다 `docs/deliverables/common-inheritance.md` 에 확정한다:
+
+| 분류 | 의미 | 조건 |
+|---|---|---|
+| **계승** | AS-IS 공통을 TO-BE 로 그대로 포팅(패키지·시그니처 정리만) | TO-BE 프레임워크에 대응 기능이 없고 slice 들이 그대로 씀 |
+| **대체** | TO-BE 프레임워크/라이브러리 기능으로 교체 | 예: 세션 체크 인터셉터→Spring Security, XSS 필터→서버 검증기, dbcp→Hikari, log4jdbc→p6spy. **동작 차이**(무엇이 달라지는지·slice 영향)를 반드시 명시 |
+| **개선** | 요구사항/§12 근거로 동작을 바꿈 | 근거 없으면 개선 불가 → 계승 |
+| **폐기** | 사용처 0 또는 TO-BE 에서 불필요 | 미호출 증명(인벤토리 사용처 수 0) 또는 §12 결정 |
+
+- 각 행: AS-IS 클래스 `파일`, 사용처 수, 분류, TO-BE 대응(클래스/설정), 동작 차이, 근거. 대체·개선은 **특성화 테스트**로 AS-IS 동작과의 차이가 의도한 것뿐임을 증명.
+- 설정 XML 의 빈·인터셉터·스케줄 job 도 같은 표로(각 job 은 `@Scheduled` 대응 또는 폐기 근거).
+
 ## 4. 산출물 및 상태
 - `common/` 변경 + 각 slice 의 치환
 - `<target_dir>/docs/deliverables/common-module-spec.md`: 공통 모듈 목록·용도·사용법 (8단계 산출물의 원천). 기존 파일이 있으면 갱신.

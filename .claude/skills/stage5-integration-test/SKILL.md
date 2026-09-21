@@ -16,6 +16,8 @@ description: 5단계 통합 테스트 — slice별 통합 테스트 시나리오
 - depends_on slice 와의 연동(예: 인증 후 주문) → 교차 slice 시나리오 (`ITS-<slice>-x<3자리>`)
 
 이미 있으면 새 요구사항·API 가 반영됐는지 확인해 보강한다. 사람이 쓴 시나리오는 지우지 않는다.
+- **migration 모드 — 특성화 시나리오**: `ASIS_FUNCTION_CONTRACTS.md` 의 행마다 시나리오 1개 이상(`ITS-<slice>-a<3자리>`, "AS-IS 동작 기준"): 입력 → 기대 출력은 AS-IS 계약에서, 실행은 TO-BE 에. 동작 차이가 §12 근거인 곳은 시나리오에 "의도된 차이 + 근거" 표기. `<slice>-function-mapping.md` 의 특성화 테스트 ID 열을 이 시나리오로 채운다.
+- **SQL 등가성**(`migration-sql` §4): `<slice>-sql-mapping.md` 의 ⚠ 항목마다 경계값 시나리오(`ITS-<slice>-q<3자리>`), 인벤토리 A 항목이 실행되는 커버리지 보고.
 
 ## 2. 실행 환경
 
