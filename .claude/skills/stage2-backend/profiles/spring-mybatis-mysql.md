@@ -4,6 +4,8 @@
 
 ## 기본 의존성 (Gradle 기준)
 - 버전 기준: Spring Boot **3.4.x**(OSS 지원 중인 라인) + springdoc **2.8.x** + `springdoc.api-docs.version: openapi_3_0`(2.8 기본 3.1 은 계약 형식을 바꿈) + `dependencyLocking { lockAllConfigurations() }` 와 `gradle.lockfile` 커밋. Boot 3.4 부터 `@MockBean` 대신 `@MockitoBean`.
+- 인증·회원 상태처럼 항상 현재 값이어야 하는 조회는 Mapper XML 에 `flushCache="true" useCache="false"` — MyBatis 1차 캐시가 트랜잭션 안에서 stale 행을 돌려준다(테스트에서 재현).
+- `X-Forwarded-For` 는 신뢰 프록시 홉 수 기준 **마지막 값**(1홉이면 last) 을 쓴다. 첫 값은 클라이언트가 임의로 넣을 수 있다(`$proxy_add_x_forwarded_for` 는 뒤에 덧붙임).
 - 보안 골격 기본 포함: 인증 필터의 회원 상태 조회(비활성·잠금 즉시 401), 로그인 IP rate limit(설정으로 on/off — 통합 테스트 환경은 off), 상태 변경 요청 Origin/Referer 검증(nginx `proxy_set_header Host $host` 필수 — 배포 가이드), 페이징 `page` 상한.
 - spring-boot-starter-web, -validation, -security(인증 골격), -actuator
 - mybatis-spring-boot-starter, mysql-connector-j, flyway-core + flyway-mysql
