@@ -193,5 +193,8 @@
 | refactor | 3단계가 공용 `MailMessage` 를 고쳐 RR-0002 는 slice 에서 코드 변경 0(테스트·추적표만) — "공용 변경 RR 은 3단계가 흡수" 규칙이 실제로 동작 | 정상. `/refactor` 6항의 "공용 기반으로 해결" 경로 |
 | refactor | 오케스트레이터 지시("`<img src=x>` 만 있는 본문 → 400")가 jsoup 실측(`<img>` 태그는 남음)과 어긋남 → developer 가 지시를 따르지 않고 실측대로 2단 테스트 + C-14 로 보고 | 정상(규약 > 프롬프트). 오케스트레이터는 정제기 동작을 단정하지 말고 "정제 후 빈 본문이면 400" 으로만 지시 |
 | refactor | 병렬 3 에이전트(2 developer + common 문서)가 파일 경계를 지켜 충돌 0 — RR-0007 처럼 여러 slice 파일에 걸친 문서 RR 은 오케스트레이터가 **항목을 소유 slice 별로 쪼개 배정** | `/refactor` 5항에 문서 RR 분할 규칙 추가 |
-| refactor | reviewer 가 만든 일회성 대조 스크립트를 `tools/check_test_ids.py` 로 편입 — 에이전트가 스크래치에 만든 검증 도구는 재사용 후보 | 규칙: reviewer 보고의 스크립트는 오케스트레이터가 tools/ 편입 여부 판단 |
+| refactor | reviewer 가 만든 일회성 대조 스크립트를 `tools/check_test_ids.py` 로 편입 — 에이전트가 스크래치에 만든 검증 도구는 재사용 후보 | 규칙: reviewer 보고의 스크립트는 오케스트레이터가 tools/ 편입 여부 판단 || refactor 검토 | RR-0004 처리로 `@Size(min=1)` 을 추가 → `@NotBlank` 와 겹쳐 `title:""` 에 fieldErrors 2건(둘째 문구 오안내) — **계약 강화 목적의 수정이 런타임 동작을 바꿈** | 프로필: 계약 강화는 `@Schema(minLength…)` 문서 수단 먼저; Bean Validation 추가 시 `""`·`"  "`·`null` 세 경계 테스트 필수 |
+| refactor 검토 | "GET 3개 401/403 누락" RR 을 처리하면서 같은 계약의 POST/DELETE 401 누락은 그대로 — RR 범위 밖이라도 같은 기준으로 전체를 훑어야 | stage2 §D: 같은 종류 누락은 계약 전체 엔드포인트를 대조 |
+| refactor 검토 | `check_test_ids.py` 가 추적표 약어(`SvcT`)·`Test.Nested.method`·`reject*` 를 못 읽어 60건 중 5건만 대조하고 "불일치 0"(공허) | 도구: 범례 2형식 파싱·중첩 경로·접두 와일드카드 지원 → 70/70·87/87. reviewer 는 "인용 토큰 수" 가 문서 인용 수와 비슷한지 먼저 확인 |
+| refactor 검토 | RR-0007 을 3 에이전트가 나눠 처리한 뒤 yaml 을 닫지 않음 — 오케스트레이터 누락 | `/refactor` 5항 분할 규칙에 "오케스트레이터가 같은 회차에 닫고 note 기록" 이미 명시. reviewer 체크에 "RR status ↔ 작업 트리" 대조 추가 |
 
