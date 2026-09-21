@@ -35,12 +35,14 @@ statement 마다 사용된 구문을 태깅하고 아래 규칙으로 변환한�
 |---|---|---|
 | `FROM DUAL` | 생략 또는 `FROM DUAL`(허용) | |
 | `NVL(a,b)` | `IFNULL(a,b)` / `COALESCE` | ⚠ 빈 문자열: Oracle 은 `''`=NULL 이라 `NVL('',b)`=b, MySQL 은 `''` 유지 |
+| `NVL(x, '')` | 제거(원문이 no-op) 또는 `IFNULL(x,'')` | ⚠ Oracle 은 `''`=NULL 이라 `NVL(x,'')`=x(NULL 유지). MySQL `IFNULL(x,'')` 는 `''` 반환 → 소비 코드가 NULL 체크(`??`)하면 결과 달라짐. 소비 없으면 제거 |
 | `NVL2(a,b,c)` | `IF(a IS NOT NULL, b, c)` | ⚠ 동일 |
 | `DECODE(x, v1, r1, v2, r2, d)` | `CASE x WHEN v1 THEN r1 WHEN v2 THEN r2 ELSE d END` | ⚠ `DECODE(x, NULL, r)` 는 NULL 매칭됨 → `CASE WHEN x IS NULL` |
 | `a \|\| b` | `CONCAT(a, b)` | ⚠ Oracle 은 NULL\|\|'x'='x', MySQL `CONCAT(NULL,'x')`=NULL → `CONCAT_WS('', …)` 또는 `IFNULL` |
 | `SYSDATE` / `SYSTIMESTAMP` | `NOW()` / `NOW(6)` | ⚠ 세션 TZ(JDBC `connectionTimeZone`) |
 | `TO_CHAR(d, 'YYYYMMDD')` | `DATE_FORMAT(d, '%Y%m%d')` | 형식 문자 매핑표: YYYY→%Y, MM→%m, DD→%d, HH24→%H, MI→%i, SS→%s, DAY→%W |
 | `TO_DATE(s, 'YYYYMMDD')` | `STR_TO_DATE(s, '%Y%m%d')` | ⚠ 잘못된 문자열: Oracle 예외, MySQL NULL(strict 모드 아니면) |
+| `TO_DATE('', fmt)` (빈 문자열 바인드) | `STR_TO_DATE(NULLIF(s,''), fmt)` 또는 앱에서 `''`→null 후 `LocalDate` 바인드 | ⚠ `EMPTY_NULL` — Oracle 은 `''`=NULL 이라 조용히 NULL 저장. MySQL `STR_TO_DATE('')` 는 NULL + 경고(1411) 이며 strict 모드 INSERT 에서 오류가 될 수 있음. "종료일 없음=무기한" 처럼 `''` 가 정상 입력인 경로에서 필수 |
 | `TO_NUMBER(s)` | `CAST(s AS DECIMAL)` / 암묵 | ⚠ 비숫자 문자열 |
 | `TRUNC(d)` | `DATE(d)` | `TRUNC(d,'MM')` → `DATE_FORMAT(d,'%Y-%m-01')` |
 | `ADD_MONTHS(d, n)` | `DATE_ADD(d, INTERVAL n MONTH)` | ⚠ 월말 처리 동일(둘 다 말일 유지) |
@@ -51,6 +53,8 @@ statement 마다 사용된 구문을 태깅하고 아래 규칙으로 변환한�
 | `LENGTH` / `LENGTHB` | `CHAR_LENGTH` / `LENGTH`(바이트) | ⚠ MySQL `LENGTH` 는 바이트 |
 | `ROWNUM <= n` | `LIMIT n` | ⚠ ORDER BY 없는 ROWNUM 은 순서 미정 — AS-IS 도 미정이었음을 기록 |
 | ROWNUM 페이징 (3중 서브쿼리) | `ORDER BY … LIMIT #{size} OFFSET #{offset}` | ⚠ 정렬 키 동순위 시 순서 불안정 → tie-breaker(PK) 추가 여부를 소비 코드로 판정 |
+| `ROWNUM AS RNUM` 을 결과 컬럼으로 노출(화면 번호) | `ROW_NUMBER() OVER (ORDER BY …) AS rnum` 또는 앱에서 `offset + index` | ⚠ `TIE_ORDER` — ORDER BY 가 조건부(`<if>`)면 무정렬 시 번호 의미 없음. 정렬 키가 없는 경로는 기본 정렬을 사람 확인 |
+| `<if>` 로 감싼 조건부 `ORDER BY` (없으면 무정렬 + 힌트 인덱스 순 의존) | 기본 정렬 키를 **명시**(PK DESC 등) | ⚠ `TIE_ORDER` — AS-IS 는 "운영에서 그렇게 보임" 수준의 미정 순서. 기본 정렬 결정은 근거 부족으로 기록 후 사람 확인 |
 | `ROW_NUMBER() OVER (…)` 등 분석 함수 | 동일(MySQL 8 윈도우 함수) | |
 | `LISTAGG(x, ',') WITHIN GROUP (ORDER BY y)` | `GROUP_CONCAT(x ORDER BY y SEPARATOR ',')` | ⚠ `group_concat_max_len` 기본 1024 → 설정 |
 | `WM_CONCAT` | `GROUP_CONCAT` | |
@@ -59,13 +63,17 @@ statement 마다 사용된 구문을 태깅하고 아래 규칙으로 변환한�
 | `NULLS FIRST / LAST` | `ORDER BY (col IS NULL), col` 등 | ⚠ MySQL 기본: ASC 는 NULL 먼저, DESC 는 NULL 나중 — Oracle 기본과 **반대**(Oracle ASC 는 NULL 나중) |
 | `(+)` 외부 조인 | `LEFT/RIGHT JOIN … ON` | ⚠ `(+)` 가 WHERE 조건에 섞이면 조인 조건 vs 필터 조건 분리 필요 |
 | `CONNECT BY PRIOR … START WITH` | `WITH RECURSIVE` CTE | `LEVEL`→깊이 컬럼, `SYS_CONNECT_BY_PATH`→경로 누적, `ORDER SIBLINGS BY`→CTE 안 정렬 키 |
+| `ORDER SIBLINGS BY sort_no` | CTE 에 경로 정렬키 누적: `CONCAT(p.path_key, LPAD(c.sort_no, 5, '0'), LPAD(c.id, 10, '0'))` 후 `ORDER BY path_key` | ⚠ `TIE_ORDER` — 형제 SORT_NO 동순위는 Oracle 도 미정. PK 를 경로키에 덧붙여 고정 |
+| `CONNECT_BY_ISLEAF` | 외부 SELECT 에서 `NOT EXISTS (SELECT 1 FROM t c WHERE c.parent_id = n.id)` → 1/0 | 소비 코드가 `'1'` 문자열 비교(ftl `?string == '1'`)면 반환 타입(정수) 유지 |
+| `LPAD(' ', (LEVEL-1)*2, ' ') \|\| name` (들여쓰기) | `CONCAT(REPEAT(' ', (depth-1)*2), name)` | ⚠ `CONCAT_NULL` — Oracle `LPAD(x, 0)` 은 NULL 이지만 `NULL \|\| name` = name 이라 결과 동일. MySQL `REPEAT(' ',0)` = `''` → 동일. 판정 "동작 동일" |
 | `MERGE INTO … WHEN MATCHED/NOT MATCHED` | `INSERT … ON DUPLICATE KEY UPDATE` | ⚠ UNIQUE 키가 조인 조건과 같아야 함. 아니면 앱 로직(조회 후 분기) |
 | `seq.NEXTVAL` / `CURRVAL` | `AUTO_INCREMENT` + `useGeneratedKeys` / `LAST_INSERT_ID()` | ⚠ 채번을 먼저 하고 여러 테이블에 쓰는 패턴은 시퀀스 테이블 또는 앱 채번 |
 | `DELETE FROM t WHERE …` 서브쿼리 자기참조 | MySQL 은 같은 테이블 서브쿼리 금지 → 파생 테이블로 감싸기 | |
 | `UPDATE t SET (a,b) = (SELECT …)` | `UPDATE t JOIN (SELECT …) s ON … SET t.a=s.a` | |
 | `REGEXP_LIKE(s, p)` | `s REGEXP p` | ⚠ 정규식 방언(POSIX 클래스) |
 | `TRIM(LEADING '0' FROM s)` | 동일 | |
-| `RPAD/LPAD` | 동일 | |
+| `RPAD/LPAD` | 동일 | ⚠ 길이 0: Oracle NULL, MySQL `''`. 단독 소비(NULL 체크) 시 차이 |
+| `col LIKE '%' \|\| #{kw} \|\| '%'` / 문자열 `ORDER BY` / `=` 비교 | `col LIKE CONCAT('%', #{kw}, '%')` | ⚠ `COLLATION` — Oracle 기본(BINARY) 은 대소문자·악센트 구분, MySQL 8 기본 `utf8mb4_0900_ai_ci` 는 무시. 검색 결과 집합·정렬 순서가 달라질 수 있음 → 컬럼/DB collation 을 brief §12 에서 결정 |
 | `GREATEST/LEAST` | 동일 | ⚠ NULL 인자: Oracle NULL, MySQL NULL — 동일 |
 | `EXTRACT(YEAR FROM d)` | 동일 | |
 | `TO_CHAR(n, 'FM999,999')` | `FORMAT(n, 0)` | 로케일 |
@@ -96,6 +104,8 @@ statement 마다 사용된 구문을 태깅하고 아래 규칙으로 변환한�
 | `SEQ` | 채번 시점·다중 테이블 | 앱 채번 결정 |
 | `MERGE_KEY` | MERGE 조인 키 ≠ UNIQUE | 앱 로직 |
 | `GROUP_CONCAT_LEN` | 길이 상한 | 설정 + 상한 검증 |
+| `COLLATION` | 문자열 비교·LIKE·ORDER BY 의 대소문자/악센트 구분 (Oracle BINARY vs MySQL `_ai_ci`) | 검색 키워드·정렬 컬럼이 영문/혼합이면 결과 집합·순서 차이. `_bin` 또는 `_as_cs` collation 지정 여부를 brief §12 로 결정하고 fixture(대소문자 혼합) 로 검증 |
+| `SESSION_TZ` | `SYSDATE`/`NOW()`·날짜 비교의 세션 타임존 | JDBC `connectionTimeZone`/`serverTimezone` 을 Asia/Seoul 로 고정, 배치 실행 시각(예: 00:10) 과 `CURDATE()` 경계 fixture |
 
 ## 3. 변환 절차 (stage2 B-2, sql-migrator)
 
