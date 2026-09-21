@@ -12,7 +12,7 @@ description: 2단계 Backend 개발 — 최초 1회 프로젝트 골격(scaffold
 
 `state.yaml → stages.stage2_scaffold` 가 `done` 이 아니면 slice 작업 전에 수행한다. 골격은 **slice 코드가 하나도 없는 상태**에서 만든다.
 
-0. **환경 점검 (골격 전 필수)**: 설치된 JDK 버전(`java -version`), 빌드 도구(`gradle`/`mvn` CLI 또는 `~/.gradle/wrapper/dists` 의 캐시된 배포본), Docker 데몬(`docker info`), DB CLI, Node 를 확인해
+0. **환경 점검 (골격 전 필수)**: 설치된 JDK 버전(`java -version`), 빌드 도구(`gradle`/`mvn` CLI 또는 `~/.gradle/wrapper/dists` 의 캐시된 배포본), Docker 데몬(`docker info`), DB CLI, Node, 그리고 6단계용 SAST(semgrep/gitleaks/osv-scanner — 없으면 사용자에게 미리 알림)를 확인해
    `config/project.yaml → stack` 과 대조한다. 불일치(예: config 17 vs 설치 21)는 **config 를 설치본에 맞추거나 사용자에게 알린 뒤** 진행하고 레포트 "환경" 절에 기록한다.
    빌드 도구가 없으면 wrapper 캐시의 배포본으로 `gradle wrapper` 를 만들고, 그것도 없으면 `blocked` (게이트를 통과할 수 없으므로).
    Docker 가 없으면 Mapper 테스트는 H2 `MODE=MySQL` 로 폴백하고 명시한다.

@@ -88,3 +88,11 @@
 | /refactor iter4 common-auth | RR-0009 갭 잠금: 존재 확인 후 잠금으로 부하 중 INSERT **1540ms → 82ms(1.1배)**. 수정 전 코드로 되돌려 같은 테스트가 실패함을 확인(5단계 실측 1538ms 와 일치) — 결함 재현·수정·회귀 테스트가 한 사이클로 닫힘 | 정상. 테스트 JVM stdout cp949 로 한글 로그 깨짐 → C-37(`stdout.encoding=UTF-8`), 프로필 골격 build.gradle 항목에 추가 |
 | /refactor iter4 FE | RR-0014: 내 지시 `.trim().min(1)` 은 비밀번호 값을 변환해 전송하는 문제 — developer 가 RR evidence("BE 는 trim 없이 BCrypt")를 근거로 `refine` 선택. 규약 우선순위(evidence·근거 > 프롬프트 세부)가 작동 | 프로필: 비밀번호류는 `refine` |
 | /refactor iter4 FE | 201 후속: 통합 테스트 기대값 변경이 지시(2곳)보다 많음(18곳) — developer 가 grep 으로 전수 수정. 통합 테스트 실제 재실행은 안 함 | 6·7단계 전에 5단계 재실행 필요 항목으로 기록. `/refactor` 명령 7항에 "stage 2 반영 → 그 slice 의 stage5 pending" 규칙대로 book-loan·member·common-auth stage5 를 pending 으로 되돌림 |
+
+## 2026-09-21 (오전) — stage6 보안 점검
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage6 준비 | SAST 4종(semgrep/bandit/gitleaks/osv-scanner) 전부 미설치 → claude-only 폴백. 소스 284개 > 150 → slice 병렬 scan + merge | 환경 점검 절차에 "6단계 전 SAST 설치 여부 확인·설치 권고(WSL/도커)" 추가. 골격 단계 환경 점검 표에 SAST 항목 포함 |
+| stage6 book-loan | 외부 `export_findings.py` 가 `### [F-<숫자>]` 만 인식 → `F-BL-###` 접두어 불가. slice 별 **번호 대역**(F-2xx/F-3xx/F-4xx)으로 대체 | `stage6-security` §2 대규모 절차에 "slice 별 F-번호 대역 배정(오케스트레이터가 지정), merge 시 그대로 유지" 명시 |
+| stage6 book-loan | Low 3·Info 2, Critical/High/Medium 0. 발견의 질: ISBN 중복 경합이 500(member 는 409 — slice 간 불일치), 비활성 계정 토큰으로 대여 가능(C-3 연계), 상태 변경 POST 가 SameSite 단일 방어 | 프로필 골격: `DataIntegrityViolationException` 공용 409 변환, 인증 필터에서 비활성 계정 즉시 거부(DB 조회 1회 또는 캐시), 상태 변경 요청에 커스텀 헤더 요구 — 6단계 merge 후 RR 로 |
