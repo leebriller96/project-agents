@@ -23,6 +23,7 @@ description: 6단계 보안 점검 — external/code-security-auditor(subtree) �
 - 타임스탬프: `python <path>/tools/kst_now.py`.
 - `.auditignore`: `<target_dir>/.auditignore` 를 외부 도구가 읽는다. **에이전트는 이 파일을 쓰지 않는다** — 오탐/의도된 설계로 판단한 항목은 레포트 "검토 제외 후보" 에 `.auditignore` 형식 한 줄로 제안하고, 추가는 사람이 한다.
 - **SAST 환경(실측 2026-09-22)**: `pip install semgrep`(Windows 네이티브 1.177 동작) 는 `%LOCALAPPDATA%\Python\<ver>\Scripts` 에 설치되고 PATH 에 없으므로 `export PATH="$PATH:<Scripts>"` 후 실행. pnpm 워크스페이스는 `package-lock.json` 이 없어 npm audit 가 전부 건너뛰었음 → `run_sast.py` 가 루트 `pnpm-lock.yaml` 을 찾아 `pnpm audit --json`(npm v6 형식) 1회 실행하도록 개선(upstream `e68d23d`). SAST 는 오케스트레이터가 1회 실행해 `workspace/<project>/reports/.sast/stage6/` 에 두고 첫 묶음 에이전트가 소유·검증, 나머지 묶음은 참조만(병렬 에이전트가 각각 돌리면 결과 디렉토리 경합).
+- (migration) brief §12-B 의 "AS-IS 유지" 결정(예: 비로그인 공개 범위·상태 무관 조회) 은 **보안 재평가 대상**으로 에이전트 프롬프트에 명시해 6단계가 반드시 다시 판정하게 한다 — 0단계 결정이 High 로 재평가된 사례(비로그인 다운로드 IDOR). 결과 RR 은 "사업 결정 선행" 표시 + 옵션.
 - 대규모(외부 스킬 "규모별 전략" 150개 초과): 서브에이전트는 서브에이전트를 부를 수 없으므로 **`/stage6` 오케스트레이터가 slice 단위로 나눠 병렬 호출**하고, 마지막에 `merge` 작업으로 병합한다 (§5).
   외부 `export_findings.py` 는 `### [F-<숫자>]` 만 인식하므로 slice 별 **번호 대역**(첫 slice F-001~, 2번째 F-201~, 3번째 F-301~ …)을 오케스트레이터가 지정하고 merge 에서 그대로 유지한다. 공용 `common/`·설정·마이그레이션은 첫 묶음(보통 인증 slice)에만 포함하고, 나머지 slice 는 경계 흐름을 "merge 확인 필요" 로만 표시한다. `run_sast.py`·`npm audit` 도 첫 묶음만 실행.
 - SAST 도구가 없으면 6단계 전에 사용자에게 설치를 권고한다(Windows 는 WSL/도커 권장). 없어도 claude-only 로 진행하되 레포트에 "도구 미실행" 을 명시.

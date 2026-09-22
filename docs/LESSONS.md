@@ -258,5 +258,7 @@
 |---|---|---|
 | stage6 준비 | semgrep 을 pip 로 설치하니 Scripts 경로가 PATH 밖 → "설치 실패" 로 보임. PATH 추가 후 1.177 정상(9건) | 스킬 §SAST 환경 |
 | stage6 준비 | pnpm 워크스페이스라 npm audit 5개 전부 "락파일 없음" 건너뜀 → subtree `run_sast.py` 에 pnpm audit 지원, `summarize_sast.py` 에 npm v6/pnpm advisories 파서 추가 → vitest CWE-22 2건 포착. upstream push `e68d23d` | 마스터 프로젝트 원칙(subtree 버그는 직접 고쳐 push) 적용 3회째 |
-| stage6 준비 | 선행 조건(stage5 done)이 refactor 되돌림으로 pending 인 상태에서 사용자 지시 순서대로 stage6 착수 — 보안 점검은 stage5 통과와 독립이라 진행, stage5 r2 는 별도 필요 | `/stage6` 1항: stage5 pending 이면 경고만 하고 진행 가능(재실행 필요 표시) |
+| stage6 준비 | 선행 조건(stage5 done)이 refactor 되돌림으로 pending 인 상태에서 사용자 지시 순서대로 stage6 착수 — 보안 점검은 stage5 통과와 독립이라 진행, stage5 r2 는 별도 필요 | `/stage6` 1항: stage5 pending 이면 경고만 하고 진행 가능(재실행 필요 표시) || stage6 scan ×3 | 병렬 3묶음(공용+domain-notice / notice / notice-admin) 합계 21건: Critical/High 0(공용)·High 1(notice 비로그인 다운로드 IDOR)·Medium 4. 가장 큰 발견은 **§12-B "AS-IS 유지" 결정(비로그인 상세·다운로드 permitAll, 공지 상태 무관)이 보안 관점에선 High** — 0단계 결정이 6단계에서 재평가되는 정상 되먹임. 나머지: 확장자 블랙리스트 우회(끝 점·공백), 정제기 `class` 허용, 로그 인젝션, content 길이 상한 없음 | stage0 §12 결정 표에 "보안 재평가 대상" 열을 두어 6단계가 자동 재검토(stage6 스킬 §3) |
+| stage6 scan | 에이전트가 exporter 의 확신도 오인(설명 문구에 "확실" 이 섞이면 잘못 판정)을 발견 → subtree 수정·push `85a5d53` | 마스터 프로젝트 원칙 4회째 |
+| stage6 scan | AS-IS lucy-xss → jsoup 대체의 동작 차이(style/class 허용) 가 3단계 4분류표 "대체" 행의 동작 차이로 기록돼 있어 6단계가 바로 sink 로 추적 | 4분류표의 가치 확인 |
 
