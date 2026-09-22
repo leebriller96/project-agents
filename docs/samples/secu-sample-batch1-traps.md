@@ -31,3 +31,19 @@ AS-IS 샘플 소스(24 파일) 에 의도적으로 심은 함정. 파이프라�
 
 **2단계(서비스·API) 채점**: 12 LoginCheckInterceptor 제외 경로→permitAll 4(상세·첨부·다운로드·분류, §12-A R11) ✅ / 13 관리자 분기(ADMIN_YN)→메뉴 권한+서비스 소유자 판정 ✅ / 14 등록 2단계 파일 저장→1단계+보상 삭제, DB 롤백 실측 증명 ✅ / 15 GET 삭제→DELETE+CSRF 왕복 테스트 ✅ / 16 스케줄러 XML→@Scheduled+ShedLock, 0건 무발송 ✅ / 17 lucy-xss→jsoup 정제(순서 결함 RR-0003) ✅ / 18 MERGE 조회수→UPDATE ✅. reviewer 가 잡은 추가 결함: Content-Length DB 값(AS-IS 실물), 메일 다수 수신자(RR-0002). 웨이브 MySQL 게이트가 잡은 결함: H2 URL override, Timestamp 캐스트.
 
+## 최종 채점 (0~8단계 완료, 2026-09-22)
+
+AS-IS 1차 배치에 심은 함정 18개 **전부 포착**(0단계 18/18, 2단계 SQL 8/8·서비스 7/7). 그 밖에 파이프라인이 **스스로 만든 결함**을 뒤 단계가 잡은 것이 더 중요한 결과:
+
+| 발견 단계 | 결함 | 못 잡은 앞 단계 |
+|---|---|---|
+| 2단계 웨이브 게이트 | H2 URL override 가 `-Pmysql` 을 깨뜨림 / `Timestamp` 캐스트 | 모듈 단위 게이트(H2) |
+| 4단계 reviewer | 다운로드 `Content-Length` 를 DB 값으로(AS-IS 는 실물) | developer 테스트(결함을 재현하고도 단언 없음) |
+| 5단계 E2E | **Tiptap 등록 화면 로드 즉시 크래시**(운영 빌드도) | 4단계 jsdom 122 tests |
+| 6단계 보안 | §12-B "AS-IS 유지" 결정(비로그인 공개 범위)이 High IDOR | 0·2단계 결정 |
+| 6단계 reviewer(재검토) | `forward-headers native` 가 사내망 XFF 위조 허용 → 앞서 만든 방어 2개 무력화 | 같은 회차 developer |
+| 7단계 QA | `REQUIRES_NEW` 커넥션 2중 점유 → 동시 요청 교착(10초·조회수 유실, 응답 200) | 5단계 시나리오·단위테스트 |
+| 5단계 r2 | multipart NUL 파일명이 Tomcat 파서에서 500 | 2단계 `MockMultipartFile` 테스트 |
+
+교훈: **게이트는 "앞 단계가 보지 못한 축"에서만 값을 만든다**(모듈→웨이브, jsdom→브라우저, 단위→동시성, mock→실 파서).
+
