@@ -30,6 +30,10 @@
 - 게이트 통과는 문장이 아니라 **증거**로 판정한다. 레포트 끝의 `pa-meta` 블록(실행 명령·종료 코드·테스트 개수·git HEAD·확인 필요 항목)을
   `python tools/gate.py check --stage <N> [--slice <id>]` 가 실제 git·파일과 대조한다 (`templates/report-meta.md`).
 - 결함은 리팩토링 요구서(RR), **아직 확인되지 않은 것**은 확인 필요 항목(`open-items.yaml`)으로 남아 다음 단계가 닫는다.
+- 단계를 늘려도 **같은 축**에서만 검증하면 새 결함은 나오지 않는다. 1단계가 slice 마다 `traits` 를 정하고,
+  그것이 요구하는 검증 축(`unit`·`module`·`real-db`·`real-server`·`browser`·`concurrency`·`security-static`)이
+  닫혔는지를 `gate.py` 가 대조한다 (pipeline-core §14).
+- `/run` 은 게이트 판정으로 다음 단계를 자동 진행하고, 사람 승인 지점·FAIL 에서만 멈춘다.
 
 ## 디렉토리 구조
 
@@ -38,6 +42,8 @@ project-agents/
 ├── CLAUDE.md                 # 파이프라인 운영 원칙 (Claude Code가 자동 인식)
 ├── README.md
 ├── docs/DESIGN.md            # 상세 설계 · 열린 질문
+├── docs/LESSONS.md           # 실행 이력·교훈 (재실행마다 누적)
+├── docs/AGENTSET_CHECKLIST.md # 에이전트셋 설계 체크리스트
 ├── config/
 │   ├── project.yaml.example  # 프로젝트 설정 (스택·모드·대상 repo 경로)
 │   └── tools.yaml            # 외부 도구 경로 (external/ 상대경로)

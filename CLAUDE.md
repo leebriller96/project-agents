@@ -19,6 +19,9 @@
   `python tools/gate.py check --stage <N> [--slice <id>]` 를 통과해야 단계를 `done` 으로 기록한다. 서브에이전트 보고도 `pa-agent-result` 블록으로 끝낸다.
 - **확인 필요는 파일로**: "확인 필요·미검증·결정 대기" 는 레포트 산문에 두지 말고 `python tools/gate.py oi new …` 로 채번한다.
   `high` 이상은 RR 전환이나 사람 승인 없이 단계를 끝낼 수 없다.
+- **검증 축을 바꿔 가며 본다**: 단계를 늘려도 같은 축(mock·jsdom·단위)에서만 보면 새 결함은 나오지 않는다.
+  slice 의 `traits` 가 요구하는 축(`real-db`·`real-server`·`browser`·`concurrency` 등)을 닫거나, 닫을 단계를 예약한다.
+- **깨뜨릴 수 있는 것을 먼저 말한다**: RR 을 반영할 때는 `risk_surface` 에 "이 수정이 무엇을 깨뜨릴 수 있는가" 를 적고 그 축을 덮는다.
 - **부분 재실행 가능**: 전수 변환이 기본이 아니다. `/rerun`·`/refactor` 의 slice·layer 필터로 지정 범위만 돌리고 나머지는 건드리지 않는다.
 - **재실행 = 업그레이드**: 다시 돌릴 때마다 왜 처음에 못 잡았는지를 `docs/LESSONS.md` 에 적고 해당 stage 의 스킬·프로필·에이전트를 같은 회차에 갱신한다.
 - **git 에는 스킬만**: `workspace/<project>/`(입력·AS-IS·산출물)와 `target_dir`(변환 소스)는 절대 커밋하지 않는다. `.gitignore` 가 막고 있으며, 커밋 전 `git ls-files | grep workspace/` 가 비어 있어야 한다.

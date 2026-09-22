@@ -42,6 +42,13 @@ pipeline:
     require_unit_tests: true           # 2·3·4단계 완료 조건: 단위테스트 통과
     min_coverage: 0                    # 라인 커버리지 하한(%) — 0이면 미적용
 
+verification:
+  # slice 의 traits → 반드시 닫아야 하는 검증 축 (tools/gate.py coverage-axis).
+  # 아래는 기본값을 덮어쓸 때만 적는다. 비워 두면 도구 기본 매핑을 쓴다.
+  # axis: unit | module | real-db | real-server | browser | concurrency | security-static
+  trait_axes: {}
+    # 예) payment: [real-server, concurrency]
+
 conventions:
   language: ko                         # 주석·문서 언어
   api_style: rest                      # rest | graphql

@@ -205,10 +205,14 @@ state 갱신·다음 호출 프롬프트·레포트 `pa-meta` 를 만들 수 있
      "test_count": 226, "failures": 0, "skipped": 0}
   ],
   "changed_files": ["server/domain-notice/src/main/java/…"],
-  "open_items": [{"kind": "unverified", "severity": "high", "summary": "…", "evidence": "…", "target_stage": 5}],
+  "open_items": [{"kind": "unverified", "severity": "high", "axis": "real-server",
+                  "summary": "…", "evidence": "…", "target_stage": 5}],
   "rr_ids": [],
   "common_candidates": ["C-21"],
   "not_executed": ["…"],
+  "risk_surface": [{"what": "이 변경이 깨뜨릴 수 있는 것", "axis": "concurrency",
+                    "covered_by": "테스트명 또는 '미검증'"}],
+  "cost": {"duration_min": 40, "tool_calls": 96},
   "deviations": ["오케스트레이터 지시와 다르게 결정한 것 + 근거"],
   "next_action": "reviewer 검토 요청"
 }
@@ -220,6 +224,8 @@ state 갱신·다음 호출 프롬프트·레포트 `pa-meta` 를 만들 수 있
 - `changed_files` 는 실제로 고친 파일 전부. 오케스트레이터가 `git status`·`diff` 로 대조하고,
   **자기 소유 밖의 파일(공용 설정·common·다른 slice)** 이 있으면 되돌린 뒤 공통 후보로 돌린다(§6-4).
 - 실행하지 못한 검증은 `not_executed` 에 이유와 함께 적는다. 비워 두고 통과로 보고하지 않는다.
+- `risk_surface` 는 **이 변경이 무엇을 깨뜨릴 수 있는가**를 스스로 선언하는 칸이다(§14). `covered_by` 가 "미검증" 이면 확인 필요 항목으로 올린다.
+  RR 을 반영하는 작업에서는 비워 둘 수 없다 — 리팩토링이 더 큰 결함을 낳은 실측(RR-0041: 락 축소 목적의 `REQUIRES_NEW` 가 커넥션 2중 점유를 만듦) 때문이다.
 - reviewer 는 같은 블록에 `findings[]`(§7 형식)를 함께 싣는다.
 
 ## 13. 모델 배정
@@ -237,3 +243,29 @@ state 갱신·다음 호출 프롬프트·레포트 `pa-meta` 를 만들 수 있
 계약이 정해진 CRUD slice, 확정 스키마의 기계적 작성, 산출물 재가공(8단계)은 중급으로 충분하다.
 **상향 규칙**: 같은 문제로 developer 가 2회 이상 막히면(reviewer 재작업 2회 소진 직전) 그 에이전트만 상위 모델로 재실행하고,
 사유를 레포트에 남긴다.
+
+## 14. 검증 축 (axis)
+
+단계를 늘려도 **같은 축**에서만 검증하면 새 결함은 나오지 않는다.
+secu-sample 최종 채점에서 파이프라인이 스스로 만든 결함 7건은 전부 앞 단계가 **보지 못하는 축**에서만 잡혔다.
+
+| 축 | 무엇을 볼 수 있나 | 실측으로 여기서만 잡힌 것 |
+|---|---|---|
+| `unit` | 로직 분기 | — |
+| `module` | 스프링 컨텍스트·H2 | — |
+| `real-db` | 실제 DB 방언·타입·인덱스 | H2 URL override, `Timestamp` 캐스트 |
+| `real-server` | 서블릿·필터·파서·프록시 (`RANDOM_PORT`) | multipart NUL 500, 413 순서, XFF 위조 허용 |
+| `browser` | 실제 렌더·타이머·번들 | Tiptap 로드 즉시 크래시 (jsdom 122 tests 통과) |
+| `concurrency` | 경합·풀·교착 | `REQUIRES_NEW` 커넥션 2중 점유 |
+| `security-static` | 소스 전역 sink 추적 | 정제기 우회, 로그 인젝션 |
+
+운영 규칙:
+
+1. 1단계가 slice 마다 `traits` 를 정하고, 그것이 **요구 축**을 결정한다(`stage1-slicing §4-1`). 모든 slice 는 기본으로 `unit` 을 요구하고, 그 위의 축은 traits 가 요구할 때만 본다.
+   축에는 포함 관계가 있다 — `real-server`·`real-db` 는 `module`·`unit` 을, `module` 은 `unit` 을 이미 지난다. 같은 실행을 여러 축으로 중복해 적지 않는다.
+2. 게이트를 실행할 때마다 `pa-meta.gates[].axis` 에 어느 축을 닫았는지 적는다.
+3. 이번 단계가 닫을 수 없는 축은 **확인 필요 항목으로 예약**한다: `gate.py oi new … --axis <축> --target <닫을 단계>`.
+4. `gate.py` 의 `coverage-axis` 훅이 대조한다 — 요구 축 중 닫히지도 예약되지도 않은 것이 있으면
+   2·4단계에서는 WARN, 그 축을 닫아야 할 단계(5·6·7)에서는 FAIL.
+5. **판별력 없는 테스트는 축을 닫지 않는다.** 그 축에서 결함을 재현하지 못하는 테스트(수정 전에도 통과하는 테스트)는
+   축 충족으로 세지 말고, 재현→수정→통과를 레포트에 남긴다(실측: jsdom 프로브로 재현 불가를 먼저 증명한 뒤 Chromium 스모크 채택).

@@ -314,3 +314,20 @@
 - 도구 검증: 정상/위반 레포트 2건으로 6개 훅 전부 실동작 확인(위반 케이스에서 테스트 0건·HEAD 불일치·브랜치 불일치·OI 미채번·근거 없음·RR 부재·비밀번호 노출 7건 검출, EXIT 1).
 - 교훈: 우리 파이프라인의 규칙은 대부분 이미 있었고(공용 파일 금지·정직한 보고·RR 라우팅), **없던 것은 그 규칙을 지켰는지 기계가 확인하는 층**이었다.
   산문 규칙은 에이전트가 성실히 따를 때만 작동하고, 놓친 것은 사람이 레포트를 정독해야 드러났다.
+
+## 2026-09-23 (오후) — 업그레이드 2차: 검증 축·추적 체인·자동 진행
+
+1차(게이트 검증층)에 이어, secu-sample 최종 채점의 "파이프라인이 스스로 만든 결함 7건" 을 근거로 **무엇을 검사하지 않았는지**를 자산화했다.
+
+| 항목 | 근거(실측) | 조치 |
+|---|---|---|
+| 검증 축(axis) | 7건 전부가 앞 단계가 보지 못한 축에서만 잡혔다 — 모듈→웨이브(H2 override·Timestamp), jsdom→브라우저(Tiptap), mock→실 파서(multipart NUL), 단위→동시성(REQUIRES_NEW), MockMvc→실 프록시(XFF) | `pipeline-core §14` 신설. slice 의 `traits` → 요구 축 매핑, `gates[].axis` 기록, `gate.py` 의 `coverage-axis` 훅이 대조(닫지도 예약도 안 됐으면 2·4단계 WARN, 해당 축을 닫을 단계에서 FAIL). 축 포함 관계(real-server ⊃ module ⊃ unit)로 중복 기록을 피한다 |
+| 추적 체인 | 8단계에서야 "끊긴 추적 11건" 이 드러났다 | `gate.py trace` + `traceability` 훅. 요구사항 ID → 테스트 인용, API slice → 계약 파일 존재를 전수 대조. 2·4단계 WARN, 8단계 FAIL. **실행 즉시 secu-sample 에서 REQ-025 1건 검출** |
+| 회귀 위험 선언 | iteration 4 의 `REQUIRES_NEW` 수정이 iteration 5 에서 더 큰 결함(커넥션 2중 점유 교착)이 됐다 — 리팩토링이 새 결함을 낳은 첫 사례 | `pa-agent-result`·`pa-meta` 에 `risk_surface[]`(무엇을 깨뜨릴 수 있나 / 어느 축 / 무엇으로 덮었나). `/refactor` 11항에서 필수, `covered_by: 미검증` 이면 확인 필요 항목으로 채번 |
+| 비용 계측 | 단계별 소요·토큰이 레포트 산문에만 흩어져 회차 비교가 안 됐다 | `pa-meta.cost{duration_min, tool_calls, tokens_k}` + `cost-record` 훅(누락은 경고) |
+| 자동 진행 | 게이트 판정이 기계화되자 단계 전환마다 사람이 판단을 대신할 이유가 사라졌다 | `/run [--to N] [--slice] [--max] [--dry]` 신설. 기존 `/stageN` 절차를 그대로 호출하는 얇은 진행자. 승인 지점·FAIL·blocker open item·재작업 2회 초과에서 멈춘다 |
+| 다음 샘플 | 두 샘플 모두 slice 3개 — 규모 부하를 한 번도 받지 않았다 | `docs/samples/sample3-plan.md`: slice 12~20 규모 축 기획(가설 6개·측정 지표 7종·규모에서만 드러나는 함정), 대안으로 `mode: brownfield` 설계 |
+
+- secu-sample `slices.yaml` 에 traits 를 소급 부여: domain-notice[transaction], notice[counter·auth·file-upload], notice-admin[file-upload·rich-text·batch·auth]. 전부 실측 결함이 난 축과 일치한다.
+- 도구 검증: 2단계 레포트에서 browser·real-db·real-server 공백을 WARN 으로, 같은 내용을 5단계로 바꾸면 FAIL 로 판정(의도대로). `trace` 는 실제 프로젝트에서 끊김 1건 검출.
+- 남은 것: `/run` 은 아직 실전에서 돌려 보지 않았다. sample3 첫 회차가 `/run --dry` → `/run` 의 첫 실측이 된다.

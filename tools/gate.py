@@ -4,8 +4,10 @@
 # 목적: "빌드·테스트 통과", "확인 필요 있음" 같은 문장을 사람이 읽고 믿는 대신
 #       (1) 실행 증거(명령·종료코드·테스트 개수)가 실제로 있는지
 #       (2) target_dir 의 git 실측(HEAD/브랜치/dirty/변경파일)이 레포트 기재와 같은지
-#       (3) 미해결 항목(open item)이 RR 이나 승인 없이 조용히 사라지지 않는지
-#       (4) 레포트에 자격증명·개인정보가 섞이지 않았는지
+#       (3) slice 의 traits 가 요구하는 검증 축이 닫히거나 예약됐는지
+#       (4) 요구사항 ID 가 테스트까지 이어지는지
+#       (5) 미해결 항목(open item)이 RR 이나 승인 없이 조용히 사라지지 않는지
+#       (6) 레포트에 자격증명·개인정보가 섞이지 않았는지
 #       를 도구가 대조한다. (착안: ing-people/sk-secu-agent 의 slice_agent_hooks.py)
 #
 # 사용법:
@@ -13,6 +15,7 @@
 #   python tools/gate.py check --stage 2 --slice notice          # 최신 레포트 자동 탐색
 #   python tools/gate.py check --stage 5 --slice notice --format json
 #   python tools/gate.py template --stage 2 --slice notice        # 메타 블록 골격 출력
+#   python tools/gate.py trace [--slice notice] [--strict]        # 요구사항 → 계약 → 테스트 추적 대조
 #   python tools/gate.py secrets <파일|디렉토리> ...              # 비밀정보 스캔만
 #   python tools/gate.py oi new --stage 2 --slice notice --kind unverified --severity high \
 #          --summary "..." --evidence "파일:라인" --target 5
@@ -51,6 +54,56 @@ META_END = "pa-meta:end -->"
 
 RESULTS = ("done", "done_with_gaps", "blocked", "failed")
 OI_KINDS = ("evidence_gap", "decision", "unverified", "risk", "deferred")
+
+# 검증 축 — "앞 단계가 보지 못하는 축" 에서만 새 결함이 나온다는 실측(채점표 7건)에서 나온 분류
+AXES = ("unit", "module", "real-db", "real-server", "browser", "concurrency", "security-static")
+# 모든 slice 가 공통으로 요구하는 축. module 이상은 slice 특성(traits)이 요구할 때만 본다 —
+# 기본 요구를 넓히면 axis 를 적지 않은 기존 관행이 곧바로 차단돼 도구가 무시당한다.
+BASE_AXES = ("unit",)
+# slice 특성(traits) → 반드시 닫아야 하는 축. config 의 verification.trait_axes 로 덮어쓸 수 있다.
+TRAIT_AXES = {
+    "file-upload": ["real-server"],       # 서블릿/파서 단계가 서비스보다 먼저 갈린다 (multipart NUL·413 실측)
+    "transaction": ["real-db"],           # H2 로는 못 보는 방언·캐스트 (Timestamp·H2 override 실측)
+    "batch": ["real-db"],
+    "counter": ["concurrency"],           # 조회수·시퀀스 (REQUIRES_NEW 커넥션 2중 점유 실측)
+    "concurrency-sensitive": ["concurrency"],
+    "rich-text": ["browser"],             # jsdom 이 못 잡는 로드 크래시 (Tiptap 실측)
+    "dom-heavy": ["browser"],
+    "auth": ["real-server"],              # 필터·프록시 경로 (XFF 위조 실측)
+    "proxy-header": ["real-server"],
+    "external-io": ["real-server"],
+    "sanitizer": ["security-static"],
+}
+# 각 축을 닫는 것이 자연스러운 단계 (안내용)
+AXIS_STAGE = {"unit": 2, "module": 2, "real-db": 5, "real-server": 5,
+              "browser": 4, "concurrency": 7, "security-static": 6}
+# 포함 관계 — 바깥 축을 닫으면 안쪽 축도 닫힌 것으로 본다 (실 서버 테스트는 컨텍스트·로직을 이미 지난다)
+AXIS_IMPLIES = {
+    "module": ["unit"],
+    "real-db": ["unit", "module"],
+    "real-server": ["unit", "module"],
+    "browser": ["unit"],
+}
+
+
+def expand_axes(axes):
+    out = set()
+    for a in axes:
+        if not a:
+            continue
+        out.add(a)
+        out.update(AXIS_IMPLIES.get(a, []))
+    return out
+
+
+def gate_axes(g):
+    """gates[].axis 는 문자열 또는 배열."""
+    a = g.get("axis")
+    if isinstance(a, str):
+        return [a]
+    if isinstance(a, list):
+        return [x for x in a if isinstance(x, str)]
+    return []
 SEVERITIES = ("blocker", "high", "medium", "low")
 OI_STATUSES = ("open", "resolved", "converted", "accepted")
 BLOCKING_SEV = ("blocker", "high")
@@ -232,6 +285,15 @@ def hook_gate_proof(ctx):
         kinds.add(kind)
         if kind not in ("build", "test", "lint", "typecheck", "smoke", "scan", "other"):
             f.append(fail(f"{fld}.kind", f"알 수 없는 kind: {kind}"))
+        if kind in ("test", "smoke", "scan"):
+            axes = gate_axes(g)
+            if g.get("axis") is None:
+                f.append(warn(f"{fld}.axis", f"검증 축이 없다 ({'|'.join(AXES)})", "어느 축을 닫은 실행인지 적는다"))
+            elif not axes:
+                f.append(fail(f"{fld}.axis", "axis 는 문자열 또는 문자열 배열이어야 한다"))
+            for a in axes:
+                if a not in AXES:
+                    f.append(fail(f"{fld}.axis", f"알 수 없는 axis: {a}"))
         if not str(g.get("command", "")).strip():
             f.append(fail(f"{fld}.command", "실행한 명령을 그대로 적는다"))
         if not isinstance(g.get("exit_code"), int):
@@ -448,6 +510,188 @@ def hook_state_consistency(ctx):
     return result_of("state-consistency", f, ev)
 
 
+def load_slices():
+    path = os.path.join(WS, "slices", "slices.yaml")
+    if not os.path.exists(path):
+        return None, path
+    try:
+        return load_yaml(path), path
+    except Exception:
+        return None, path
+
+
+def slice_entry(slice_id):
+    data, path = load_slices()
+    if not data or not slice_id:
+        return None, path
+    for s in (data.get("slices") or []):
+        if isinstance(s, dict) and s.get("id") == slice_id:
+            return s, path
+    return None, path
+
+
+def trait_axis_map():
+    cfg = (config().get("verification") or {})
+    custom = cfg.get("trait_axes")
+    if isinstance(custom, dict):
+        merged = dict(TRAIT_AXES)
+        merged.update({k: list(v) for k, v in custom.items() if isinstance(v, list)})
+        return merged
+    return TRAIT_AXES
+
+
+def hook_coverage_axis(ctx):
+    """slice 의 특성(traits)이 요구하는 검증 축이 닫혔거나, 닫을 단계가 예약돼 있는지.
+
+    실측 근거: 파이프라인이 스스로 만든 결함 7건은 전부 '앞 단계가 보지 못한 축'에서만 잡혔다.
+    """
+    meta = ctx["meta"]
+    if not meta:
+        return result_of("coverage-axis", [], [ctx["report"]], skipped=True)
+    slice_id = meta.get("slice")
+    entry, spath = slice_entry(slice_id)
+    ev = [ctx["report"], spath]
+    if not slice_id or slice_id == "all" or entry is None:
+        return result_of("coverage-axis", [], ev, skipped=True)
+    traits = entry.get("traits")
+    if not isinstance(traits, list) or not traits:
+        return result_of("coverage-axis",
+                         [warn("traits", f"slices.yaml 의 {slice_id} 에 traits 가 없어 축 검사를 건너뛴다",
+                               "stage1 에서 traits(file-upload·transaction·counter·rich-text·auth 등)를 채운다")], ev)
+    amap = trait_axis_map()
+    required = set(BASE_AXES)
+    unknown = []
+    for t in traits:
+        if t in amap:
+            required.update(amap[t])
+        else:
+            unknown.append(t)
+    declared = []
+    for g in (meta.get("gates") or []):
+        if not isinstance(g, dict) or g.get("exit_code") != 0:
+            continue
+        axes = gate_axes(g)
+        if axes:
+            declared.extend(axes)
+        elif g.get("kind") in ("test", "smoke"):
+            declared.append("unit")   # 축 미기재 테스트는 가장 약한 축만 닫은 것으로 본다
+    covered = expand_axes(declared)
+    deferred = {i.get("axis") for i in (meta.get("open_items") or [])
+                if isinstance(i, dict) and i.get("axis")}
+    f = []
+    for t in unknown:
+        f.append(warn("traits", f"알 수 없는 trait: {t}", "config 의 verification.trait_axes 에 매핑을 추가한다"))
+    missing = sorted(required - covered - deferred)
+    stage = meta.get("stage")
+    for axis in missing:
+        owner = AXIS_STAGE.get(axis, 5)
+        blocking = isinstance(stage, int) and stage >= owner
+        msg = f"{slice_id}({','.join(traits)}) 가 요구하는 '{axis}' 축이 닫히지도, 예약되지도 않았다"
+        act = (f"그 축으로 실행해 gates[].axis={axis} 로 남기거나, "
+               f"python tools/gate.py oi new --stage {stage} --slice {slice_id} --kind unverified "
+               f"--axis {axis} --target {owner} … 로 넘긴다")
+        f.append(finding("FAIL" if blocking else "WARN", f"axis.{axis}", msg, act))
+    return result_of("coverage-axis", f, ev)
+
+
+TEST_GLOBS = ("**/src/test/**/*.java", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx")
+
+
+def collect_test_text(td, cache={}):
+    if td in cache:
+        return cache[td]
+    chunks = []
+    for pat in TEST_GLOBS:
+        for p in glob.glob(os.path.join(td, pat), recursive=True):
+            if "node_modules" in p or os.sep + "target" + os.sep in p or os.sep + "dist" + os.sep in p:
+                continue
+            try:
+                with open(p, encoding="utf-8", errors="replace") as fh:
+                    chunks.append(fh.read())
+            except OSError:
+                continue
+    cache[td] = "\n".join(chunks)
+    return cache[td]
+
+
+def trace_slice(td, entry):
+    """slice 의 요구사항 ID 가 테스트까지 살아 있는지. (found, missing, contract_ok)"""
+    reqs = [str(r) for r in (entry.get("requirements") or [])]
+    text = collect_test_text(td) if td else ""
+    found, missing = [], []
+    for r in reqs:
+        (found if r and r in text else missing).append(r)
+    contract = os.path.join(td, "docs", "api", f"{entry.get('id')}.yaml") if td else ""
+    contract_ok = (not entry.get("apis")) or (contract and os.path.exists(contract))
+    return found, missing, contract_ok, contract
+
+
+def hook_traceability(ctx):
+    """요구사항 ID 가 slices → 테스트까지 이어지는지. 8단계에서 '끊긴 추적' 으로 드러나던 것을 앞당긴다."""
+    meta = ctx["meta"]
+    if not meta:
+        return result_of("traceability", [], [ctx["report"]], skipped=True)
+    slice_id = meta.get("slice")
+    entry, spath = slice_entry(slice_id)
+    ev = [ctx["report"], spath]
+    td = ctx["target_dir"]
+    if entry is None or not td or not os.path.isdir(td):
+        return result_of("traceability", [], ev, skipped=True)
+    found, missing, contract_ok, contract = trace_slice(td, entry)
+    stage = meta.get("stage")
+    blocking = isinstance(stage, int) and stage == 8
+    f = []
+    if not found and not missing:
+        return result_of("traceability", [warn("requirements", f"{slice_id} 에 requirements 가 없다")], ev)
+    for r in missing:
+        f.append(finding("FAIL" if blocking else "WARN", f"trace.{r}",
+                         f"{r} 을 인용한 테스트를 찾지 못했다 (8단계 추적표에서 끊긴 연결이 된다)",
+                         "요구사항을 다루는 테스트의 @DisplayName·describe 에 요구사항 ID 를 적는다"))
+    if not contract_ok:
+        f.append(finding("FAIL" if blocking else "WARN", "trace.contract",
+                         f"API 가 있는 slice 인데 계약 파일이 없다: {contract}", "2단계에서 계약을 산출한다"))
+    return result_of("traceability", f, ev)
+
+
+def hook_cost_record(ctx):
+    """단계 비용(소요·tool call) 기록. 회차 간 비교 근거이며 누락은 경고만 한다."""
+    meta = ctx["meta"]
+    if not meta:
+        return result_of("cost-record", [], [ctx["report"]], skipped=True)
+    cost = meta.get("cost")
+    f = []
+    if cost is None:
+        f.append(warn("cost", "cost(소요 시간·tool call·토큰) 기록이 없다",
+                      "cost: {duration_min, tool_calls, tokens_k} 를 남기면 회차 간 비용 비교가 된다"))
+    elif not isinstance(cost, dict):
+        f.append(fail("cost", "cost 는 객체여야 한다"))
+    else:
+        for k in ("duration_min", "tool_calls"):
+            v = cost.get(k)
+            if v is not None and not isinstance(v, (int, float)):
+                f.append(fail(f"cost.{k}", f"{k} 는 숫자여야 한다"))
+        if cost.get("duration_min") is None:
+            f.append(warn("cost.duration_min", "소요 시간이 없다"))
+    risks = meta.get("risk_surface")
+    if risks is not None:
+        if not isinstance(risks, list):
+            f.append(fail("risk_surface", "risk_surface 는 배열이어야 한다"))
+        else:
+            for i, r in enumerate(risks):
+                if not isinstance(r, dict):
+                    f.append(fail(f"risk_surface[{i}]", "항목은 객체여야 한다"))
+                    continue
+                if not str(r.get("what", "")).strip():
+                    f.append(fail(f"risk_surface[{i}].what", "이 변경이 무엇을 깨뜨릴 수 있는지 적는다"))
+                if r.get("axis") and r["axis"] not in AXES:
+                    f.append(fail(f"risk_surface[{i}].axis", f"알 수 없는 axis: {r['axis']}"))
+                if not str(r.get("covered_by", "")).strip():
+                    f.append(fail(f"risk_surface[{i}].covered_by",
+                                  "무엇으로 덮었는지(테스트명) 또는 '미검증' 을 적는다",
+                                  "미검증이면 확인 필요 항목으로 남긴다"))
+    return result_of("cost-record", f, [ctx["report"]])
+
+
 def scan_secrets_text(text, label):
     f = []
     for line_no, line in enumerate(text.splitlines(), 1):
@@ -479,20 +723,27 @@ HOOKS = {
     "report-meta": hook_report_meta,
     "gate-proof": hook_gate_proof,
     "repo-consistency": hook_repo_consistency,
+    "coverage-axis": hook_coverage_axis,
+    "traceability": hook_traceability,
     "open-items": hook_open_items,
     "state-consistency": hook_state_consistency,
+    "cost-record": hook_cost_record,
     "secret-scan": hook_secret_scan,
 }
 PROFILES = {
     # 2·3·4단계: 빌드·테스트 증거와 git 실측까지
-    "dev": ["report-meta", "gate-proof", "repo-consistency", "open-items", "state-consistency", "secret-scan"],
+    "dev": ["report-meta", "gate-proof", "repo-consistency", "coverage-axis", "traceability",
+            "open-items", "state-consistency", "cost-record", "secret-scan"],
     # 5·6·7단계: 검증 단계 — 결함은 RR, 미확인은 open item 으로 나갔는지
-    "verify": ["report-meta", "gate-proof", "open-items", "state-consistency", "secret-scan"],
-    # 0·1·8단계
-    "doc": ["report-meta", "open-items", "state-consistency", "secret-scan"],
+    "verify": ["report-meta", "gate-proof", "coverage-axis", "open-items", "state-consistency",
+               "cost-record", "secret-scan"],
+    # 0·1단계
+    "doc": ["report-meta", "open-items", "state-consistency", "cost-record", "secret-scan"],
+    # 8단계: 추적 체인이 끊기면 산출물이 비어 나온다 → 여기서는 차단
+    "deliver": ["report-meta", "traceability", "open-items", "state-consistency", "cost-record", "secret-scan"],
     "all": list(HOOKS),
 }
-STAGE_PROFILE = {0: "doc", 1: "doc", 2: "dev", 3: "dev", 4: "dev", 5: "verify", 6: "verify", 7: "verify", 8: "doc"}
+STAGE_PROFILE = {0: "doc", 1: "doc", 2: "dev", 3: "dev", 4: "dev", 5: "verify", 6: "verify", 7: "verify", 8: "deliver"}
 
 
 # ---------------------------------------------------------------- 명령
@@ -548,12 +799,14 @@ def cmd_template(args):
         "gates": [
             {"kind": "build", "command": "", "exit_code": 0, "executed_at": now_kst()},
             {"kind": "test", "command": "", "exit_code": 0, "executed_at": now_kst(),
-             "test_count": 0, "failures": 0, "skipped": 0},
+             "axis": "unit", "test_count": 0, "failures": 0, "skipped": 0},
         ],
         "open_items": [],
         "rr_ids": [],
         "common_candidates": [],
         "not_executed": [],
+        "risk_surface": [],
+        "cost": {"duration_min": 0, "tool_calls": 0, "tokens_k": 0},
     }
     print(META_START)
     print(json.dumps(meta, ensure_ascii=False, indent=2))
@@ -603,11 +856,14 @@ def cmd_oi(args):
             sys.exit(f"[gate] kind 는 {'|'.join(OI_KINDS)}")
         if args.severity not in SEVERITIES:
             sys.exit(f"[gate] severity 는 {'|'.join(SEVERITIES)}")
+        if args.axis and args.axis not in AXES:
+            sys.exit(f"[gate] axis 는 {'|'.join(AXES)}")
         oid = next_oi_id(items)
         rec = {"id": oid, "found_at": now_kst(), "stage": args.stage, "slice": args.slice or "",
                "kind": args.kind, "severity": args.severity, "summary": args.summary,
-               "evidence": args.evidence, "target_stage": args.target, "owner": args.owner or "",
-               "rr_id": "", "status": "open", "approved_by": "", "expiry": "", "note": ""}
+               "evidence": args.evidence, "target_stage": args.target, "axis": args.axis or "",
+               "owner": args.owner or "", "rr_id": "", "status": "open",
+               "approved_by": "", "expiry": "", "note": ""}
         items.append(rec)
         dump_yaml(OI_FILE, data)
         print(oid)
@@ -654,6 +910,35 @@ def cmd_oi(args):
     return 2
 
 
+def cmd_trace(args):
+    """요구사항 ID → 계약 → 테스트 추적 체인을 slice 별로 전수 대조."""
+    data, spath = load_slices()
+    if not data:
+        sys.exit(f"[gate] slices.yaml 을 읽지 못했다: {spath}")
+    td = target_dir()
+    if not td or not os.path.isdir(td):
+        sys.exit(f"[gate] target_dir 이 없다: {td}")
+    rows, broken = [], 0
+    for entry in (data.get("slices") or []):
+        if not isinstance(entry, dict):
+            continue
+        if args.slice and entry.get("id") != args.slice:
+            continue
+        found, missing, contract_ok, contract = trace_slice(td, entry)
+        broken += len(missing) + (0 if contract_ok else 1)
+        rows.append((entry.get("id"), len(found), missing, contract_ok))
+    if args.format == "json":
+        print(json.dumps({"slices": [{"id": i, "traced": t, "missing": m, "contract": c}
+                                     for i, t, m, c in rows], "broken": broken},
+                         ensure_ascii=False, indent=2))
+    else:
+        print(f"{'slice':<18} {'추적됨':<7} {'계약':<6} 끊긴 요구사항")
+        for i, t, m, c in rows:
+            print(f"{i:<18} {t:<7} {'OK' if c else '없음':<6} {', '.join(m) if m else '-'}")
+        print(f"끊긴 연결 총 {broken}건")
+    return 1 if broken and args.strict else 0
+
+
 def build_parser():
     p = argparse.ArgumentParser(description="단계 레포트 게이트 메타 검증")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -672,6 +957,12 @@ def build_parser():
     t.add_argument("--agent")
     t.set_defaults(fn=cmd_template)
 
+    tr = sub.add_parser("trace", help="요구사항 → 계약 → 테스트 추적 체인 대조")
+    tr.add_argument("--slice")
+    tr.add_argument("--format", choices=["human", "json"], default="human")
+    tr.add_argument("--strict", action="store_true", help="끊긴 연결이 있으면 종료 코드 1")
+    tr.set_defaults(fn=cmd_trace)
+
     s = sub.add_parser("secrets", help="자격증명·개인정보 스캔")
     s.add_argument("paths", nargs="+")
     s.add_argument("--format", choices=["human", "json"], default="human")
@@ -687,6 +978,7 @@ def build_parser():
     on.add_argument("--summary", required=True)
     on.add_argument("--evidence", required=True)
     on.add_argument("--target", type=int, required=True, help="닫을 단계")
+    on.add_argument("--axis", choices=AXES, help="이 항목이 기다리는 검증 축")
     on.add_argument("--owner")
     ol = osub.add_parser("list")
     ol.add_argument("--status", choices=OI_STATUSES)

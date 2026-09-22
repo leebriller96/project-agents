@@ -35,9 +35,29 @@ description: 1단계 업무 분류 — PROJECT_BRIEF(및 AS-IS 인벤토리)를 
 - 순환 의존이 나오면 공통 부분을 떼어 `common-*` slice 로 만든다.
 - `priority` 는 depends_on 위상순서를 따르되 같은 레벨에서는 요구사항 우선순위·리스크(외부 연동 등) 높은 것을 먼저.
 
+## 4-1. traits — 검증 축 결정 (필수)
+
+slice 마다 `traits` 를 채운다. 이것이 **그 slice 를 어느 축에서 검증해야 하는지**를 정하고,
+`tools/gate.py` 의 `coverage-axis` 훅이 2·4·5단계에서 그 축이 닫혔는지 대조한다.
+근거: 파이프라인이 스스로 만든 결함 7건은 전부 "앞 단계가 보지 못한 축"에서만 잡혔다(`docs/samples/secu-sample-batch1-traps.md` 최종 채점).
+
+| brief·AS-IS 에서 이런 게 보이면 | trait | 닫아야 할 축 |
+|---|---|---|
+| 첨부·업로드·다운로드 | `file-upload` | `real-server` (서블릿·파서가 서비스보다 먼저 갈린다) |
+| 여러 테이블 갱신·보상·배치 | `transaction` / `batch` | `real-db` (H2 로는 방언·캐스트가 안 보인다) |
+| 조회수·채번·재고처럼 경합하는 값 | `counter` / `concurrency-sensitive` | `concurrency` |
+| 에디터·차트·트리 등 DOM/타이머 의존 화면 | `rich-text` / `dom-heavy` | `browser` (jsdom 은 로드 크래시를 못 잡는다) |
+| 로그인·권한·프록시 헤더·세션 | `auth` / `proxy-header` | `real-server` |
+| 메일·외부 API·파일시스템 | `external-io` | `real-server` |
+| HTML 정제·XSS 방어 | `sanitizer` | `security-static` |
+
+- 해당 없으면 빈 배열로 둔다. 추측으로 붙이지 말고 근거(brief 절·AS-IS 파일)를 SLICE_MAP 에 적는다.
+- 새 trait 이 필요하면 `config/project.yaml → verification.trait_axes` 에 매핑을 추가하고 그 이유를 레포트에 남긴다.
+
 ## 5. 검증
 
 - brief 의 엔티티·화면·요구사항이 모두 어느 slice 에 들어갔는지 확인한다. 못 넣은 것은 `unassigned` 에 적는다.
+- 모든 slice 에 `traits` 키가 있는지 확인한다(빈 배열이라도). 없으면 축 검사가 건너뛰어진다.
 - id 는 `^[a-z][a-z0-9-]*$`. 패키지명·디렉토리명으로 쓰이므로 예약어를 피한다.
 - `depends_on` 이 존재하는 id 만 가리키는지, 순환이 없는지 확인한다.
 

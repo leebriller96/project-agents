@@ -34,3 +34,7 @@ argument-hint: "[RR-0001,RR-0002 | slice:<id> | stage:<n> | layer:<backend/mappe
     새 확인 필요 항목은 `python tools/gate.py oi new …` 로 채번한다. 레포트 끝에 `pa-meta` 블록(`stage` = 반영 대상 단계, `rr_ids` = 처리한 RR)을 붙이고
     `python tools/gate.py check --report <레포트 경로>` 를 실행한다. FAIL 이면 RR 을 `done` 으로 닫지 않는다.
     `oi list --target <해당 단계>` 로 이번 회차가 닫기로 한 항목이 남지 않았는지 확인한다.
+11. **회귀 위험 선언 (RR 반영 필수)**: developer 는 `pa-agent-result.risk_surface` 에 "이 수정이 무엇을 깨뜨릴 수 있는가 / 어느 축의 문제인가 / 무엇으로 덮었는가" 를 적는다.
+    오케스트레이터는 이를 레포트 `pa-meta.risk_surface` 로 옮기고, `covered_by` 가 "미검증" 인 항목은 그 축을 target 으로 하는 확인 필요 항목으로 채번한다
+    (`gate.py oi new … --kind risk --axis <축>`). 근거: iteration 4 의 `REQUIRES_NEW` 수정이 iteration 5 에서 더 큰 결함(커넥션 2중 점유 교착)으로 드러났다 —
+    **리팩토링이 새 결함을 낳는 경로가 실측됐다.** 수정이 닿는 축이 지금 게이트에 없으면 그 축의 테스트를 같은 회차에 추가한다.

@@ -22,5 +22,7 @@ argument-hint: "[all|<산출물 키>[,<키>...]] (기본 all)"
 2. 확인 필요 항목은 `python tools/gate.py oi new --stage 8 --slice <id> --kind <kind> --severity <sev> --summary "…" --evidence "…" --target <닫을 단계>` 로 채번한다.
    `blocker`·`high` 는 RR 전환(`oi set <id> converted --rr RR-xxxx`) 또는 사람 승인(`accepted`) 없이 남기지 않는다.
 3. 레포트 끝에 `pa-meta` 블록을 붙인다 (`python tools/gate.py template --stage 8 --slice <id> --agent orchestrator` 로 골격 생성 후 실제 값으로 채움).
+3-1. **추적 체인 전수 대조**: `python tools/gate.py trace --strict` 를 실행한다. 끊긴 연결(요구사항 ID 를 인용한 테스트 부재, 계약 파일 부재)이 있으면
+   산출물에 "끊긴 추적" 으로 싣고, 8단계에서 메울 수 있는 것(문서 인용 누락)은 메운다. 코드·테스트가 없어서 끊긴 것은 확인 필요 항목으로 남긴다.
 4. `python tools/gate.py check --stage 8 [--slice <id>]` 를 실행한다. **FAIL 이면 그 단계를 `done` 으로 기록하지 않는다.**
    검사 결과(통과 / FAIL 항목)를 사용자 보고에 한 줄로 포함한다.
