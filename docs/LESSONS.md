@@ -279,5 +279,6 @@
 | 단계 | 현상 | 조치 |
 |---|---|---|
 | stage5 r2 domain-notice | 28분: 39→50 시나리오(신규 11·갱신 1·회귀 확인 37), 실패 0. 재실행 규칙(r1/r2 병기·갱신 근거 = RR note)이 잘 동작. 신규 low 2(seed 동시 기동 경쟁, Flyway 가 프로파일 가드보다 먼저) | 스킬 §2 r2 실측 |
-| stage5 r2 | `.env.local` 필수화(RR-0029) 후 첫 실행 — 폴백 없음이 실측으로 확인, `APP_PROXY_INTERNAL_IPS` 는 local yml 리터럴로 기동 | — || stage5 r2 notice | 30분: 58→68 시나리오(갱신 11·신규 14·회귀 47), 전부 통과. 초기 실패 5건은 전부 테스터 오류(시나리오 간 조회수 간섭, XFF 신뢰 주소). 서비스 결함 0, RR 1(FE gen 타입 stale) | 스킬 §2: 인메모리 상태·XFF 대조 주소·Playwright reporter |
+| stage5 r2 | `.env.local` 필수화(RR-0029) 후 첫 실행 — 폴백 없음이 실측으로 확인, `APP_PROXY_INTERNAL_IPS` 는 local yml 리터럴로 기동 | — || stage5 r2 notice | 30분: 58→68 시나리오(갱신 11·신규 14·회귀 47), 전부 통과. 초기 실패 5건은 전부 테스터 오류(시나리오 간 조회수 간섭, XFF 신뢰 주소). 서비스 결함 0, RR 1(FE gen 타입 stale) | 스킬 §2: 인메모리 상태·XFF 대조 주소·Playwright reporter || stage5 r2 notice-admin | 33분·408k 토큰: 58→80행(갱신 20·신규 26·회귀 37), **RR-0017 크래시 해소를 dev·lazy·preview 3경로 브라우저 실측**. 새 결함 1: multipart 파일명 NUL 이 Tomcat 파서에서 500(서비스 정규화 미도달, MockMultipartFile 로는 못 봄 → RR-0040) | 프로필: 파서 단계 예외 매핑·실서버 테스트 |
+| stage5 r2 전체 | 3 slice r2 합계 198행, 실패 1(RR-0040 low), 서비스 회귀 0. r2 규칙(r1/r2 병기·갱신 근거 = RR note) 이 "기대값 갱신 32건" 을 정직하게 구분 — 5단계 재실행 비용 약 90분 | stage7 착수 조건 충족 |
 
