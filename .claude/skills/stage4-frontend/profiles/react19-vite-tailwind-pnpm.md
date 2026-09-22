@@ -50,6 +50,7 @@
 - `immediatelyRender:false` 부작용: `useEditorState` 스냅샷이 첫 transaction 까지 `editor:null` → `onCreate` 에서 transaction 1회. 브라우저 스모크 spec 은 **typecheck 게이트에 포함**(별도 `tsc -p tests/browser/tsconfig.json --noEmit` 또는 Playwright 를 앱 devDependency 로 — `paths`→`index.mjs` 우회는 선언 파일이 없어 typecheck 이 통째로 빠짐). `webServer.command` 는 `node node_modules/vite/bin/vite.js` 직접 호출(`pnpm exec` 는 재링크를 유발). CSRF 쿠키 우선은 스모크에서 요청 헤더 값 단언으로 증명.
 - **수정 전 판별력 검증**은 `git worktree` + 별도 `pnpm install`(store 공유)로. node_modules 를 junction 으로 공유하면 `pnpm exec` 가 실제 repo 의 링크 94개를 worktree 경로로 바꿔 놓는다(실측·복구함).
 - (구 기록) 로드 직후 `Cannot read properties of null (reading 'cached')` at `Editor.getHTML` — `useEditor` 의 1ms 파괴 예약과 passive effect(`getHTML` 호출) 경합. jsdom 테스트는 통과하고 실제 브라우저(dev·preview)에서만 재현 → 에디터 인스턴스 접근은 `editor?.isDestroyed` 확인 + `onUpdate` 콜백으로 값 전달, `immediatelyRender`/StrictMode 조합 실측. Chromium 렌더 스모크 필수(§C).
+- DOMPurify `ALLOWED_URI_REGEXP` 는 `URI_SAFE_ATTRIBUTES` 밖 **모든** 속성 값에 적용(`start="3"`·`target` 까지 제거) → 비-URI 속성을 `ADD_URI_SAFE_ATTR` 로 등록해 `href`/`src` 로 한정.
 - Tiptap 테스트에서 `editor.commands.*` 를 직접 호출할 때는 `await act(() => …)` 로 감싼다(act 경고).
 - 골격이 만드는 `features/sample` 은 첫 slice 가 들어오면 삭제(공통 후보 F-05).
 
