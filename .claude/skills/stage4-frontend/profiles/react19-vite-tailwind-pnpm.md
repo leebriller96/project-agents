@@ -40,6 +40,9 @@
 - **msw + jsdom FormData**: jsdom 의 `FormData` 를 msw 가 multipart 로 못 읽음 → 테스트 setup 에서 Node `FormData/Blob/File` 로 스텁(골격 `shared/test` 헬퍼로). jsdom 에 `Range` 없음(Tiptap) → 폴리필.
 - react-hooks 7 규칙: `use` 로 시작하는 순수 함수명은 hooks 규칙에 걸림(`useYnLabel`→`usageLabel`), `set-state-in-effect` 는 `key` 재마운트로 회피.
 - **리치텍스트 허용 마크는 3자 동일**(서버 정제기 = FE SafeHtml = 에디터 확장) — 하나라도 다르면 "저장은 되는데 표시가 지워지는" 결함(예: `style` 정렬). 에디터 확장을 넣기 전에 SafeHtml 이 그 속성을 통과시키는지 실측.
+- **msw 핸들러는 선등록 우선** — `/notices/:noticeId` 패턴이 `/notices/top` 을 가로챈다 → 고정 경로 핸들러를 파라미터 경로보다 먼저 등록.
+- user-event `click` 은 `element.click()` 을 거치므로 앵커 click 을 전역 목으로 막으면 onClick 이 안 발화 → `download` 속성 앵커만 가로채기.
+- Write/heredoc 의 ` ` 류 이스케이프가 도구에서 실제 문자로 바뀌어 저장될 수 있음 → 특수 문자는 `String.fromCharCode(0xa0)` 로 명시.
 - Tiptap 테스트에서 `editor.commands.*` 를 직접 호출할 때는 `await act(() => …)` 로 감싼다(act 경고).
 - 골격이 만드는 `features/sample` 은 첫 slice 가 들어오면 삭제(공통 후보 F-05).
 

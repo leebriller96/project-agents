@@ -215,4 +215,12 @@
 | stage4 notice-admin 검토 | 인라인 오류 표시 + 공통 토스트 이중 알림(`meta.silent` 누락) — 테스트로 안 잡힘 | §D-0 대조 항목 |
 | stage4 notice-admin 검토 | 계약이 오류 코드만 싣고 문구가 없어 FE/서버 문구 갈림(007) — "계약만 보고 개발" 원칙의 구멍 | stage2 §B-5: 오류 코드별 문구를 계약 description 에. RR-0010 |
 | stage4 notice-admin 검토 | 골격 SafeHtml 이 서버가 허용하는 `style` 을 지워 에디터 정렬 기능을 빼야 했음 — 3자 동일을 골격 시점에 맞추지 않은 결과 | stage4 §A-6 |
+## 2026-09-22 — secu-sample stage4 W1 (notice user 앱)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage4 notice | developer 가 API 서버 오류(529, 500)로 두 번 중단 → `SendMessage` 재개로 같은 컨텍스트에서 이어 완료(산출물 손실 0). 재개 프롬프트에 "작업 트리 상태를 먼저 확인" 을 넣은 것이 효과 | 규칙(pipeline-core §6): 에이전트가 서버 오류로 끊기면 새 에이전트 대신 **재개**(컨텍스트 보존) + "git status 로 상태 복구 후 이어서" 지시 |
+| stage4 notice | 계약 7개로 화면 2개 전부 구현, RR 0 — 2단계 notice 계약이 충분했음(admin 은 다운로드 누락) | — |
+| stage4 notice | msw 선등록 우선(`/:id` 가 `/top` 가로챔), user-event 앵커 click 목, 도구의 ` ` 이스케이프 변환 — 실측 3건 | 프로필 "알려진 주의" |
+| stage4 notice | 테스트가 실제 결함 1건 발견(react-query `onSuccess` 2번째 인자를 잘못 넘김) | 정상 |
 
