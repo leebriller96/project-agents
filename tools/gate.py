@@ -15,10 +15,12 @@
 #   python tools/gate.py check --stage 2 --slice notice          # 최신 레포트 자동 탐색
 #   python tools/gate.py check --stage 5 --slice notice --format json
 #   python tools/gate.py template --stage 2 --slice notice        # 메타 블록 골격 출력
+#   python tools/gate.py plan [--to 5] [--max 4]                  # /run 진행 계획(웨이브·축·멈춤 조건)
 #   python tools/gate.py trace [--slice notice] [--strict]        # 요구사항 → 계약 → 테스트 추적 대조
 #   python tools/gate.py secrets <파일|디렉토리> ...              # 비밀정보 스캔만
 #   python tools/gate.py oi new --stage 2 --slice notice --kind unverified --severity high \
 #          --summary "..." --evidence "파일:라인" --target 5
+#   python tools/gate.py oi import --report <레포트> --write     # pa-meta 의 open_items 일괄 채번
 #   python tools/gate.py oi list [--status open] [--slice notice]
 #   python tools/gate.py oi set OI-0003 converted --rr RR-0041 [--note "..."]
 #   python tools/gate.py oi set OI-0004 accepted --approved-by 사용자 --expiry 2026-10-31 --note "..."
@@ -441,12 +443,23 @@ def hook_open_items(ctx):
             f.append(fail(f"{fld}.severity", f"severity 는 {'|'.join(SEVERITIES)} 중 하나여야 한다"))
         if not str(it.get("evidence", "")).strip():
             f.append(fail(f"{fld}.evidence", "근거(파일:라인·명령·레포트 절)가 없다"))
-        if not it.get("target_stage"):
-            f.append(fail(f"{fld}.target_stage", "어느 단계가 닫을 항목인지 적는다"))
+        target = it.get("target_stage")
+        if target is None or target == "":
+            f.append(fail(f"{fld}.target_stage", "어느 단계가 닫을 항목인지 적는다 (사람 결정 대기는 0)"))
         status = (store.get(oid) or it).get("status", "open")
         rid = (store.get(oid) or it).get("rr_id") or it.get("rr_id")
+        # RR(리팩토링 요구서)은 "이미 있는 코드의 결함" 을 고치라는 요구다. 그래서 RR 전환을 요구할 수 있는 것은
+        # 코드가 존재하는 단계(2~7)에서 나온 unverified·risk 뿐이다.
+        # decision·evidence_gap·deferred 는 다음 단계가 자기 일로 받아 닫는 정상 경로이므로 예약(target_stage)만 있으면 된다.
+        stage_num = meta.get("stage") if isinstance(meta.get("stage"), int) else None
+        code_exists = stage_num is not None and stage_num >= 2
+        rr_applicable = it.get("kind") in ("unverified", "risk") and code_exists
         if sev in BLOCKING_SEV and meta.get("result") in ("done", "done_with_gaps"):
-            if status == "open" and not rid:
+            if not rr_applicable and status == "open":
+                where = "사람 결정 대기" if str(target) == "0" else f"stage{target} 가 닫을 항목으로 예약"
+                f.append(warn(f"{fld}", f"{sev} 항목이 열린 채 넘어간다 ({where})",
+                              "사용자 보고에 포함하고, 그 단계 착수 시 oi list --target 으로 받아 처리한다"))
+            elif status == "open" and not rid:
                 f.append(fail(f"{fld}", f"{sev} 항목이 RR 연결·사람 승인 없이 열린 채로 완료 처리됐다",
                               "RR 로 변환(gate.py oi set <id> converted --rr RR-xxxx)하거나 accepted 승인을 받는다"))
             if rid and not rr_exists(rid):
@@ -851,6 +864,8 @@ def cmd_oi(args):
     os.makedirs(WS, exist_ok=True)
     data = load_open_items()
     items = data["items"]
+    if args.oi_cmd == "import":
+        return cmd_oi_import(args)
     if args.oi_cmd == "new":
         if args.kind not in OI_KINDS:
             sys.exit(f"[gate] kind 는 {'|'.join(OI_KINDS)}")
@@ -910,6 +925,196 @@ def cmd_oi(args):
     return 2
 
 
+def cmd_plan(args):
+    """/run 의 진행 계획을 계산한다 — 선행조건·웨이브·축 요구·멈춤 조건.
+
+    /run 이 이 계산을 매번 산문으로 재구현하면 어긋난다. 계획은 도구가 한 곳에서 만든다.
+    """
+    cfg = config()
+    if not os.path.exists(STATE):
+        sys.exit(f"[gate] state.yaml 이 없다: {STATE}")
+    st = load_yaml(STATE)
+    sl_data, spath = load_slices()
+    if not sl_data:
+        sys.exit(f"[gate] slices.yaml 을 읽지 못했다: {spath}")
+    slices = {s["id"]: s for s in (sl_data.get("slices") or []) if isinstance(s, dict)}
+    maxp = int(((cfg.get("pipeline") or {}).get("max_parallel") or 1))
+    amap = trait_axis_map()
+
+    # 웨이브 편성 (depends_on 위상 정렬)
+    waves, done, remaining, cyc = [], set(), dict(slices), []
+    while remaining:
+        ready = sorted([i for i, s in remaining.items()
+                        if all(d in done for d in (s.get("depends_on") or []))],
+                       key=lambda i: slices[i].get("priority", 99))
+        if not ready:
+            cyc = sorted(remaining)
+            break
+        waves.append(ready)
+        done |= set(ready)
+        for i in ready:
+            remaining.pop(i)
+
+    # 열린 확인 필요 항목 / RR
+    items = [i for i in load_open_items()["items"] if isinstance(i, dict) and i.get("status") == "open"]
+    blocking = [i for i in items if i.get("severity") in BLOCKING_SEV]
+    unreserved = [i for i in blocking if i.get("target_stage") in (None, "")]
+    rr_open = int((st.get("refactor_requests") or {}).get("open") or 0)
+
+    # 멈춤 조건 (run.md 의 표를 그대로 검사)
+    stops = []
+    if not sl_data.get("approved"):
+        stops.append("slices.yaml approved=false — 1단계 승인은 사람 몫 (pipeline-core §10)")
+    if unreserved:
+        stops.append(f"blocker/high 확인 필요 항목 {len(unreserved)}건이 닫을 단계 예약 없이 열려 있다")
+    if cyc:
+        stops.append(f"depends_on 순환: {', '.join(cyc)}")
+
+    # 실행 가능한 단계 계산 (pipeline-core §4)
+    stages = st.get("stages") or {}
+    sstate = st.get("slices") or {}
+    steps = []
+    if rr_open and (blocking or rr_open >= 5):
+        steps.append(("/refactor", f"열린 RR {rr_open}건 — 다음 단계 전에 먼저 반영"))
+    if stages.get("stage2_scaffold") != "done":
+        steps.append(("/stage2 scaffold", "골격 1회 — 환경 점검 후 빌드·테스트 게이트"))
+    todo2 = [i for i in slices if (sstate.get(i) or {}).get("stage2_backend") != "done"]
+    if todo2:
+        steps.append(("/stage2 all", f"웨이브 {len(waves)}단 × 동시 {maxp}개, 대상 {len(todo2)} slice"))
+    if any((sstate.get(i) or {}).get("stage2_backend") == "done" for i in slices) or todo2:
+        steps.append(("/stage3", "공통화 — 공통 후보 흡수"))
+    todo4 = [i for i in slices if (sstate.get(i) or {}).get("stage4_frontend") != "done"]
+    if todo4:
+        steps.append(("/stage4 all", f"프론트 골격 + 웨이브, 대상 {len(todo4)} slice"))
+    todo5 = [i for i in slices if (sstate.get(i) or {}).get("stage5_integration") != "done"]
+    if todo5 and args.to >= 5:
+        steps.append(("/stage5 all", f"통합 테스트, 대상 {len(todo5)} slice"))
+    if args.to >= 6 and stages.get("stage6_security") != "done":
+        steps.append(("/stage6", "보안 점검"))
+    if args.to >= 7 and stages.get("stage7_qa") != "done":
+        steps.append(("/stage7", "QA 자동화"))
+    if args.to >= 8 and stages.get("stage8_deliverables") != "done":
+        steps.append(("/stage8", "산출물"))
+    planned, deferred_steps = steps[:args.max], steps[args.max:]
+
+    # 축 요구 집계
+    axis_slices = {}
+    for i, s in slices.items():
+        for t in (s.get("traits") or []):
+            for a in amap.get(t, []):
+                axis_slices.setdefault(a, []).append(i)
+    for a in axis_slices:
+        axis_slices[a] = sorted(set(axis_slices[a]))
+
+    batches = sum(-(-len(w) // maxp) for w in waves)
+    plan = {
+        "project": (cfg.get("project") or {}).get("name"),
+        "to": args.to, "max": args.max, "max_parallel": maxp,
+        "slices": len(slices), "waves": waves, "batches": batches,
+        "serial_waves": [w[0] for w in waves if len(w) == 1],
+        "open_items": {"open": len(items), "blocking": len(blocking), "unreserved": len(unreserved)},
+        "rr_open": rr_open,
+        "axis_requirements": {a: {"slices": len(v), "closed_by": f"stage{AXIS_STAGE.get(a, 5)}"}
+                              for a, v in sorted(axis_slices.items())},
+        "steps": [{"command": c, "note": n} for c, n in planned],
+        "deferred": [{"command": c, "note": n} for c, n in deferred_steps],
+        "stops": stops,
+        "runnable": not stops,
+    }
+    if args.format == "json":
+        print(json.dumps(plan, ensure_ascii=False, indent=2))
+        return 0
+    print(f"/run --to {args.to} --max {args.max} --dry   (project={plan['project']}, max_parallel={maxp})")
+    print(f"\n[선행 확인]")
+    print(f"  slices.yaml approved : {sl_data.get('approved')}")
+    print(f"  열린 확인 필요 항목  : {len(items)}건 (blocker/high {len(blocking)}, 예약 없음 {len(unreserved)})")
+    print(f"  열린 RR              : {rr_open}건")
+    print(f"  stage2 골격          : {stages.get('stage2_scaffold')}")
+    print(f"\n[웨이브] slice {len(slices)} / 동시 {maxp} → 배치 {batches}회")
+    for n, w in enumerate(waves, 1):
+        mark = "  <- slice 1개, 병렬 손실" if len(w) == 1 else ""
+        print(f"  w{n} ({len(w)}) {', '.join(w)}{mark}")
+    print(f"\n[진행 계획] 최대 {args.max}단계")
+    for n, (c, note) in enumerate(planned, 1):
+        print(f"  {n}. {c:<18} {note}")
+    for c, note in deferred_steps:
+        print(f"  -  {c:<18} {note}  (--max 초과 → 다음 /run)")
+    print(f"\n[검증 축 요구]")
+    for a, v in plan["axis_requirements"].items():
+        print(f"  {a:<16} {v['slices']:>2} slice   닫을 단계 {v['closed_by']}")
+    print(f"\n[판정] {'실행 가능' if plan['runnable'] else '멈춤'}")
+    for s in stops:
+        print(f"  x {s}")
+    if stops:
+        print(f"\n  사람이 할 일: {stops[0]}")
+        print(f"  이어갈 명령 : /run --to {args.to}")
+    return 0
+
+
+def write_meta_back(report, meta):
+    """레포트의 pa-meta 블록을 갱신한 meta 로 교체한다."""
+    with open(report, encoding="utf-8") as fh:
+        text = fh.read()
+    s, e = text.find(META_START), text.find(META_END)
+    if s < 0 or e < 0:
+        return False
+    body = json.dumps(meta, ensure_ascii=False, indent=2)
+    new = text[:s] + META_START + "\n" + body + "\n" + text[e:]
+    with open(report, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(new)
+    return True
+
+
+def cmd_oi_import(args):
+    """레포트 pa-meta 의 open_items 를 일괄 채번하고 레포트에 id 를 써넣는다.
+
+    규모가 커지면 항목이 수십 건이 되므로 한 건씩 oi new 를 부르는 것은 현실적이지 않다.
+    """
+    report = args.report if os.path.isabs(args.report) else os.path.normpath(os.path.join(ROOT, args.report))
+    meta, err = extract_meta(report)
+    if err:
+        sys.exit(f"[gate] {err}")
+    items = meta.get("open_items")
+    if not isinstance(items, list):
+        sys.exit("[gate] pa-meta.open_items 가 배열이 아니다")
+    os.makedirs(WS, exist_ok=True)
+    data = load_open_items()
+    store = data["items"]
+    known = {i.get("id") for i in store if isinstance(i, dict)}
+    added, skipped = [], 0
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        if it.get("id") and it["id"] in known:
+            skipped += 1
+            continue
+        if it.get("kind") not in OI_KINDS or it.get("severity") not in SEVERITIES:
+            sys.exit(f"[gate] kind/severity 가 유효하지 않다: {it.get('summary', '')[:40]}")
+        oid = next_oi_id(store)
+        rec = {"id": oid, "found_at": now_kst(), "stage": meta.get("stage"),
+               "slice": it.get("slice") or meta.get("slice") or "",
+               "kind": it["kind"], "severity": it["severity"],
+               "summary": it.get("summary", ""), "evidence": it.get("evidence", ""),
+               "target_stage": it.get("target_stage"), "axis": it.get("axis") or "",
+               "owner": it.get("owner") or "", "rr_id": "", "status": "open",
+               "approved_by": "", "expiry": "", "note": ""}
+        store.append(rec)
+        known.add(oid)
+        it["id"] = oid
+        added.append(rec)
+    dump_yaml(OI_FILE, data)
+    if args.write:
+        write_meta_back(report, meta)
+    print(f"채번 {len(added)}건 (기존 {skipped}건 건너뜀) → {OI_FILE}")
+    for rec in added:
+        print(f"  {rec['id']} {rec['severity']:<7} {rec['kind']:<12} →stage{rec['target_stage']}  {str(rec['summary'])[:56]}")
+    if args.write:
+        print(f"레포트 pa-meta 갱신: {report}")
+    else:
+        print("레포트에 id 를 써넣으려면 --write 를 붙인다")
+    return 0
+
+
 def cmd_trace(args):
     """요구사항 ID → 계약 → 테스트 추적 체인을 slice 별로 전수 대조."""
     data, spath = load_slices()
@@ -957,6 +1162,12 @@ def build_parser():
     t.add_argument("--agent")
     t.set_defaults(fn=cmd_template)
 
+    pl = sub.add_parser("plan", help="/run 의 진행 계획 계산 (선행조건·웨이브·축·멈춤 조건)")
+    pl.add_argument("--to", type=int, default=5, help="여기까지 진행 (기본 5)")
+    pl.add_argument("--max", type=int, default=4, help="한 번에 실행할 최대 단계 수 (기본 4)")
+    pl.add_argument("--format", choices=["human", "json"], default="human")
+    pl.set_defaults(fn=cmd_plan)
+
     tr = sub.add_parser("trace", help="요구사항 → 계약 → 테스트 추적 체인 대조")
     tr.add_argument("--slice")
     tr.add_argument("--format", choices=["human", "json"], default="human")
@@ -980,6 +1191,9 @@ def build_parser():
     on.add_argument("--target", type=int, required=True, help="닫을 단계")
     on.add_argument("--axis", choices=AXES, help="이 항목이 기다리는 검증 축")
     on.add_argument("--owner")
+    oim = osub.add_parser("import", help="레포트 pa-meta 의 open_items 를 일괄 채번")
+    oim.add_argument("--report", required=True)
+    oim.add_argument("--write", action="store_true", help="레포트 pa-meta 에 채번한 id 를 써넣는다")
     ol = osub.add_parser("list")
     ol.add_argument("--status", choices=OI_STATUSES)
     ol.add_argument("--slice")

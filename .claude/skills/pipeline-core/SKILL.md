@@ -176,10 +176,17 @@ RR 은 "고쳐야 할 결함"이고, open item 은 **"아직 확인·결정되�
 | `risk` | 지금은 괜찮지만 조건이 바뀌면 깨지는 것 |
 | `deferred` | 뒤 단계로 의도적으로 미룬 것 |
 
-- 채번: `python tools/gate.py oi new --stage <N> --slice <id> --kind <kind> --severity <sev> --summary "…" --evidence "파일:라인" --target <닫을 단계> [--owner <에이전트>]`
+- 채번: `python tools/gate.py oi new --stage <N> --slice <id> --kind <kind> --severity <sev> --summary "…" --evidence "파일:라인" --target <닫을 단계> [--axis <축>] [--owner <에이전트>]`
+- **항목이 여러 건이면** 서브에이전트 보고를 레포트 `pa-meta.open_items` 에 그대로 옮긴 뒤
+  `python tools/gate.py oi import --report <레포트> --write` 로 **일괄 채번**한다 (레포트의 id 까지 도구가 채운다).
+  0단계에서 51건이 나온 실측 — 한 건씩 부르는 것은 규모에서 불가능하다.
 - 레포트 `pa-meta.open_items[]` 에 같은 id 로 싣는다. 도구가 파일과 대조한다.
-- **`blocker`·`high` 항목은 RR 로 전환(`oi set <id> converted --rr RR-xxxx`)하거나 사람이 승인(`accepted`)하지 않으면
-  그 단계를 `done` 으로 끝낼 수 없다.** 게이트는 통과했지만 미확인이 남았으면 레포트 `result` 는 `done_with_gaps` 다.
+- **RR 전환을 요구하는 것은 `unverified`·`risk` 이고 단계가 2 이상일 때뿐이다.** RR 은 "이미 있는 코드의 결함" 을 고치라는 요구이므로
+  0·1단계에는 만들 대상이 없다. `blocker`·`high` 라도 `decision`·`evidence_gap`·`deferred` 는
+  **`target_stage` 로 예약**되어 있으면 열린 채 넘어갈 수 있다(도구가 WARN 으로 추적한다).
+  2단계 이후의 `unverified`·`risk` 가 `blocker`·`high` 면 RR 전환(`oi set <id> converted --rr RR-xxxx`) 또는
+  사람 승인(`accepted`) 없이 그 단계를 `done` 으로 끝낼 수 없다.
+  게이트는 통과했지만 미확인이 남았으면 레포트 `result` 는 `done_with_gaps` 다.
 - `target_stage` 가 자기 단계인 항목은 착수 시 `oi list --target <N>` 으로 확인하고, 처리하면 `resolved`,
   못 했으면 레포트에 다시 싣는다 (도구가 누락을 WARN 으로 알린다).
 - `accepted` 는 사람만 지정하고 `approved_by`·`expiry`(YYYY-MM-DD)가 필요하다. 만료된 승인은 FAIL 이다.

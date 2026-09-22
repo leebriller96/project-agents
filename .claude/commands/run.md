@@ -17,10 +17,14 @@ argument-hint: "[--to <stage>] [--slice <id>|all] [--max <단계수>] [--dry]"
    - `--to <stage>`: 여기까지만 진행 (기본: 5).  `--slice <id>|all`: 대상 slice (기본: all).
    - `--max <n>`: 한 번에 실행할 최대 단계 수 (기본: 4). 넘으면 멈추고 다음 명령을 안내한다.
    - `--dry`: 실행하지 않고 **진행 계획만** 출력한다. 처음 쓸 때는 `--dry` 를 먼저 권한다.
-3. **다음 실행 가능 단계 계산**: pipeline-core §4 의 선행 조건 표를 그대로 적용해
-   지금 실행 가능한 `(명령, 대상)` 목록을 만든다. 여러 개면 단계 번호가 낮은 것부터.
-   - 열린 RR 이 `refactor_threshold`(기본 1건 이상 `blocker`/`high`, 또는 open 5건 이상)를 넘으면
-     다음 단계로 가기 전에 `/refactor` 를 먼저 넣는다.
+3. **다음 실행 가능 단계 계산**: **직접 계산하지 말고 `python tools/gate.py plan --to <N> --max <n>` 을 실행한다.**
+   선행 조건(pipeline-core §4)·웨이브 편성(§6)·축 요구(§14)·멈춤 조건을 도구가 한 곳에서 계산한다 —
+   명령 본문이 이 계산을 산문으로 재구현하면 어긋난다(첫 실측에서 애드혹 스크립트가 인코딩·문법으로 두 번 깨졌다).
+   `--format json` 으로 받아 그대로 쓴다. 출력에는 `steps`(실행할 단계), `deferred`(--max 초과분),
+   `waves`, `serial_waves`(slice 1개라 병렬 이득이 없는 웨이브), `axis_requirements`, `stops`, `runnable` 이 들어 있다.
+   - `stops` 가 비어 있지 않으면 **아무 단계도 실행하지 않고** 그 내용을 사용자에게 보여준다.
+   - 열린 RR 이 임계치(`blocker`/`high` 1건 이상 또는 open 5건 이상)를 넘으면 `plan` 이 `/refactor` 를 먼저 넣어 준다.
+   - `--dry` 면 이 출력을 사람이 읽을 형태로 보여주고 **끝낸다**(파일을 쓰지 않는다).
 4. **한 단계 실행**: 해당 `/stageN` 명령의 절차를 그대로 수행한다(서브에이전트 호출·웨이브·reviewer 포함).
 5. **판정**: 그 단계의 레포트에 `pa-meta` 를 붙이고 `python tools/gate.py check --stage <N> [--slice <id>]` 를 실행한다.
    - 통과(WARN 포함) → `state.yaml` 갱신 후 3번으로 돌아간다.

@@ -67,7 +67,7 @@ pa-meta:end -->
 | `gates[].exit_code` | 실제 종료 코드. 0 이 아닌 게이트가 있으면 `result` 는 `done` 일 수 없다 |
 | `gates[].axis` | 이 실행이 **어느 축을 닫았는가**: `unit`·`module`·`real-db`·`real-server`·`browser`·`concurrency`·`security-static`. `test`·`smoke`·`scan` 에 필수 |
 | `gates[].test_count` | `test`·`smoke` 필수. **0 이면 FAIL** — 필터가 아무것도 매칭하지 않은 채 EXIT 0 이 나오는 함정을 막는다. 집계는 `python tools/surefire_sum.py <target_dir>` 등 근거 있는 방법으로 |
-| `open_items[]` | 확인 필요 항목. `id` 는 `gate.py oi new` 로 채번한 뒤 여기 싣는다 (`pipeline-core §11`) |
+| `open_items[]` | 확인 필요 항목. 여러 건이면 id 없이 실은 뒤 `gate.py oi import --report <이 파일> --write` 로 일괄 채번한다 (`pipeline-core §11`). 각 항목에 `axis` 를 달면 검증 축 예약으로 인정된다 |
 | `rr_ids[]` | 이 단계에서 만든 RR id. 파일 존재를 도구가 확인한다 |
 | `common_candidates[]` | `common-candidates.md` 에 추가한 C-번호 |
 | `not_executed[]` | 실행하지 못한 검증과 이유. 여기 적은 것 중 다음 단계가 닫아야 하는 것은 `open_items` 로도 올린다 |
