@@ -236,5 +236,8 @@
 | stage5 domain-notice | COLLATION 근거 부족 S-1 이 "검색" 만 다뤘는데 **정렬**(TITLE ORDER BY)도 ai_ci 로 AS-IS BINARY 와 달라짐을 5단계 실측이 발견 → RR-0012 | migration-sql 카탈로그 COLLATION 태그에 "정렬도 영향" 명시 || stage5 notice | 31분·329k 토큰: E2E(Chromium→Vite→jar→MySQL) 58 시나리오 전부 통과, 계약 드리프트 0. 첫 실패 3건은 테스터 기대값 오기(한글 정렬·URL 정규화) | 정상 |
 | stage5 notice | 로그인 계정이 seed 어디에도 없어 5단계가 fixture 로 해시를 UPDATE — 골격이 테스트 계정 seed 를 제공했어야 | stage2 골격 §A-8 추가 |
 | stage5 notice | `/auth/csrf` 본문 토큰(XOR 마스킹)을 헤더로 보내면 403 — 계약 문구가 실제와 어긋남(RR-0015). 브라우저 경로는 쿠키를 읽어 정상 | 스킬 §2 실측 (c) |
-| stage5 notice | 개발 PC 5173 점유 → 포트 변수화로 회피(다른 프로세스 죽이지 않음) | 스킬 §2 실측 (a) |
+| stage5 notice | 개발 PC 5173 점유 → 포트 변수화로 회피(다른 프로세스 죽이지 않음) | 스킬 §2 실측 (a) || stage5 notice-admin | 90분·471k 토큰·137 tool call(가장 무거운 slice). **등록 화면이 실제 브라우저에서 로드 즉시 크래시**(Tiptap `useEditor` 경합, RR-0017 high, 운영 빌드도 재현) — 4단계 jsdom 단위 테스트 122건이 전부 통과했음에도 | stage4 §C: DOM/타이머 의존 서드파티 컴포넌트는 Chromium 렌더 스모크 게이트. 프로필에 원인·회피 기록 |
+| stage5 notice-admin | 서블릿 multipart 한도가 slice 검증(007)보다 먼저 걸려 `COMMON_413` — 2단계 테스트는 서비스 단위라 도달 불가를 못 봄(RR-0018) | stage2: 파일 크기 검증은 서블릿 한도와의 순서를 계약에 명시(어느 코드가 나가는지) |
+| stage5 notice-admin | 만료 배치·보상 삭제·실패 메일을 트리거 SIGNAL·cron 덮어쓰기로 실측 — 5단계가 "증명 없음" 항목을 실제로 닫는 방법 확립 | 스킬 §2 실측 (c)(d) |
+| stage5 notice-admin | 리치텍스트 3자 정합 실측: 서버는 `style` 보존, user SafeHtml 이 제거 → 관리자가 넣은 정렬이 사용자에겐 안 보임(F-25 실증) | 3단계/골격 후보 유지, stage4 §A-6 |
 

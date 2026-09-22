@@ -45,6 +45,7 @@
 - Write/heredoc 의 ` ` 류 이스케이프가 도구에서 실제 문자로 바뀌어 저장될 수 있음 → 특수 문자는 `String.fromCharCode(0xa0)` 로 명시.
 - 운영 QueryClient `retry: 1` 은 404 도 재시도(약 1초 지연) → AS-IS 가 즉시 오류 화면인 단건 조회는 `retry: (n, e) => e.status !== 404 && n < 1`.
 - AS-IS 인라인 스크립트가 `form.submit()` 이면 "폼 전체 값 전송" 이 동작의 일부 — 분류 change·정렬·페이지 콜백이 URL 값만 merge 하면 입력 중 값이 유실된다. 화면 문서의 스크립트 동작 표에 **전송 필드 범위** 열을 둔다.
+- **Tiptap `useEditor` 크래시**: 로드 직후 `Cannot read properties of null (reading 'cached')` at `Editor.getHTML` — `useEditor` 의 1ms 파괴 예약과 passive effect(`getHTML` 호출) 경합. jsdom 테스트는 통과하고 실제 브라우저(dev·preview)에서만 재현 → 에디터 인스턴스 접근은 `editor?.isDestroyed` 확인 + `onUpdate` 콜백으로 값 전달, `immediatelyRender`/StrictMode 조합 실측. Chromium 렌더 스모크 필수(§C).
 - Tiptap 테스트에서 `editor.commands.*` 를 직접 호출할 때는 `await act(() => …)` 로 감싼다(act 경고).
 - 골격이 만드는 `features/sample` 은 첫 slice 가 들어오면 삭제(공통 후보 F-05).
 
