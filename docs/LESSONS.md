@@ -249,5 +249,6 @@
 | refactor common | Boot 바인더가 미해석 플레이스홀더를 리터럴로 넘김(실측) | 프로필 || refactor notice-admin BE | 오류 문구를 계약에 싣는 규칙을 "컴파일 상수 `Msg` 클래스 + 리플렉션 대조" 로 구현해 문구 드리프트를 구조적으로 차단 — 좋은 패턴 | stage2 §B-5 규칙으로 승격 |
 | refactor notice-admin BE | 서블릿 multipart 한도가 slice 검증보다 먼저(013→413) — 2단계는 MockMvc 라 못 보고 5단계 실측이 잡음. 계약을 실제대로 정정, yml 상향은 사람 결정(C-15) | 프로필 |
 | refactor notice-admin BE | Bash 도구가 `\` 를 한 번 접어 정규식 `\s` 가 깨진 사고 1회 → Edit 도구로 교정 | 메모리 [[bash-heredoc-size-limit]] 와 같은 계열: 백슬래시·특수문자 포함 코드는 Write/Edit || refactor notice-admin FE | RR-0017 원인을 tiptap 소스로 확정(`immediatelyRender` + `scheduleDestroy` 1ms 경합). jsdom 은 재현 불가를 프로브로 실측 → "판별력 없는 테스트는 채택하지 않음" 정직 기록. Chromium 스모크 수정 전 2/2 실패·후 2/2 통과로 판별력 증명 | 프로필 원인·수정·게이트 방법 확정. 공용 후보 F-27(Tree aria-disabled 상속)·F-28(Playwright 공용 설정) |
-| refactor iter3 전체 | RR 12건 → 3묶음 순차(3→2→4)로 처리, 전체 게이트 BE 226·FE 314. 3단계 변경(csrf.ts)이 4단계 테스트 1건을 깨뜨림(목 갱신) — 순서 3→2→4 가 맞았음 | `/refactor` 5항 순서 규칙 유효 |
+| refactor iter3 전체 | RR 12건 → 3묶음 순차(3→2→4)로 처리, 전체 게이트 BE 226·FE 314. 3단계 변경(csrf.ts)이 4단계 테스트 1건을 깨뜨림(목 갱신) — 순서 3→2→4 가 맞았음 | `/refactor` 5항 순서 규칙 유효 || refactor iter3 BE 검토 | `EnvironmentPostProcessor` 를 Boot 4 에서 deprecated(forRemoval) 구 패키지로 구현 — 컴파일·jar 실측 모두 성공해 developer 가 못 봄, reviewer 가 javap 로 검출. 배선 테스트도 없어 회귀 시 조용히 꺼짐 | 프로필: SPI 새 패키지·javap 확인·배선 테스트 게이트 |
+| refactor iter3 BE 검토 | 오류 문구 상수화가 enum 코드까지만이고 Bean Validation `message=` 5종은 리터럴 3중 복제 — RR-0010 원 결함(문구 갈림)의 잔여 경로 | stage2 §B-5 확장(`Msg.FIELD_*`) |
 
