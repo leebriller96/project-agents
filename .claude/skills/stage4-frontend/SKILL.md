@@ -43,7 +43,7 @@ description: 4단계 Frontend 개발 — 피그마/스토리보드와 slice 의 
 - 계약 기반 목 서버(프로필: msw)를 써서 실제 응답 스키마로 테스트한다.
 
 ## C. 게이트 및 산출물
-- **실제 브라우저 렌더 게이트**: 리치텍스트 에디터·차트·트리처럼 DOM/타이머에 의존하는 서드파티 컴포넌트를 쓰는 화면은 jsdom 단위 테스트만으로 통과시키지 않는다. slice 게이트에 Playwright(Chromium) 렌더 스모크 1건(화면 로드 → 콘솔 에러 0 → 핵심 요소 표시)을 포함한다 — jsdom 이 못 잡은 Tiptap 로드 즉시 크래시(RR-0017, 운영 빌드도 재현) 사례. Playwright 는 `tests/integration/package.json` 격리 설치(5단계와 공유) 또는 앱 devDependency.
+- **실제 브라우저 렌더 게이트**: 리치텍스트 에디터·차트·트리처럼 DOM/타이머에 의존하는 서드파티 컴포넌트를 쓰는 화면은 jsdom 단위 테스트만으로 통과시키지 않는다. slice 게이트에 Playwright(Chromium) 렌더 스모크 1건(화면 로드 → 콘솔 에러 0 → 핵심 요소 표시)을 포함한다 — jsdom 이 못 잡은 Tiptap 로드 즉시 크래시(RR-0017, 운영 빌드도 재현) 사례. Playwright 는 `tests/integration/package.json` 격리 설치(5단계와 공유) 또는 앱 devDependency. 스모크 spec 은 typecheck 게이트에 포함(선언 파일이 해석되는 설치 경로 필수).
 - 빌드 + 린트 + 타입체크 + 단위테스트. 실패하면 고치고 재실행. 못 고치면 `blocked`.
 - 공용 파일 변경 필요 사항은 `workspace/<project>/reports/common-candidates.md` 에 (frontend 섹션).
 - 레포트 `workspace/<project>/reports/<ts>_stage4_<slice>_frontend.md`: 화면 표, 컴포넌트 목록, 사용한 API, 테스트 결과, 계약 부족(RR 목록), 근거 부족.
