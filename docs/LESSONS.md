@@ -252,4 +252,11 @@
 | refactor iter3 전체 | RR 12건 → 3묶음 순차(3→2→4)로 처리, 전체 게이트 BE 226·FE 314. 3단계 변경(csrf.ts)이 4단계 테스트 1건을 깨뜨림(목 갱신) — 순서 3→2→4 가 맞았음 | `/refactor` 5항 순서 규칙 유효 || refactor iter3 BE 검토 | `EnvironmentPostProcessor` 를 Boot 4 에서 deprecated(forRemoval) 구 패키지로 구현 — 컴파일·jar 실측 모두 성공해 developer 가 못 봄, reviewer 가 javap 로 검출. 배선 테스트도 없어 회귀 시 조용히 꺼짐 | 프로필: SPI 새 패키지·javap 확인·배선 테스트 게이트 |
 | refactor iter3 BE 검토 | 오류 문구 상수화가 enum 코드까지만이고 Bean Validation `message=` 5종은 리터럴 3중 복제 — RR-0010 원 결함(문구 갈림)의 잔여 경로 | stage2 §B-5 확장(`Msg.FIELD_*`) || refactor iter3 FE 검토 | 새로 만든 브라우저 스모크가 어떤 typecheck 에도 안 걸림(`paths`→`.mjs` 우회로 선언 파일 없음) — "게이트" 라면서 타입 검사 밖 | 프로필·§C: 스모크 spec typecheck 포함 |
 | refactor iter3 FE 검토 | reviewer 가 수정 전 판별력을 검증하려고 worktree 에 node_modules junction → `pnpm exec` 가 실제 repo 링크 94개를 바꿔 놓음(즉시 복구·정직 보고) | 프로필: worktree 는 별도 `pnpm install`(store 공유), junction 금지 |
+## 2026-09-22 — secu-sample stage6 준비
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage6 준비 | semgrep 을 pip 로 설치하니 Scripts 경로가 PATH 밖 → "설치 실패" 로 보임. PATH 추가 후 1.177 정상(9건) | 스킬 §SAST 환경 |
+| stage6 준비 | pnpm 워크스페이스라 npm audit 5개 전부 "락파일 없음" 건너뜀 → subtree `run_sast.py` 에 pnpm audit 지원, `summarize_sast.py` 에 npm v6/pnpm advisories 파서 추가 → vitest CWE-22 2건 포착. upstream push `e68d23d` | 마스터 프로젝트 원칙(subtree 버그는 직접 고쳐 push) 적용 3회째 |
+| stage6 준비 | 선행 조건(stage5 done)이 refactor 되돌림으로 pending 인 상태에서 사용자 지시 순서대로 stage6 착수 — 보안 점검은 stage5 통과와 독립이라 진행, stage5 r2 는 별도 필요 | `/stage6` 1항: stage5 pending 이면 경고만 하고 진행 가능(재실행 필요 표시) |
 
