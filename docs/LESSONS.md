@@ -211,5 +211,8 @@
 | stage4 notice-admin | 36분·372k 토큰. ftl 분기 21 ↔ 테스트 대응표, 122 tests. 계약 부족 1(관리자 상세 첨부 다운로드 API 없음 → RR-0009 medium) — 2단계가 admin 상세의 첨부 다운로드를 빠뜨린 것을 FE 가 잡음(사용자 앱 API 를 admin 이 못 씀) | 정상 경로. 교훈: slices.yaml 의 apis 가 "첨부 목록" 만 있고 다운로드가 없었음 → stage1 slice-planner 는 첨부 표시가 있는 화면에 다운로드 API 를 자동 포함 |
 | stage4 notice-admin | 에디터 TextAlign 이 SafeHtml 에서 `style` 제거로 표시 안 됨(실측) → developer 가 제외하고 F-25 | 프로필: 허용 마크 3자 동일 원칙 + 실측 규칙 |
 | stage4 notice-admin | RHF 체크박스 `value="Y"`, zod 4 refine 미평가, msw+jsdom FormData, react-hooks 7 이름 규칙, date input — 실측 5건 | 프로필 "알려진 주의" |
-| stage4 병렬 | 두 FE developer 가 `common-candidates.md` frontend 섹션에 F-1x/F-2x 대역으로 충돌 없이 기록 — 대역 배정 규칙 효과 확인 | 정상 |
+| stage4 병렬 | 두 FE developer 가 `common-candidates.md` frontend 섹션에 F-1x/F-2x 대역으로 충돌 없이 기록 — 대역 배정 규칙 효과 확인 | 정상 || stage4 notice-admin 검토 | 분기→테스트 대응표 21행 중 1행이 요청 파라미터만 검증하고 렌더 단언 없음(대응표는 채워짐) | stage4 §D-0: 행마다 렌더 단언 확인 |
+| stage4 notice-admin 검토 | 인라인 오류 표시 + 공통 토스트 이중 알림(`meta.silent` 누락) — 테스트로 안 잡힘 | §D-0 대조 항목 |
+| stage4 notice-admin 검토 | 계약이 오류 코드만 싣고 문구가 없어 FE/서버 문구 갈림(007) — "계약만 보고 개발" 원칙의 구멍 | stage2 §B-5: 오류 코드별 문구를 계약 description 에. RR-0010 |
+| stage4 notice-admin 검토 | 골격 SafeHtml 이 서버가 허용하는 `style` 을 지워 에디터 정렬 기능을 빼야 했음 — 3자 동일을 골격 시점에 맞추지 않은 결과 | stage4 §A-6 |
 

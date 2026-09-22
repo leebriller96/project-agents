@@ -40,6 +40,7 @@
 - **msw + jsdom FormData**: jsdom 의 `FormData` 를 msw 가 multipart 로 못 읽음 → 테스트 setup 에서 Node `FormData/Blob/File` 로 스텁(골격 `shared/test` 헬퍼로). jsdom 에 `Range` 없음(Tiptap) → 폴리필.
 - react-hooks 7 규칙: `use` 로 시작하는 순수 함수명은 hooks 규칙에 걸림(`useYnLabel`→`usageLabel`), `set-state-in-effect` 는 `key` 재마운트로 회피.
 - **리치텍스트 허용 마크는 3자 동일**(서버 정제기 = FE SafeHtml = 에디터 확장) — 하나라도 다르면 "저장은 되는데 표시가 지워지는" 결함(예: `style` 정렬). 에디터 확장을 넣기 전에 SafeHtml 이 그 속성을 통과시키는지 실측.
+- Tiptap 테스트에서 `editor.commands.*` 를 직접 호출할 때는 `await act(() => …)` 로 감싼다(act 경고).
 - 골격이 만드는 `features/sample` 은 첫 slice 가 들어오면 삭제(공통 후보 F-05).
 
 ## 알려진 주의
