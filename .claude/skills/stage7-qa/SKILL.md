@@ -22,6 +22,9 @@ description: 7단계 QA 자동화 — external/qa-automation(subtree) 의 test-a
 - 생성한 테스트는 `<target_dir>/tests/qa/<서비스>/` 에 둔다 (5단계의 `tests/integration/` 과 분리). 외부 스킬의 "생성 테스트 회수 안내" 는 불필요 — target_dir 이 곧 원본 저장소다.
 - full 모드는 기존 테스트(2·4단계 단위테스트, 5단계 통합테스트)도 함께 실행된다. 기존 테스트 실패도 결함 근거가 된다.
 
+- **러너 실측(2026-09-22, secu-sample)**: subtree `run_tests.sh` 가 Maven **멀티모듈**(하위 모듈 `*/target/surefire-reports`)과 **pnpm 워크스페이스**(루트 `pnpm -r test` 는 기계판독 결과 없음)를 집계하지 못해 295·366건이 0 으로 잡혔다 → upstream 수정(`375f125`): 하위 모듈 glob, `packageManager` → corepack 실행, 워크스페이스는 `-r exec vitest run --outputFile=.qa-junit.xml` 로 패키지별 junit, `CI=1`. **오케스트레이터는 stage7 착수 전 러너를 1회 돌려 집계가 0 이 아닌지 확인**하고, 0 이면 도구를 먼저 고친다(에이전트가 우회 집계하면 수치 출처가 흐려진다).
+- Playwright 스위트(`tests/integration`·`tests/qa`)는 서버 기동이 필요해 러너 단독 실행에서는 exit=1(환경 문제) — QA 에이전트가 `env-up.sh` 로 따로 돌리고 레포트에 출처를 명시한다.
+
 ## 3. 중복·특화 점검
 - 5단계 시나리오·결과(`docs/test/*-scenario.md`)와 open RR 을 먼저 읽어 **이미 알려진 결함은 중복 RR 을 만들지 않는다** (레포트에 "기존 RR-xxxx 와 동일" 표시).
 - 이 프로젝트에서 특히 볼 것: slice 간 호출 경계, 트랜잭션 경계(부분 실패·미롤백), 페이징·정렬 경계값, 동시성(재고 차감 등), 마이그레이션 재실행, 공통 응답 포맷 계약 불일치.
