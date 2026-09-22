@@ -62,6 +62,9 @@
 - `JdbcTemplate.queryForMap` 의 DATETIME 은 H2=`Timestamp`, Connector/J=`LocalDateTime` → 테스트는 `queryForObject(sql, LocalDateTime.class)` 로 읽는다(캐스트 금지). developer 가 "MySQL 전용 구문 없음" 을 이유로 `-Pmysql` 을 건너뛰어도 reviewer 는 그 slice 의 `@SpringBootTest` 를 `-Pmysql -Dtest=<IT> -Dsurefire.failIfNoSpecifiedTests=false` 로 1회 돌린다 — SQL 이식성과 테스트 이식성은 별개.
 - 테스트 클래스의 `properties="spring.datasource.url=…"` override 금지(`test-mysql` 프로파일을 덮어 MySQL 게이트가 깨짐). fixture 격리는 `cleanup.sql` + `@Sql(AFTER_TEST_METHOD)`.
 - 원자성 REQ(공지+첨부 한 트랜잭션 류)는 목 예외→보상 테스트만으로 부족 — 실제 DB 에서 두 번째 INSERT 를 실패시켜(컬럼 길이 초과 등) 롤백을 증명한다.
+- **필수 환경변수 fail-fast**: Boot 바인더는 미해석 `${DB_PASSWORD}` 를 예외 없이 리터럴로 넘긴다(`environment.getProperty` 는 예외를 내지만 DataSource 바인딩은 아님) → `EnvironmentPostProcessor`(`META-INF/spring.factories`) 로 원본 값의 `${…}` 잔존을 정규식 검사해 명확한 메시지로 종료. 골격 기본.
+- **테스트 계정 seed**: `TestAccountSeeder` + `app.security.test-accounts`(`local` 만 활성, `test` 는 허용 목록만 — `test` 에 켜면 골격의 "tb_user 0건" 단언이 깨짐; 다른 프로파일이면 기동 실패).
+- **`/auth/csrf` 본문 토큰은 XOR 마스킹**(`csrf.spa()`) — 헤더 값은 `XSRF-TOKEN` 쿠키. 계약 description 과 FE `fetchCsrfToken` 은 쿠키 우선. msw 는 `Set-Cookie` 를 `document.cookie` 에 반영하지 않으므로 테스트 핸들러가 쿠키를 직접 쓴다.
 - `@WebMvcTest` 는 `@Import({SecurityConfig, MenuAuthorizationManager})` + `authentication(LoginUser)`; DTO 는 record 그대로 `resultType`.
 
 ## 알려진 주의

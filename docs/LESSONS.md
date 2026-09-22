@@ -240,4 +240,11 @@
 | stage5 notice-admin | 서블릿 multipart 한도가 slice 검증(007)보다 먼저 걸려 `COMMON_413` — 2단계 테스트는 서비스 단위라 도달 불가를 못 봄(RR-0018) | stage2: 파일 크기 검증은 서블릿 한도와의 순서를 계약에 명시(어느 코드가 나가는지) |
 | stage5 notice-admin | 만료 배치·보상 삭제·실패 메일을 트리거 SIGNAL·cron 덮어쓰기로 실측 — 5단계가 "증명 없음" 항목을 실제로 닫는 방법 확립 | 스킬 §2 실측 (c)(d) |
 | stage5 notice-admin | 리치텍스트 3자 정합 실측: 서버는 `style` 보존, user SafeHtml 이 제거 → 관리자가 넣은 정렬이 사용자에겐 안 보임(F-25 실증) | 3단계/골격 후보 유지, stage4 §A-6 |
+## 2026-09-22 — secu-sample /refactor iteration 3 (stage3 common 묶음)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| refactor common | 5단계 RR 4건(계정 seed·DB_PASSWORD fail-fast·csrf 마스킹·테스트 데이터 파괴) 이 전부 **골격이 처음부터 갖췄어야 할 것** — 통합 테스트가 골격 결함을 드러냄 | 프로필 "알려진 주의" 에 골격 기본으로 승격(EnvironmentPostProcessor·TestAccountSeeder·csrf 쿠키 우선) |
+| refactor common | 3단계가 `apps/shared`(FE 공용)도 수정 — 공용 소유 원칙이 FE 에도 적용됨을 확인 | stage3 스킬: 공용 범위 = `server/common` + `apps/shared` + 루트 설정 |
+| refactor common | Boot 바인더가 미해석 플레이스홀더를 리터럴로 넘김(실측) | 프로필 |
 
