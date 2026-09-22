@@ -24,7 +24,8 @@ description: 2단계 Backend 개발 — 최초 1회 프로젝트 골격(scaffold
 5. 테스트 기반: 단위테스트 프레임워크 설정, 테스트용 DB(H2 MySQL 모드 또는 testcontainers) 설정, 샘플 테스트 1개.
 6. `<target_dir>/backend/CONVENTIONS.md`: 패키지 규칙, 네이밍, 응답/에러 규약, 트랜잭션 경계, 테스트 규약. 이후 모든 slice 와 reviewer 가 이 문서를 기준으로 삼는다.
 7. 게이트: 빌드 + 샘플 테스트 통과. 통과하면 `stage2_scaffold: done`, 사용자에게 구조 요약을 보여준다.
-8. 골격 테스트는 slice 가 채워도 깨지지 않게 쓴다 — "핸들러 없어 404" 같은 빈 상태 전제 대신 "401 아님 + 응답 봉투" 수준. 모듈에 `@SpringBootTest` 가 둘 이상이면 DB 상태를 공유하므로 골격이 `src/test/resources/cleanup.sql` + `@Sql(executionPhase=AFTER_TEST_METHOD)` 패턴을 제공한다. **`@SpringBootTest(properties="spring.datasource.url=jdbc:h2:mem:…")` 로 DB 를 분리하지 말 것** — 테스트 속성이 `-Pmysql` 프로파일보다 우선해 MySQL 게이트에서 컨텍스트가 깨진다.
+8. (통합 테스트 대비) 골격은 **테스트 계정 seed**(사용자·관리자 각 1, BCrypt 해시, `test`/`local` 프로파일 한정) 와 그 계정 정보를 `docs/test/README.md`(또는 골격 README) 에 남긴다 — 5단계가 계정을 만들어 넣느라 fixture 로 운영 seed 를 덮는 일이 없게.
+9. 골격 테스트는 slice 가 채워도 깨지지 않게 쓴다 — "핸들러 없어 404" 같은 빈 상태 전제 대신 "401 아님 + 응답 봉투" 수준. 모듈에 `@SpringBootTest` 가 둘 이상이면 DB 상태를 공유하므로 골격이 `src/test/resources/cleanup.sql` + `@Sql(executionPhase=AFTER_TEST_METHOD)` 패턴을 제공한다. **`@SpringBootTest(properties="spring.datasource.url=jdbc:h2:mem:…")` 로 DB 를 분리하지 말 것** — 테스트 속성이 `-Pmysql` 프로파일보다 우선해 MySQL 게이트에서 컨텍스트가 깨진다.
 
 brief §3 컨벤션과 프로필 기본값이 다르면 brief 를 우선한다.
 

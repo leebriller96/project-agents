@@ -233,5 +233,8 @@
 | stage5 domain-notice | 31분·277k 토큰·92 tool call: MySQL 8.4 도커 + jar 2개 + Playwright 환경 구축, 시나리오 39(a17/q13/c8+1 미실행) 전부 통과, SQL A 15/15 커버, 4분류표 미증명 9건 중 8건 실측 증명(GROUP_CONCAT 절단·init-sql·세션 TZ·socketTimeout×2·ShedLock 단일 실행·DB_PASSWORD 미설정 exit) | 정상. 환경 스크립트는 다음 slice 가 재사용 |
 | stage5 domain-notice | 특성화 테스트를 실 DB 로 돌리려다 `-am` 이 common 테스트를 끌고 와 `tb_user` 를 지움(RR-0013) — 테스트 자체의 데이터 파괴성 | 스킬 §2 실측 (b): slice 패키지 제한 + COUNT 확인. common 테스트 격리는 RR |
 | stage5 domain-notice | surefire `-Dtest` 점 표기가 0건 매칭인데 성공으로 지나감 | 스킬 §2 실측 (a) |
-| stage5 domain-notice | COLLATION 근거 부족 S-1 이 "검색" 만 다뤘는데 **정렬**(TITLE ORDER BY)도 ai_ci 로 AS-IS BINARY 와 달라짐을 5단계 실측이 발견 → RR-0012 | migration-sql 카탈로그 COLLATION 태그에 "정렬도 영향" 명시 |
+| stage5 domain-notice | COLLATION 근거 부족 S-1 이 "검색" 만 다뤘는데 **정렬**(TITLE ORDER BY)도 ai_ci 로 AS-IS BINARY 와 달라짐을 5단계 실측이 발견 → RR-0012 | migration-sql 카탈로그 COLLATION 태그에 "정렬도 영향" 명시 || stage5 notice | 31분·329k 토큰: E2E(Chromium→Vite→jar→MySQL) 58 시나리오 전부 통과, 계약 드리프트 0. 첫 실패 3건은 테스터 기대값 오기(한글 정렬·URL 정규화) | 정상 |
+| stage5 notice | 로그인 계정이 seed 어디에도 없어 5단계가 fixture 로 해시를 UPDATE — 골격이 테스트 계정 seed 를 제공했어야 | stage2 골격 §A-8 추가 |
+| stage5 notice | `/auth/csrf` 본문 토큰(XOR 마스킹)을 헤더로 보내면 403 — 계약 문구가 실제와 어긋남(RR-0015). 브라우저 경로는 쿠키를 읽어 정상 | 스킬 §2 실측 (c) |
+| stage5 notice | 개발 PC 5173 점유 → 포트 변수화로 회피(다른 프로세스 죽이지 않음) | 스킬 §2 실측 (a) |
 
