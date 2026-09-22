@@ -271,5 +271,7 @@
 | refactor 병렬 | 두 developer 가 같은 스크래치패드 경로를 써서 패치 스크립트가 덮어써짐 | pipeline-core §6: 임시 파일에 slice 접두어 || refactor notice | RR-0021 지시(비로그인 미게시 첨부 목록 404)가 골격 테스트(200 고정)와 충돌 → developer 가 규약 우선으로 빈 배열 채택. 노출 판별 동등 | 정상. 오케스트레이터가 골격 테스트 전제를 확인 안 한 사례 |
 | refactor 병렬 | 두 developer 가 C-16 을 동시에 씀(notice 가 C-17 로 회피) — 오케스트레이터가 프롬프트에 C-번호 대역을 **안 적음**(규칙은 있음) | `/refactor`·`/stage2` 프롬프트 템플릿에 "C-대역: …" 필수 줄 추가 || refactor FE 후속 | 두 slice 를 한 에이전트가 순차 처리(12분) — 계약 후속처럼 작은 변경은 병렬보다 순차 단일 에이전트가 경제적. zod 테스트 29→68(우회 13종). Write 도구 NBSP 저장 문제 2회째 | 프로필 |
 | refactor iter4 전체 | 6단계 RR 12 + 파생 1 = 13건, 4묶음(3→2×2→2→4) 순차·부분 병렬, 게이트 BE 285·FE 364·스모크 2. High F-001 은 Mapper(공개용 statement)→서비스(익명 분기)→FE(regId null) 3계층 연쇄 — RR 을 계층별로 쪼갠 6단계 merge 의 판단이 맞았음 | — || refactor iter4 FE 검토 | 화면 문서가 "시그니처 거부 문구가 fieldErrors 로 슬롯 아래 표시" 라 적었으나 서버는 fieldErrors 없이 최상위 message — 계약이 오류 코드별 fieldErrors 유무를 안 적어 developer 가 추정 | stage2 §B-5: fieldErrors 유무 명시. stage4 §D-0: 표시 위치 열 |
-| refactor iter4 FE 검토 | "3자 동일" 테스트가 개수(44)·부정 단언뿐 → 태그 교체는 못 잡음. reviewer 가 스크립트로 44/44·18/18 대조 | §D-0: 리터럴 고정 |
+| refactor iter4 FE 검토 | "3자 동일" 테스트가 개수(44)·부정 단언뿐 → 태그 교체는 못 잡음. reviewer 가 스크립트로 44/44·18/18 대조 | §D-0: 리터럴 고정 || refactor iter4 BE 검토 | **FAIL(high 2)**: (1) `forward-headers-strategy: native` 가 사내망에서는 XFF 위조를 허용 — RR-0027 옵션 A 가 RR-0028·RR-0023 을 무력화. 단위·MockMvc 테스트가 valve 를 안 거쳐 못 잡음 (2) RR-0023 의 admin 몫(F-306)이 두 developer 사이에서 증발 | 프로필: internal-proxies 고정+RANDOM_PORT 테스트. `/refactor`: 두 slice 걸친 RR 분할, "다른 slice 영향" 절 변환. RR-0035 |
+| refactor iter4 BE 검토 | 매직바이트 `contains` 검사가 hwpx/epub·정상 txt 를 거부(테스트가 오탐을 고정) | 프로필: 선두 앵커링·OCF 픽스처 |
+| refactor iter4 BE 검토 | 삭제 첨부 연쇄(admin)가 notice 계약 문구("로그인은 상태 무관")를 거짓으로 만듦 — notice-admin 레포트 §8 "확인 필요" 가 인계되지 않음 | `/refactor` 규칙 |
 

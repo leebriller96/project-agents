@@ -20,6 +20,8 @@ argument-hint: "[RR-0001,RR-0002 | slice:<id> | stage:<n> | layer:<backend/mappe
    - `target_stage: 4` → `frontend-developer` 를 `refactor <RR-id 목록>` 으로 호출 → `frontend-reviewer`.
    병렬 호출 프롬프트에는 **C-번호 대역(공통 후보)·F-번호 대역** 을 반드시 적는다(빠뜨려 충돌 2회).
    각 호출 전 해당 RR 을 `in_progress` 로 바꾼다(`python tools/rr.py set <id> in_progress`).
+   - **한 RR 이 두 slice 에 걸치면**(예 조회수 정책이 user·admin 양쪽) RR 을 slice 별로 분할해 각 묶음에 배정한다 — 한쪽 developer 가 "다른 slice 몫" 으로 넘기고 아무도 처리 안 한 사례. reviewer 는 RR evidence 파일 ↔ 변경 파일을 기계 대조.
+   - 병렬 developer 레포트의 "다른 slice 영향" 절은 웨이브 종료 시 오케스트레이터가 해당 slice 의 계약·추적표 갱신 지시로 변환한다(문서 간 상충이 reviewer 까지 살아남은 사례).
    - slice 소유 문서만 고치는 RR(예 매핑표 근거 부족 보강)은 공용 묶음이 아니라 **그 slice 묶음**에 배정한다(경계 원칙 — 문서라도).
    - 여러 slice·공용 파일에 걸친 **문서 RR**(추적표·4분류표 정합 묶음)은 항목을 소유 slice 별로 쪼개 각 developer/common-refactorer 프롬프트에 배정하고, 전부 끝난 뒤 오케스트레이터가 RR 을 닫는다(한 파일을 두 에이전트가 만지지 않게).
    - developer 에게 라이브러리 동작(정제기·파서 등)을 단정해 지시하지 말고 기대 결과("정제 후 비면 400")만 준다 — 실측이 다르면 developer 가 규약 우선으로 바로잡는다.
