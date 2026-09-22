@@ -42,6 +42,7 @@
 - **리치텍스트 허용 마크는 3자 동일**(서버 정제기 = FE SafeHtml = 에디터 확장) — 하나라도 다르면 "저장은 되는데 표시가 지워지는" 결함(예: `style` 정렬). 에디터 확장을 넣기 전에 SafeHtml 이 그 속성을 통과시키는지 실측.
 - **msw 핸들러는 선등록 우선** — `/notices/:noticeId` 패턴이 `/notices/top` 을 가로챈다 → 고정 경로 핸들러를 파라미터 경로보다 먼저 등록.
 - user-event `click` 은 `element.click()` 을 거치므로 앵커 click 을 전역 목으로 막으면 onClick 이 안 발화 → `download` 속성 앵커만 가로채기.
+- **Write 도구도** ` ` 이스케이프를 실제 문자로 저장해 `no-irregular-whitespace` lint 에 걸림(실측 2회) — 유니코드 이스케이프가 든 파일은 Edit 로 부분 수정하거나 `String.fromCharCode` 사용. zod 4 `max().refine()` 은 max 실패 시에도 refine 평가(객체 refine 과 다름). Tiptap 3 링크 출력은 `rel="noopener noreferrer nofollow"`, `ol[start]` 는 start≠1 일 때만.
 - Write/heredoc 의 ` ` 류 이스케이프가 도구에서 실제 문자로 바뀌어 저장될 수 있음 → 특수 문자는 `String.fromCharCode(0xa0)` 로 명시.
 - 운영 QueryClient `retry: 1` 은 404 도 재시도(약 1초 지연) → AS-IS 가 즉시 오류 화면인 단건 조회는 `retry: (n, e) => e.status !== 404 && n < 1`.
 - AS-IS 인라인 스크립트가 `form.submit()` 이면 "폼 전체 값 전송" 이 동작의 일부 — 분류 change·정렬·페이지 콜백이 URL 값만 merge 하면 입력 중 값이 유실된다. 화면 문서의 스크립트 동작 표에 **전송 필드 범위** 열을 둔다.
