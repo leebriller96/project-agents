@@ -222,5 +222,8 @@
 | stage4 notice | developer 가 API 서버 오류(529, 500)로 두 번 중단 → `SendMessage` 재개로 같은 컨텍스트에서 이어 완료(산출물 손실 0). 재개 프롬프트에 "작업 트리 상태를 먼저 확인" 을 넣은 것이 효과 | 규칙(pipeline-core §6): 에이전트가 서버 오류로 끊기면 새 에이전트 대신 **재개**(컨텍스트 보존) + "git status 로 상태 복구 후 이어서" 지시 |
 | stage4 notice | 계약 7개로 화면 2개 전부 구현, RR 0 — 2단계 notice 계약이 충분했음(admin 은 다운로드 누락) | — |
 | stage4 notice | msw 선등록 우선(`/:id` 가 `/top` 가로챔), user-event 앵커 click 목, 도구의 ` ` 이스케이프 변환 — 실측 3건 | 프로필 "알려진 주의" |
-| stage4 notice | 테스트가 실제 결함 1건 발견(react-query `onSuccess` 2번째 인자를 잘못 넘김) | 정상 |
+| stage4 notice | 테스트가 실제 결함 1건 발견(react-query `onSuccess` 2번째 인자를 잘못 넘김) | 정상 || stage4 notice 검토 | 분류 change·정렬·페이지 이동이 URL 값만 merge → 입력 중 검색어 유실. AS-IS 는 `form.submit()` 으로 폼 전체 전송 — "스크립트 동작 매핑" 에 **전송 필드 범위**가 빠져 있었음 | 프로필: 매핑표에 전송 필드 범위 열 |
+| stage4 notice 검토 | `pnpm test -- --run <경로>` 의 `--` 가 vitest 필터를 무효화(전체 실행) — 프로필·pipeline-core 예시가 틀렸음(F-17 실측 재현) | 모든 pnpm 예시에서 `--` 제거, 프로필에 금지 명시 |
+| stage4 notice 검토 | 운영 QueryClient `retry: 1` 이 404 도 재시도 → AS-IS 즉시 오류 화면과 1초 차이 | 프로필: 단건 조회 404 재시도 제외 |
+| stage4 notice 검토 | `meta.silent` 누락이 admin(목록)·user(목록) 두 slice 에서 반복 — 상세는 맞고 목록만 빠짐 | §D-0: alert 렌더 컴포넌트의 query 전수 grep |
 

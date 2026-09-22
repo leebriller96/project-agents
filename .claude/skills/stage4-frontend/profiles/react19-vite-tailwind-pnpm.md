@@ -14,7 +14,7 @@
 ```
 - slice 는 backend 소유 모듈과 같은 앱(user 또는 admin)에만 화면을 둔다. 양쪽에 화면이 있으면 slice 를 나눈다.
 - 계약 타입: `pnpm gen:api -- <slice>` → `shared/src/api/types/<slice>.d.ts` (앱이 공유).
-- 명령: `pnpm install --frozen-lockfile`, `pnpm -r lint`, `pnpm -r typecheck`, `pnpm -r test -- --run`, `pnpm -r build`, 앱 단위는 `pnpm --filter @app/user test -- --run src/features/<slice>`.
+- 명령: `pnpm install --frozen-lockfile`, `pnpm -r lint`, `pnpm -r typecheck`, `pnpm -r test --run`, `pnpm -r build`, 앱 단위는 `pnpm --filter @app/user test --run src/features/<slice>` (**`--` 금지** — pnpm 이 `--` 를 vitest 인자로 넘겨 경로 필터가 무효화되고 전체가 실행됨, 실측 F-17).
 
 ## 규약 차이
 - **인증**: 세션 쿠키(JSESSIONID, httpOnly) + **CSRF**: `shared/api/client.ts` 인터셉터가 `XSRF-TOKEN` 쿠키를 읽어 상태 변경 요청에 `X-CSRF-TOKEN` 헤더 부착. 403 CSRF 실패는 토큰 재요청 후 1회 재시도. 토큰을 JS 에서 다루지만 인증 토큰이 아니라 CSRF 토큰(설계상 허용).
@@ -43,6 +43,8 @@
 - **msw 핸들러는 선등록 우선** — `/notices/:noticeId` 패턴이 `/notices/top` 을 가로챈다 → 고정 경로 핸들러를 파라미터 경로보다 먼저 등록.
 - user-event `click` 은 `element.click()` 을 거치므로 앵커 click 을 전역 목으로 막으면 onClick 이 안 발화 → `download` 속성 앵커만 가로채기.
 - Write/heredoc 의 ` ` 류 이스케이프가 도구에서 실제 문자로 바뀌어 저장될 수 있음 → 특수 문자는 `String.fromCharCode(0xa0)` 로 명시.
+- 운영 QueryClient `retry: 1` 은 404 도 재시도(약 1초 지연) → AS-IS 가 즉시 오류 화면인 단건 조회는 `retry: (n, e) => e.status !== 404 && n < 1`.
+- AS-IS 인라인 스크립트가 `form.submit()` 이면 "폼 전체 값 전송" 이 동작의 일부 — 분류 change·정렬·페이지 콜백이 URL 값만 merge 하면 입력 중 값이 유실된다. 화면 문서의 스크립트 동작 표에 **전송 필드 범위** 열을 둔다.
 - Tiptap 테스트에서 `editor.commands.*` 를 직접 호출할 때는 `await act(() => …)` 로 감싼다(act 경고).
 - 골격이 만드는 `features/sample` 은 첫 slice 가 들어오면 삭제(공통 후보 F-05).
 
