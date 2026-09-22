@@ -274,4 +274,10 @@
 | refactor iter4 FE 검토 | "3자 동일" 테스트가 개수(44)·부정 단언뿐 → 태그 교체는 못 잡음. reviewer 가 스크립트로 44/44·18/18 대조 | §D-0: 리터럴 고정 || refactor iter4 BE 검토 | **FAIL(high 2)**: (1) `forward-headers-strategy: native` 가 사내망에서는 XFF 위조를 허용 — RR-0027 옵션 A 가 RR-0028·RR-0023 을 무력화. 단위·MockMvc 테스트가 valve 를 안 거쳐 못 잡음 (2) RR-0023 의 admin 몫(F-306)이 두 developer 사이에서 증발 | 프로필: internal-proxies 고정+RANDOM_PORT 테스트. `/refactor`: 두 slice 걸친 RR 분할, "다른 slice 영향" 절 변환. RR-0035 |
 | refactor iter4 BE 검토 | 매직바이트 `contains` 검사가 hwpx/epub·정상 txt 를 거부(테스트가 오탐을 고정) | 프로필: 선두 앵커링·OCF 픽스처 |
 | refactor iter4 BE 검토 | 삭제 첨부 연쇄(admin)가 notice 계약 문구("로그인은 상태 무관")를 거짓으로 만듦 — notice-admin 레포트 §8 "확인 필요" 가 인계되지 않음 | `/refactor` 규칙 || refactor iter4 반영 | Boot 4 `@LocalServerPort` 는 `org.springframework.boot.test.web.server`; DOMPurify `ALLOWED_URI_REGEXP` 는 URI_SAFE 밖 모든 속성에 적용(`ADD_URI_SAFE_ATTR` 로 한정); 병렬 developer 편집 중 `-am` 빌드가 남의 과도기 파일을 읽어 컴파일 실패 2회(수 초 뒤 회복) | 프로필 2건. 병렬 -am 은 "재실행으로 해소" 를 규칙에 |
+## 2026-09-22 — secu-sample stage5 r2 (refactor iter3·4 검증)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage5 r2 domain-notice | 28분: 39→50 시나리오(신규 11·갱신 1·회귀 확인 37), 실패 0. 재실행 규칙(r1/r2 병기·갱신 근거 = RR note)이 잘 동작. 신규 low 2(seed 동시 기동 경쟁, Flyway 가 프로파일 가드보다 먼저) | 스킬 §2 r2 실측 |
+| stage5 r2 | `.env.local` 필수화(RR-0029) 후 첫 실행 — 폴백 없음이 실측으로 확인, `APP_PROXY_INTERNAL_IPS` 는 local yml 리터럴로 기동 | — |
 
