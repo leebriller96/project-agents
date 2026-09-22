@@ -50,7 +50,7 @@ description: 4단계 Frontend 개발 — 피그마/스토리보드와 slice 의 
 - `state.yaml → slices.<slice>.stage4_frontend: done|blocked`.
 
 ## D. reviewer 체크리스트 (frontend-reviewer)
-0. (migration) 분기→테스트 대응표의 각 행이 **렌더 단언**을 포함하는지(요청 파라미터 검증 ≠ 렌더 검증). 인라인으로 `error.message` 를 표시하는 query/mutation 은 `meta.silent` 여부 대조(이중 알림) — `role="alert"` 를 렌더하는 컴포넌트가 쓰는 query 를 **전수** grep(상세만 보고 목록을 빠뜨린 사례). 골격 SafeHtml 허용 목록 ↔ 서버 정제기 ↔ 에디터 확장 3자 대조.
+0. (migration) 분기→테스트 대응표의 각 행이 **렌더 단언**을 포함하는지(요청 파라미터 검증 ≠ 렌더 검증). 인라인으로 `error.message` 를 표시하는 query/mutation 은 `meta.silent` 여부 대조(이중 알림) — `role="alert"` 를 렌더하는 컴포넌트가 쓰는 query 를 **전수** grep(상세만 보고 목록을 빠뜨린 사례). 골격 SafeHtml 허용 목록 ↔ 서버 정제기 ↔ 에디터 확장 3자 대조 — 테스트는 개수·부정 단언이 아니라 spec 표의 **리터럴 고정**이어야 하고, 렌더 측 훅이 저장값을 변형하는 항목(rel·target·URI 정책)은 표에 "렌더 시 추가 변형" 행으로 명시. 화면 문서 오류 표에 "표시 위치(필드 아래/상단)" 열.
 1. 계약 준수: 요청/응답 타입이 생성 타입인가. 손으로 만든 타입·하드코딩 URL 이 없는가.
 2. 화면 근거: 디자인의 필드·버튼·상태가 모두 구현됐는가. 근거 없는 UI 가 있는가.
 3. 경계: 다른 slice 의 내부 컴포넌트/상태를 직접 import 하지 않는가. 공용 파일 수정이 등록 한 줄 외에 없는가.

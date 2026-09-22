@@ -61,7 +61,7 @@ brief §3 컨벤션과 프로필 기본값이 다르면 brief 를 우선한다.
 - 입력 검증은 DTO 레벨에서. 인증/인가는 골격의 방식대로 어노테이션/필터로.
 
 ### B-5. OpenAPI 계약
-- slice 오류 코드마다 **사용자 문구**를 계약 description(오류 응답 표)에 싣는다 — 어노테이션은 컴파일 상수만 받으므로 `<Slice>ErrorCode.Msg` 상수 클래스를 두고 enum·서비스·`@ApiResponse` 가 같은 상수를 참조(어긋날 수 없게), 공통 코드 문구는 리플렉션 테스트로 `CommonErrorCode.message()` 와 대조. Bean Validation `message=` 의 fieldErrors 문구도 같은 `Msg.FIELD_*` 상수(리터럴 0)이고 Contract 테스트가 DTO 문구까지 대조. 오류 응답은 전부 `@Content(schema=@Schema(implementation=ApiResponse.class))` 로 공용 오류 봉투를 가리킨다(성공 봉투 타입 참조 금지 — slice 간 규약 불일치 사례) — FE 가 같은 규칙을 먼저 막을 때 서버와 같은 문구를 쓸 수 있어야 한다(계약만 보고 개발하는 원칙의 필수 조건).
+- slice 오류 코드마다 **사용자 문구**를 계약 description(오류 응답 표)에 싣는다 — 어노테이션은 컴파일 상수만 받으므로 `<Slice>ErrorCode.Msg` 상수 클래스를 두고 enum·서비스·`@ApiResponse` 가 같은 상수를 참조(어긋날 수 없게), 공통 코드 문구는 리플렉션 테스트로 `CommonErrorCode.message()` 와 대조. 오류 코드마다 **`fieldErrors` 있음(필드명)/없음** 을 description 에 명시한다(FE 가 표시 위치를 결정하는 근거). Bean Validation `message=` 의 fieldErrors 문구도 같은 `Msg.FIELD_*` 상수(리터럴 0)이고 Contract 테스트가 DTO 문구까지 대조. 오류 응답은 전부 `@Content(schema=@Schema(implementation=ApiResponse.class))` 로 공용 오류 봉투를 가리킨다(성공 봉투 타입 참조 금지 — slice 간 규약 불일치 사례) — FE 가 같은 규칙을 먼저 막을 때 서버와 같은 문구를 쓸 수 있어야 한다(계약만 보고 개발하는 원칙의 필수 조건).
 - `<target_dir>/docs/api/<slice>.yaml` (OpenAPI 3.x). 코드에서 생성하든 손으로 쓰든, **실제 컨트롤러와 일치**해야 한다.
 - 스키마·예시·에러 응답·인증 요구를 포함한다. 4단계는 이 파일만 보고 개발하므로 설명은 한글로 충분히.
 - `depends_on` slice 계약과 타입이 겹치면 그 정의를 `$ref` 로 참조한다.
