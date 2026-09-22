@@ -25,3 +25,13 @@ argument-hint: "<slice-id>[,<slice-id>...] | all | scaffold"
 5-1. 웨이브 종료 후 reviewer 지적 중 "규칙 부재·규칙 신설로 인한 것"(예: URL 파라미터 정규화, 검증 규칙 테스트 누락)은 같은 웨이브의 **다른 slice 에도 해당하는지** 오케스트레이터가 grep 으로 확인하고, 해당하면 slice 별 RR 을 함께 만든다. 프로필 규칙을 갱신했다면 다음 웨이브 developer 프롬프트에 명시한다.
 6. 사용자에게 보여준다: slice 별 결과 표(상태·테이블 수·API 수·테스트 수·reviewer 결과), blocked 사유, 근거 부족 항목, 공통 후보 수, 레포트 경로.
 7. 안내: 남은 slice 가 있으면 `/stage2 <다음>`, 모두 끝났으면 `/stage3` (공통화) 또는 `/stage4 <slice>`.
+
+## 완료 처리 (공통 · pipeline-core §9·§11·§12)
+
+1. 서브에이전트 보고의 `pa-agent-result` 블록에서 게이트·변경 파일·확인 필요 항목을 그대로 가져온다.
+   `changed_files` 에 소유 밖 파일이 있으면 되돌리고 공통 후보로 돌린다.
+2. 확인 필요 항목은 `python tools/gate.py oi new --stage 2 --slice <id> --kind <kind> --severity <sev> --summary "…" --evidence "…" --target <닫을 단계>` 로 채번한다.
+   `blocker`·`high` 는 RR 전환(`oi set <id> converted --rr RR-xxxx`) 또는 사람 승인(`accepted`) 없이 남기지 않는다.
+3. 레포트 끝에 `pa-meta` 블록을 붙인다 (`python tools/gate.py template --stage 2 --slice <id> --agent orchestrator` 로 골격 생성 후 실제 값으로 채움).
+4. `python tools/gate.py check --stage 2 [--slice <id>]` 를 실행한다. **FAIL 이면 그 단계를 `done` 으로 기록하지 않는다.**
+   검사 결과(통과 / FAIL 항목)를 사용자 보고에 한 줄로 포함한다.

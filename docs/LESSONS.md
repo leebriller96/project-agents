@@ -295,3 +295,22 @@
 | refactor RR-0041 | 회차 4 의 `REQUIRES_NEW`(락 점유 축소 목적)가 **커넥션 2배 점유**라는 더 큰 결함을 만듦 — 리팩토링이 새 결함을 낳은 첫 사례. developer 가 수정 전 재현(10.6s·500 5건)→수정 후(202ms·유실 0)로 증명 | 프로필: REQUIRES_NEW 규칙 + 풀 1개 증명법 |
 | refactor RR-0041 | `<testsuite tests=…>` 와 `<testcase>` 개수가 `@Nested` 에서 불일치 — 그동안 XML 합계를 tests 속성으로 세어 왔음(수치 신뢰도) | 프로필: testcase 개수 기준 |
 
+
+## 2026-09-23 — 외부 에이전트 repo 검토(ing-people/sk-secu-agent) → 파이프라인 반영
+
+| 대상 | 외부 repo 에서 본 것 | 우리 조치 |
+|---|---|---|
+| 게이트 판정 | 레포트에 기계가 읽는 메타 블록(`handoff-metadata`)을 넣고 훅 러너(`slice_agent_hooks.py`)가 프로필별로 검사. 종료 코드로 차단 | `tools/gate.py` 신설 + 레포트 `pa-meta` 블록(`templates/report-meta.md`). `gate.py check` 가 stage 별 프로파일(dev/verify/doc)로 6개 훅 실행 |
+| 테스트 증명 | `testRuns[]` 에 command·exitCode·executedAt·head·testCount 를 적고 "변경된 repo 에 테스트 기록이 없으면 FAIL" | `gates[].test_count` 필수 + **0건이면 FAIL**. surefire `-Dtest` 가 0건 매칭인데 EXIT 0 인 함정(이번 세션 2회)을 도구가 막는다 |
+| 보고 ↔ 실제 대조 | `changedFiles` ↔ `git diff base...HEAD`, `dirty` ↔ `git status`, branch·HEAD 실측 대조 | `repo-consistency` 훅. 레포트가 적은 HEAD·브랜치·dirty·변경 파일을 target_dir 의 git 으로 대조 |
+| 미해결 항목 | canonical Gap 표 + waiver(승인자·만료일). HIGH/CRITICAL 은 승인 없이 `PASS_WITH_GAPS` 불가 | `open-items.yaml` + `gate.py oi` (kind 5종·status 4종). `blocker`/`high` 는 RR 전환 또는 사람 승인(`accepted`, approved_by·expiry) 없이 단계 종료 불가. 레포트 `result` 에 `done_with_gaps` 추가 |
+| 인계 단절 | 후행 에이전트가 선행 handoff 를 읽는 것이 선행조건 | reviewer 지적에 `confidence`·**`test_hint`** 필드 추가(pipeline-core §7), 5단계 스킬이 `oi list --target 5` 를 먼저 읽고 시나리오로 편입 — "notice-admin §8 확인 필요 미인계", "RR-0023 admin 몫 증발" 의 구조적 원인 |
+| 서브에이전트 보고 | `## Agent Result` 고정 항목(status·inputs·outputs·changedFiles·gaps·nextAgent·mergeRisks) | `pa-agent-result` JSON 블록(pipeline-core §12)을 12개 에이전트 문서에 의무화. 오케스트레이터는 이 블록만으로 state·`pa-meta` 를 만든다 |
+| 증적 위생 | upload 전 secret/PII 정규식 스캔(`evidence-redaction-gate`) | `gate.py` 의 `secret-scan` 훅 + `gate.py secrets <경로>`. 우리는 `.env.local`·테스트 계정·DB 비밀번호를 다루므로 레포트 노출 위험이 실재 |
+| 모델 배정 | capability 기반 프로필(deep-analysis/fast-edit/vision/automation) + 역할별 기본값 | pipeline-core §13: 상위 모델은 골격·공통화·검증·AS-IS 추적에만, 2회 막히면 그 에이전트만 상향 |
+| 설계 체크리스트 | `에이전트셋_설계_고려사항.md`(파일 소유권·공유 파일 선점·API 소유자·금지 목록) | `docs/AGENTSET_CHECKLIST.md` 로 각색 편입. 우리 규칙과 1:1 연결, 미도입 4건은 이유를 명시 |
+| 미도입 | 중앙 포털 claim/lease, slice 별 worktree 필수, 리뷰어 6축 분리, AS-IS 픽셀 패리티 PNG 증적 | 단일 오케스트레이터 구조·worktree 사고 실측·비용 대비 효과를 이유로 제외(체크리스트 §10). migration 모드의 화면 증적 비교만 후보로 남김 |
+
+- 도구 검증: 정상/위반 레포트 2건으로 6개 훅 전부 실동작 확인(위반 케이스에서 테스트 0건·HEAD 불일치·브랜치 불일치·OI 미채번·근거 없음·RR 부재·비밀번호 노출 7건 검출, EXIT 1).
+- 교훈: 우리 파이프라인의 규칙은 대부분 이미 있었고(공용 파일 금지·정직한 보고·RR 라우팅), **없던 것은 그 규칙을 지켰는지 기계가 확인하는 층**이었다.
+  산문 규칙은 에이전트가 성실히 따를 때만 작동하고, 놓친 것은 사람이 레포트를 정독해야 드러났다.

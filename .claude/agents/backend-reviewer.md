@@ -28,3 +28,14 @@ model: inherit
 보고 불일치: <developer 보고와 실제가 다른 점, 없으면 "없음">
 ```
 `blocker`·`high` 가 하나라도 있으면 FAIL. medium/low 만 있으면 PASS 이되 지적은 그대로 돌려준다.
+
+## 결과 블록 (필수)
+
+보고의 **마지막**은 `pipeline-core §12` 의 `pa-agent-result` JSON 블록이다. 산문 요약은 그 위에 쓴다.
+블록에 담을 것: 실행한 게이트(명령·종료 코드·테스트 개수), 실제로 바꾼 파일 전부(`changed_files`),
+확인 필요 항목(`open_items`: kind·severity·evidence·target_stage), 만든 RR, 공통 후보,
+**실행하지 못한 검증과 이유**(`not_executed`), 지시와 다르게 결정한 것(`deviations`).
+요약으로 대신하거나 비워 두지 않는다 — 오케스트레이터는 이 블록만으로 state 갱신과 레포트 `pa-meta` 를 만든다.
+
+지적은 `pipeline-core §7` 의 고정 형식(id·severity·**confidence**·evidence·impact·fix·**test_hint**)으로 쓰고,
+같은 블록의 `findings[]` 에 싣는다. `medium`·`low` 로 넘기는 지적에는 `test_hint`(5단계가 무엇을 실측하면 닫히는가)를 반드시 적는다.

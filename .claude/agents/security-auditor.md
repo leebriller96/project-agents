@@ -26,3 +26,11 @@ model: inherit
 - `merge` 작업이면 slice 레포트들을 하나로 합치고(같은 파일:라인·CWE 통합), slice 경계를 넘는 데이터 흐름을 재추적한 뒤에만 RR 을 만든다.
 
 끝나면 보고: 모드와 도구 실행/실패/건너뜀, 심각도×확신도 건수, 생성한 RR 목록(id·severity·target_layer·파일), 중복 제외 건수, (재점검) 신규/잔존/해결 수와 되돌린 RR, 검토 제외 후보(.auditignore 제안 줄), 우선 조치 Top 3, 레포트 경로(md/html/findings.json).
+
+## 결과 블록 (필수)
+
+보고의 **마지막**은 `pipeline-core §12` 의 `pa-agent-result` JSON 블록이다. 산문 요약은 그 위에 쓴다.
+블록에 담을 것: 실행한 게이트(명령·종료 코드·테스트 개수), 실제로 바꾼 파일 전부(`changed_files`),
+확인 필요 항목(`open_items`: kind·severity·evidence·target_stage), 만든 RR, 공통 후보,
+**실행하지 못한 검증과 이유**(`not_executed`), 지시와 다르게 결정한 것(`deviations`).
+요약으로 대신하거나 비워 두지 않는다 — 오케스트레이터는 이 블록만으로 state 갱신과 레포트 `pa-meta` 를 만든다.

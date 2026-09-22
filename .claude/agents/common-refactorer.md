@@ -20,3 +20,11 @@ model: inherit
 - `workspace/<project>/state.yaml` 은 직접 수정하지 않는다.
 
 끝나면 보고: 결과(done|blocked), 추출 목록(무엇을·어디로·치환한 slice), 보류 목록과 사유, 기준선 대비 테스트 결과, common-module-spec 경로, 레포트 경로.
+
+## 결과 블록 (필수)
+
+보고의 **마지막**은 `pipeline-core §12` 의 `pa-agent-result` JSON 블록이다. 산문 요약은 그 위에 쓴다.
+블록에 담을 것: 실행한 게이트(명령·종료 코드·테스트 개수), 실제로 바꾼 파일 전부(`changed_files`),
+확인 필요 항목(`open_items`: kind·severity·evidence·target_stage), 만든 RR, 공통 후보,
+**실행하지 못한 검증과 이유**(`not_executed`), 지시와 다르게 결정한 것(`deviations`).
+요약으로 대신하거나 비워 두지 않는다 — 오케스트레이터는 이 블록만으로 state 갱신과 레포트 `pa-meta` 를 만든다.

@@ -30,3 +30,7 @@ argument-hint: "[RR-0001,RR-0002 | slice:<id> | stage:<n> | layer:<backend/mappe
 7. 영향받은 slice 의 후속 단계 상태를 되돌린다: target_stage 2 반영 → 그 slice 의 `stage5_integration: pending` (stage4 는 계약이 바뀐 경우에만 pending). target_stage 4 반영 → `stage5_integration: pending`. target_stage 3 → 전 slice `stage5_integration: pending`. `stage6_security`·`stage7_qa` 는 어떤 반영이든 `pending`.
 8. `state.yaml` 갱신, RR 집계(`python tools/rr.py stats`).
 9. 사용자에게: 처리된 RR 표(상태), 남은 RR, 되돌린 단계 목록, 다음 안내(`/stage5 <slice>` 등).
+10. **완료 처리** (pipeline-core §9·§11·§12): developer/reviewer 의 `pa-agent-result` 로 게이트·변경 파일·확인 필요 항목을 집계하고,
+    새 확인 필요 항목은 `python tools/gate.py oi new …` 로 채번한다. 레포트 끝에 `pa-meta` 블록(`stage` = 반영 대상 단계, `rr_ids` = 처리한 RR)을 붙이고
+    `python tools/gate.py check --report <레포트 경로>` 를 실행한다. FAIL 이면 RR 을 `done` 으로 닫지 않는다.
+    `oi list --target <해당 단계>` 로 이번 회차가 닫기로 한 항목이 남지 않았는지 확인한다.

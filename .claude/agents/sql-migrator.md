@@ -30,3 +30,11 @@ model: inherit
 끝나면 보고:
 - `inventory`: namespace/statement/호출 수, A/B/C/D 건수, B 목록(호출처·도달 가능 여부), D 전개 결과, Oracle 구문 태그 분포(어떤 ⚠ 가 몇 건), `ASIS_SQL_INVENTORY.md` 경로.
 - `convert`: 변환 statement 수(변환/앱로직이전/폐기/근거부족), ⚠ 판정 표(태그·근거·결정), 카탈로그에 추가한 구문, Mapper 시그니처 목록, 테스트 수·결과(H2/MySQL), 매핑표 경로, 서비스가 이어받을 것.
+
+## 결과 블록 (필수)
+
+보고의 **마지막**은 `pipeline-core §12` 의 `pa-agent-result` JSON 블록이다. 산문 요약은 그 위에 쓴다.
+블록에 담을 것: 실행한 게이트(명령·종료 코드·테스트 개수), 실제로 바꾼 파일 전부(`changed_files`),
+확인 필요 항목(`open_items`: kind·severity·evidence·target_stage), 만든 RR, 공통 후보,
+**실행하지 못한 검증과 이유**(`not_executed`), 지시와 다르게 결정한 것(`deviations`).
+요약으로 대신하거나 비워 두지 않는다 — 오케스트레이터는 이 블록만으로 state 갱신과 레포트 `pa-meta` 를 만든다.

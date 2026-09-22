@@ -47,6 +47,10 @@ description: 4단계 Frontend 개발 — 피그마/스토리보드와 slice 의 
 - 빌드 + 린트 + 타입체크 + 단위테스트. 실패하면 고치고 재실행. 못 고치면 `blocked`.
 - 공용 파일 변경 필요 사항은 `workspace/<project>/reports/common-candidates.md` 에 (frontend 섹션).
 - 레포트 `workspace/<project>/reports/<ts>_stage4_<slice>_frontend.md`: 화면 표, 컴포넌트 목록, 사용한 API, 테스트 결과, 계약 부족(RR 목록), 근거 부족.
+  끝에 `pa-meta` 블록을 붙이고 `python tools/gate.py check --stage 4 --slice <id>` 를 통과시킨다 (pipeline-core §9).
+  `gates[]` 에 build·lint·typecheck·test 와 (해당되면) 브라우저 스모크를 각각 명령·종료 코드·개수로 적는다.
+- jsdom 으로는 판별력이 없다고 확인된 동작(브라우저 렌더·타이머 경합 등)을 스모크로도 덮지 못했으면
+  확인 필요 항목으로 넘긴다: `python tools/gate.py oi new --stage 4 --slice <id> --kind unverified --severity <sev> … --target 5` (pipeline-core §11).
 - `state.yaml → slices.<slice>.stage4_frontend: done|blocked`.
 
 ## D. reviewer 체크리스트 (frontend-reviewer)

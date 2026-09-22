@@ -19,3 +19,11 @@ model: inherit
 - `workspace/<project>/state.yaml` 은 직접 수정하지 않는다.
 
 끝나면 다음을 보고한다: 생성한 파일 목록, 문서 유형별 건수, 엔티티/화면/API/요구사항 수, §11 항목 요약, 레포트 경로.
+
+## 결과 블록 (필수)
+
+보고의 **마지막**은 `pipeline-core §12` 의 `pa-agent-result` JSON 블록이다. 산문 요약은 그 위에 쓴다.
+블록에 담을 것: 실행한 게이트(명령·종료 코드·테스트 개수), 실제로 바꾼 파일 전부(`changed_files`),
+확인 필요 항목(`open_items`: kind·severity·evidence·target_stage), 만든 RR, 공통 후보,
+**실행하지 못한 검증과 이유**(`not_executed`), 지시와 다르게 결정한 것(`deviations`).
+요약으로 대신하거나 비워 두지 않는다 — 오케스트레이터는 이 블록만으로 state 갱신과 레포트 `pa-meta` 를 만든다.

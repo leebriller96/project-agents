@@ -77,6 +77,10 @@ brief §3 컨벤션과 프로필 기본값이 다르면 brief 를 우선한다.
 - 빌드 + 단위테스트 실행. 명령과 출력 요약을 레포트에 싣는다. 실패하면 고치고 다시 돌린다. 못 고치면 `blocked`.
 - 공용 파일 변경이 필요했던 것은 `workspace/<project>/reports/common-candidates.md` 에 누적 기록 (3단계 입력).
 - 레포트 `workspace/<project>/reports/<ts>_stage2_<slice>_backend.md`: 만든 파일 목록, 테이블, API 표, 테스트 수/결과, 근거 부족, 공통 후보.
+  끝에 `pa-meta` 블록(실행 명령·종료 코드·**테스트 개수**·git 실측·확인 필요 항목)을 붙이고 `python tools/gate.py check --stage 2 --slice <id>` 를 통과시킨다 (pipeline-core §9).
+  테스트 개수는 `python tools/surefire_sum.py <target_dir>` 의 `<testcase>` 기준 — 필터가 0건 매칭이어도 종료 코드는 0 이다.
+- **이 단계의 테스트로 도달할 수 없는 것**(서블릿·필터·파서 단계에서 먼저 갈리는 경로, 실제 프록시/브라우저가 있어야 하는 동작)은
+  "확인함" 으로 적지 말고 확인 필요 항목으로 넘긴다: `python tools/gate.py oi new --stage 2 --slice <id> --kind unverified --severity <sev> --summary "…" --evidence "…" --target 5` (pipeline-core §11).
 - `state.yaml → slices.<slice>.stage2_backend: done|blocked`.
 
 ## D. reviewer 체크리스트 (backend-reviewer 가 사용)

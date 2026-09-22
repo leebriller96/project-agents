@@ -13,3 +13,13 @@ argument-hint: "(인자 없음)"
 4. 보고를 받아 `state.yaml` 갱신: `stage0_ingest: done`, `updated_at`, `log` 추가.
 5. 사용자에게 보여준다: 입력 인벤토리 요약, 엔티티/화면/API/요구사항 수, (migration) AS-IS 프로그램·테이블·SQL 4분류·공통 클래스 수와 B 목록, **§11 근거 부족·모순 표 전체**, brief 경로.
 6. 안내: "brief 를 확인·수정한 뒤 `/stage1` 을 실행하세요."
+
+## 완료 처리 (공통 · pipeline-core §9·§11·§12)
+
+1. 서브에이전트 보고의 `pa-agent-result` 블록에서 게이트·변경 파일·확인 필요 항목을 그대로 가져온다.
+   `changed_files` 에 소유 밖 파일이 있으면 되돌리고 공통 후보로 돌린다.
+2. 확인 필요 항목은 `python tools/gate.py oi new --stage 0 --slice <id> --kind <kind> --severity <sev> --summary "…" --evidence "…" --target <닫을 단계>` 로 채번한다.
+   `blocker`·`high` 는 RR 전환(`oi set <id> converted --rr RR-xxxx`) 또는 사람 승인(`accepted`) 없이 남기지 않는다.
+3. 레포트 끝에 `pa-meta` 블록을 붙인다 (`python tools/gate.py template --stage 0 --slice <id> --agent orchestrator` 로 골격 생성 후 실제 값으로 채움).
+4. `python tools/gate.py check --stage 0 [--slice <id>]` 를 실행한다. **FAIL 이면 그 단계를 `done` 으로 기록하지 않는다.**
+   검사 결과(통과 / FAIL 항목)를 사용자 보고에 한 줄로 포함한다.

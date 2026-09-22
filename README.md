@@ -27,6 +27,9 @@
 - 1~4단계는 slice 단위로 반복하고, 5~7단계에서 나온 요구서는 `target_stage`/`target_layer`가 지정되어
   해당 단계·계층만 다시 돈다 (무조건 1단계부터 되돌아가지 않음).
 - 각 단계는 **developer 에이전트 → reviewer 에이전트** 순으로 실행되며, 게이트(빌드·테스트)를 통과해야 다음 단계로 넘어간다.
+- 게이트 통과는 문장이 아니라 **증거**로 판정한다. 레포트 끝의 `pa-meta` 블록(실행 명령·종료 코드·테스트 개수·git HEAD·확인 필요 항목)을
+  `python tools/gate.py check --stage <N> [--slice <id>]` 가 실제 git·파일과 대조한다 (`templates/report-meta.md`).
+- 결함은 리팩토링 요구서(RR), **아직 확인되지 않은 것**은 확인 필요 항목(`open-items.yaml`)으로 남아 다음 단계가 닫는다.
 
 ## 디렉토리 구조
 
@@ -45,13 +48,15 @@ project-agents/
 │   │                         #   security-auditor, qa-runner, deliverable-writer)
 │   └── skills/               # pipeline-core(공통 규칙) + 단계별 방법론 + 스택 프로필
 ├── templates/                # state·slices·PROJECT_BRIEF·리팩토링 요구서·테스트 시나리오 템플릿
-├── tools/                    # rr.py(요구서 관리), status.py(상태 요약), build_report.py(md→html), sync-external.sh
+├── tools/                    # rr.py(요구서 관리), gate.py(게이트 검증·확인필요 항목·비밀정보 스캔),
+│                             #   status.py(상태 요약), build_report.py(md→html), surefire_sum.py, sync-external.sh
 ├── external/                 # git subtree: qa-automation, code-security-auditor
 └── workspace/<project>/      # 프로젝트별 작업 공간 (커밋하지 않음, <project> = config 의 project.name)
     ├── 00_inputs/            # 0단계 정적 문서·AS-IS 소스
     ├── knowledge/            # PROJECT_BRIEF.md 등 요약 지식
     ├── slices/               # slices.yaml
     ├── refactor-requests/    # RR-0001.yaml …
+    ├── open-items.yaml       # 확인 필요 항목(미검증·결정 대기·근거 부족)
     ├── reports/              # 단계별 실행 레포트
     ├── deliverables/         # 8단계 산출물
     └── state.yaml            # 파이프라인 상태 (slice × stage 진행도, 반복 횟수)

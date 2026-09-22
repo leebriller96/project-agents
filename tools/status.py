@@ -91,6 +91,23 @@ def main():
           f"/ done {rr.get('done', 0)} / rejected {rr.get('rejected', 0)}")
     print()
 
+    # 확인 필요 항목(open item) — pipeline-core §11
+    oi = load(os.path.join(WS, "open-items.yaml"))
+    items = [i for i in ((oi or {}).get("items") or []) if isinstance(i, dict) and i.get("status") == "open"]
+    if items:
+        order = {"blocker": 0, "high": 1, "medium": 2, "low": 3}
+        items.sort(key=lambda i: (order.get(i.get("severity"), 9), str(i.get("target_stage"))))
+        print(f"## 확인 필요 항목 (열림 {len(items)}건)")
+        print("| id | severity | kind | slice | 닫을 단계 | 요약 |")
+        print("|---|---|---|---|---|---|")
+        for i in items:
+            print(f"| {i.get('id')} | {i.get('severity')} | {i.get('kind')} | {i.get('slice') or '-'} "
+                  f"| stage{i.get('target_stage')} | {str(i.get('summary', ''))[:60]} |")
+        blocking = [i for i in items if i.get("severity") in ("blocker", "high")]
+        if blocking:
+            print(f"\n> `blocker`/`high` {len(blocking)}건은 RR 전환 또는 사람 승인 없이 해당 단계를 done 으로 끝낼 수 없다.")
+        print()
+
     log = st.get("log") or []
     if log:
         print("## 최근 기록")

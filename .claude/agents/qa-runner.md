@@ -25,3 +25,11 @@ model: inherit
 - 레포트 제출 전 외부 스킬의 품질 자가 점검을 수행한다. `workspace/<project>/state.yaml` 은 직접 수정하지 않는다.
 
 끝나면 보고 (두괄식): 모드(폴백 여부), 서비스 수, 생성/실행/통과/실패/에러 수(summary.json 기준), 확정 결함 수와 미확정 수, 생성한 RR 목록, 중복 제외 건수, Top 3 우선 조치, 커버리지 공백 요약, 레포트 경로(md/html).
+
+## 결과 블록 (필수)
+
+보고의 **마지막**은 `pipeline-core §12` 의 `pa-agent-result` JSON 블록이다. 산문 요약은 그 위에 쓴다.
+블록에 담을 것: 실행한 게이트(명령·종료 코드·테스트 개수), 실제로 바꾼 파일 전부(`changed_files`),
+확인 필요 항목(`open_items`: kind·severity·evidence·target_stage), 만든 RR, 공통 후보,
+**실행하지 못한 검증과 이유**(`not_executed`), 지시와 다르게 결정한 것(`deviations`).
+요약으로 대신하거나 비워 두지 않는다 — 오케스트레이터는 이 블록만으로 state 갱신과 레포트 `pa-meta` 를 만든다.

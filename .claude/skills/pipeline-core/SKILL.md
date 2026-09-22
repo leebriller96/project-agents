@@ -40,6 +40,8 @@ description: project-agents 파이프라인의 공통 규칙 — 설정·상태�
 | `workspace/<project>/knowledge/PROJECT_BRIEF.md` | 프로젝트 요약 지식 | `templates/PROJECT_BRIEF.md` |
 | `workspace/<project>/slices/slices.yaml` | 업무 분류 | `templates/slices.yaml` |
 | `workspace/<project>/refactor-requests/RR-NNNN.yaml` | 리팩토링 요구서 | `templates/refactor-request.yaml` |
+| `workspace/<project>/open-items.yaml` | 확인 필요 항목(§11) | `templates/open-items.yaml` |
+| `workspace/<project>/reports/*.md` 끝의 `pa-meta` 블록 | 레포트 게이트 메타(§9) | `templates/report-meta.md` |
 | `<target_dir>/docs/test/<slice>-scenario.md` | 통합 테스트 시나리오 | `templates/test-scenario.md` |
 
 템플릿의 키를 빼거나 이름을 바꾸지 않는다. 값이 없으면 빈 값으로 둔다.
@@ -59,6 +61,9 @@ description: project-agents 파이프라인의 공통 규칙 — 설정·상태�
 | /refactor | open 요구서 1개 이상 |
 
 **완료 조건 (2·3·4단계)**: `pipeline.gate` 설정에 따라 빌드·단위테스트가 통과해야 `done`. 실패하면 `blocked` + `blocked_reason` 기록.
+게이트 통과 여부는 **말이 아니라 증거로 남긴다** — 레포트 `pa-meta` 의 `gates[]` 에 명령·종료 코드·테스트 개수를 적고
+`python tools/gate.py check --stage <N> [--slice <id>]` 가 통과해야 단계를 `done` 으로 기록한다 (§9).
+테스트 개수 0 은 통과가 아니다 — 필터가 아무것도 매칭하지 않아도 종료 코드는 0 이 나온다(실측 2회).
 통과시키려고 테스트를 지우거나 `@Disabled`/`skip` 하지 않는다.
 예외: 환경 조건부 실행(예: Docker 필요한 동시성 테스트 `@EnabledIfSystemProperty`)은 조건·사유가 어노테이션에 있고, 해당 환경(`-Pmysql` 등)에서 실제 실행·통과한 기록이 레포트에 있으면 허용한다.
 이런 테스트가 어떤 RR 의 유일한 회귀 근거라면 **그 환경에서의 1회 실행이 게이트에 포함**된다 — 오케스트레이터가 웨이브 종료 시 `-Pmysql` 등으로 실행하고 state log 에 남긴다. 5단계 시나리오에도 같은 조건을 적는다.
@@ -99,7 +104,20 @@ description: project-agents 파이프라인의 공통 규칙 — 설정·상태�
 ## 7. developer → reviewer
 
 2·3·4단계는 developer 서브에이전트가 만든 뒤 reviewer 서브에이전트가 검토한다.
-- reviewer 는 코드를 고치지 않고 지적 목록(파일:라인, 심각도, 이유, 수정안)을 돌려준다.
+- reviewer 는 코드를 고치지 않고 지적 목록을 돌려준다. 지적 한 건의 고정 형식:
+
+  | 필드 | 규칙 |
+  |---|---|
+  | `id` | `<축약어>-<번호>` (예: `BR-03`) |
+  | `severity` | `blocker` \| `high` \| `medium` \| `low` |
+  | `confidence` | `confirmed`(실행·대조로 증명) \| `high` \| `medium` \| `low`(정황) — **근거 없이 severity 만 높이지 않는다** |
+  | `evidence` | `파일:라인` 또는 실행한 명령·출력. 없으면 지적으로 만들지 않는다 |
+  | `impact` | 사용자·데이터·운영에 실제로 무엇이 잘못되는가 |
+  | `fix` | 구체적 수정안 |
+  | `test_hint` | 이 지적을 닫으려면 **5단계가 무엇을 실측해야 하는가**. `medium`·`low` 로 넘기는 지적에는 필수 |
+
+  `confidence: low` 인데 `severity: blocker` 면 오케스트레이터는 재작업 대신 확인 필요 항목(§11)으로 돌린다.
+  `test_hint` 는 5단계 시나리오·7단계 인벤토리의 입력이다 — 여기서 끊기면 "확인 필요" 가 증발한다(실측: notice-admin §8 미인계).
 - 오케스트레이터는 `blocker`·`high` 지적을 developer 에게 다시 넘겨 같은 단계 안에서 고친다 (최대 2회).
 - 2회 후에도 남으면 `blocked` 로 기록하고 사람에게 보고한다.
 - `medium`·`low` 지적 처리: 코드 수정이 필요한 것은 RR(`source_stage` = 현재 단계)로 남기고, 공용 파일·컨벤션 문서 변경은 `common-candidates.md` 로 넘긴다. 같은 단계에서 바로 고치지 않는다 (병렬 slice 와의 충돌·회귀 방지).
@@ -121,6 +139,17 @@ description: project-agents 파이프라인의 공통 규칙 — 설정·상태�
 - 타임스탬프는 항상 `python tools/kst_now.py` (파일명용 `yyMMddHHmm`; `--full` 은 본문용 `YYYY-MM-DD HH:MM`). bash `TZ=... date` 는 Windows Git Bash 에서 틀린다.
 - 레포트에는 항상 포함: 대상·입력 근거·수행 내용·게이트 결과(빌드/테스트 명령과 출력 요약)·미완료/근거 부족 항목·다음 단계 안내.
 - 실행하지 못한 것은 "실행하지 못함 + 이유" 로 쓴다. 통과한 것처럼 쓰지 않는다.
+- **레포트 끝에 `pa-meta` 블록을 붙인다** (형식·필드: `templates/report-meta.md`).
+  골격: `python tools/gate.py template --stage <N> --slice <id> --agent <이름>`.
+  본문의 서술과 별개로 이 블록이 기계 대조 대상이다 — `gates[]`(명령·종료 코드·테스트 개수),
+  `repo`(git HEAD·브랜치·dirty·변경 파일), `open_items[]`, `rr_ids[]`, `not_executed[]`.
+- **레포트를 쓴 직후 `python tools/gate.py check --stage <N> [--slice <id>]` 를 실행하고 결과를 본문에 남긴다.**
+  FAIL 이면 그 단계를 `done` 으로 기록하지 않는다. 검사 항목:
+  실패한 게이트를 통과로 적기 · 테스트 0건 통과 · git 실측과 다른 기재 ·
+  high 이상 확인 필요 항목의 무단 종료 · state.yaml 과의 모순 · 레포트의 자격증명/개인정보 노출.
+  (도구가 잡아낸 것은 사람이 다시 읽어 확인하지 않아도 되고, 도구가 못 보는 것만 사람이 본다.)
+- 레포트·산출물에 비밀번호·토큰·키·주민번호·연락처 **원문을 적지 않는다.** 값은 `***` 로 가리고 경로·변수명만 남긴다.
+  별도 스캔: `python tools/gate.py secrets workspace/<project>/reports`.
 
 ## 10. 사람 확인 지점
 
@@ -131,3 +160,80 @@ description: project-agents 파이프라인의 공통 규칙 — 설정·상태�
 | stage2 골격 종료 | 골격 구조·컨벤션 요약을 보여주고 확인 요청 (차단 아님) |
 | reviewer 2회 후 잔여 지적 | 사람에게 보고, `blocked` |
 | RR `rejected` | 사람만 가능 |
+| 확인 필요 항목 `accepted` (§11) | 사람만 가능 — 승인자·만료일 기록 |
+
+## 11. 확인 필요 항목 (open item)
+
+RR 은 "고쳐야 할 결함"이고, open item 은 **"아직 확인·결정되지 않은 것"** 이다.
+레포트 산문에만 적힌 "확인 필요" 는 다음 단계로 넘어가면서 사라진다(실측: notice-admin §8, F-306).
+그래서 다음 다섯 가지는 반드시 `workspace/<project>/open-items.yaml` 에 채번해 남긴다.
+
+| kind | 예 |
+|---|---|
+| `evidence_gap` | brief §11 근거 부족이 그 단계에서 결정을 막은 것 |
+| `decision` | 사람 결정이 필요한 것 (brief §12 후보) |
+| `unverified` | 구현은 했으나 그 단계의 테스트로는 도달·증명 불가 (MockMvc 로는 못 보는 서블릿 경로 등) |
+| `risk` | 지금은 괜찮지만 조건이 바뀌면 깨지는 것 |
+| `deferred` | 뒤 단계로 의도적으로 미룬 것 |
+
+- 채번: `python tools/gate.py oi new --stage <N> --slice <id> --kind <kind> --severity <sev> --summary "…" --evidence "파일:라인" --target <닫을 단계> [--owner <에이전트>]`
+- 레포트 `pa-meta.open_items[]` 에 같은 id 로 싣는다. 도구가 파일과 대조한다.
+- **`blocker`·`high` 항목은 RR 로 전환(`oi set <id> converted --rr RR-xxxx`)하거나 사람이 승인(`accepted`)하지 않으면
+  그 단계를 `done` 으로 끝낼 수 없다.** 게이트는 통과했지만 미확인이 남았으면 레포트 `result` 는 `done_with_gaps` 다.
+- `target_stage` 가 자기 단계인 항목은 착수 시 `oi list --target <N>` 으로 확인하고, 처리하면 `resolved`,
+  못 했으면 레포트에 다시 싣는다 (도구가 누락을 WARN 으로 알린다).
+- `accepted` 는 사람만 지정하고 `approved_by`·`expiry`(YYYY-MM-DD)가 필요하다. 만료된 승인은 FAIL 이다.
+
+## 12. 에이전트 결과 계약 (Agent Result)
+
+서브에이전트의 보고가 산문뿐이면 오케스트레이터가 집계·인계에서 항목을 흘린다(실측: RR-0023 admin 몫 증발).
+**모든 서브에이전트는 보고의 마지막을 아래 블록으로 끝낸다.** 오케스트레이터는 이 블록만으로
+state 갱신·다음 호출 프롬프트·레포트 `pa-meta` 를 만들 수 있어야 한다.
+
+````markdown
+```json pa-agent-result
+{
+  "schema": 1,
+  "agent": "backend-developer",
+  "stage": 2,
+  "slice": "notice",
+  "attempt": 1,
+  "result": "done",
+  "gates": [
+    {"kind": "build", "command": "…", "exit_code": 0, "executed_at": "2026-09-23 00:20"},
+    {"kind": "test", "command": "…", "exit_code": 0, "executed_at": "2026-09-23 00:35",
+     "test_count": 226, "failures": 0, "skipped": 0}
+  ],
+  "changed_files": ["server/domain-notice/src/main/java/…"],
+  "open_items": [{"kind": "unverified", "severity": "high", "summary": "…", "evidence": "…", "target_stage": 5}],
+  "rr_ids": [],
+  "common_candidates": ["C-21"],
+  "not_executed": ["…"],
+  "deviations": ["오케스트레이터 지시와 다르게 결정한 것 + 근거"],
+  "next_action": "reviewer 검토 요청"
+}
+```
+````
+
+- `result`: `done` | `done_with_gaps` | `blocked` | `failed`.
+- `open_items` 는 id 없이 보고해도 된다 — 채번은 오케스트레이터가 `gate.py oi new` 로 한다.
+- `changed_files` 는 실제로 고친 파일 전부. 오케스트레이터가 `git status`·`diff` 로 대조하고,
+  **자기 소유 밖의 파일(공용 설정·common·다른 slice)** 이 있으면 되돌린 뒤 공통 후보로 돌린다(§6-4).
+- 실행하지 못한 검증은 `not_executed` 에 이유와 함께 적는다. 비워 두고 통과로 보고하지 않는다.
+- reviewer 는 같은 블록에 `findings[]`(§7 형식)를 함께 싣는다.
+
+## 13. 모델 배정
+
+`.claude/agents/*.md` 는 `model: inherit` 이다. 오케스트레이터가 Agent 호출 시 아래 기준으로 상위/중급을 고른다.
+전부 최상위는 낭비이고, 전부 중급은 공용·경계에서 사고가 난다.
+
+| 상위 모델을 쓰는 곳 | 이유 |
+|---|---|
+| 골격(scaffold)·3단계 공통화·계약 설계 | 실수가 모든 slice 로 전파된다 |
+| 분기·상태 조합이 많은 slice (권한·결재·파일·외부연동) | 경우의 수를 놓치면 5·6단계에서 크게 돌아온다 |
+| 5·6·7단계 검증과 reviewer | 결함의 원인 계층을 정확히 지목해야 재작업이 라우팅된다 |
+| AS-IS 추적(sql-migrator·ingest) | 근거 해석이 틀리면 뒤 단계가 전부 틀린다 |
+
+계약이 정해진 CRUD slice, 확정 스키마의 기계적 작성, 산출물 재가공(8단계)은 중급으로 충분하다.
+**상향 규칙**: 같은 문제로 developer 가 2회 이상 막히면(reviewer 재작업 2회 소진 직전) 그 에이전트만 상위 모델로 재실행하고,
+사유를 레포트에 남긴다.
