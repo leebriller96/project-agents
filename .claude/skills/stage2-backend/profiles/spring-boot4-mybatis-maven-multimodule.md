@@ -64,6 +64,8 @@
 - 원자성 REQ(공지+첨부 한 트랜잭션 류)는 목 예외→보상 테스트만으로 부족 — 실제 DB 에서 두 번째 INSERT 를 실패시켜(컬럼 길이 초과 등) 롤백을 증명한다.
 - **Boot 4 SPI 이동**: `EnvironmentPostProcessor` 등 SPI 는 `org.springframework.boot.*` 새 패키지(구 `org.springframework.boot.env.*` 는 `@Deprecated(forRemoval)` 호환 경로로만 로드) — `spring.factories` 키도 새 FQCN. "컴파일·기동 성공" 만으로는 deprecated 경로를 못 잡으므로 developer 는 `javap -v` 로 `Deprecated/forRemoval` 확인. `spring.factories`/`.imports` 등록 컴포넌트는 **배선 테스트**(SpringApplication 기동 실패 단언)를 게이트로.
 - 프로파일 가드는 `ApplicationRunner` 가 아니라 빈 생성 시점(리스닝·Flyway 전)에. seed 사번(`SEED*`)과 테스트 fixture 사번은 대역을 분리.
+- surefire `-Dtest='패키지.*'` 는 아무것도 매칭하지 않고 EXIT 0 — 클래스명 나열 또는 슬래시 경로 패턴(`com/x/**/*Test`)으로, 실행 후 XML 타임스탬프/`Tests run` 확인. MyBatis Mapper 는 JDK 프록시라 `@MockitoSpyBean`+`callRealMethod` 불가 → 실패 주입은 `@TestConfiguration @Primary` 위임 프록시로.
+- 업로드 파일명 정규화(실측 순서): 경로 제거 → NFC → `\p{Cc}\p{Cf}`(NUL·RTLO) 제거 → 끝 점·공백 제거(Windows 저장 규칙 우회 차단) → 길이 1~300 → 마지막 확장자 거부 목록(대소문자 무시) → 크기 → 매직바이트(MZ·ELF·`#!`·PK+META-INF·`<html`/`<script`). Tika 는 공용 pom 결정 후.
 - 쿠키 속성 테스트: `MockHttpServletResponse` 는 `SameSite` 를 헤더에 쓰지 않음 → `Cookie.getAttribute("SameSite")` 로 검증. 새 `LoggerContext` 로 `%X{}` 포맷 시 NPE → 실제 `ILoggerFactory` 컨텍스트로 logback 패턴 테스트. `.gitignore` 의 `!예외` 줄 뒤 인라인 주석은 패턴에 포함돼 무효.
 - **필수 환경변수 fail-fast**: Boot 바인더는 미해석 `${DB_PASSWORD}` 를 예외 없이 리터럴로 넘긴다(`environment.getProperty` 는 예외를 내지만 DataSource 바인딩은 아님) → `EnvironmentPostProcessor`(`META-INF/spring.factories`) 로 원본 값의 `${…}` 잔존을 정규식 검사해 명확한 메시지로 종료. 골격 기본.
 - **테스트 계정 seed**: `TestAccountSeeder` + `app.security.test-accounts`(`local` 만 활성, `test` 는 허용 목록만 — `test` 에 켜면 골격의 "tb_user 0건" 단언이 깨짐; 다른 프로파일이면 기동 실패).
