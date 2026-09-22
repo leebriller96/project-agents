@@ -246,5 +246,7 @@
 |---|---|---|
 | refactor common | 5단계 RR 4건(계정 seed·DB_PASSWORD fail-fast·csrf 마스킹·테스트 데이터 파괴) 이 전부 **골격이 처음부터 갖췄어야 할 것** — 통합 테스트가 골격 결함을 드러냄 | 프로필 "알려진 주의" 에 골격 기본으로 승격(EnvironmentPostProcessor·TestAccountSeeder·csrf 쿠키 우선) |
 | refactor common | 3단계가 `apps/shared`(FE 공용)도 수정 — 공용 소유 원칙이 FE 에도 적용됨을 확인 | stage3 스킬: 공용 범위 = `server/common` + `apps/shared` + 루트 설정 |
-| refactor common | Boot 바인더가 미해석 플레이스홀더를 리터럴로 넘김(실측) | 프로필 |
+| refactor common | Boot 바인더가 미해석 플레이스홀더를 리터럴로 넘김(실측) | 프로필 || refactor notice-admin BE | 오류 문구를 계약에 싣는 규칙을 "컴파일 상수 `Msg` 클래스 + 리플렉션 대조" 로 구현해 문구 드리프트를 구조적으로 차단 — 좋은 패턴 | stage2 §B-5 규칙으로 승격 |
+| refactor notice-admin BE | 서블릿 multipart 한도가 slice 검증보다 먼저(013→413) — 2단계는 MockMvc 라 못 보고 5단계 실측이 잡음. 계약을 실제대로 정정, yml 상향은 사람 결정(C-15) | 프로필 |
+| refactor notice-admin BE | Bash 도구가 `\` 를 한 번 접어 정규식 `\s` 가 깨진 사고 1회 → Edit 도구로 교정 | 메모리 [[bash-heredoc-size-limit]] 와 같은 계열: 백슬래시·특수문자 포함 코드는 Write/Edit |
 
