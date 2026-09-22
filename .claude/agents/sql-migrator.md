@@ -23,6 +23,7 @@ model: inherit
 - 폐기(dead SQL) 는 근거(미호출 증명)를 적고 삭제한다. 애매하면 남기고 근거 부족.
 - **공유 도메인 slice**(API·서비스 없이 Mapper 만 있는 slice, 예 `domain-<x>`)는 developer 단계가 없으므로 `convert` 가 그 slice 에 배정된 기능 계약 행의 **기능 추적표**(`<slice>-function-mapping.md`, stage2 §B-2-1)까지 낸다. 산출물 경계가 비어 게이트가 빠지지 않게.
 - 매핑표 통계는 "statement N(정의 n + B m) + fragment k = 행 수" 형식으로 합계를 고정한다. ⚠ 판정이 MySQL 실측 후 뒤집히면 XML 주석까지 같이 갱신한다. 근거 부족 항목이 brief §11 에 없으면 "brief §11 후보" 절로 분리 보고하고 인용은 실제 출처(`ASIS_SQL_INVENTORY.md §10` 등)로 쓴다.
+- ⚠ 태그 판정은 **컬럼 단위로 모든 절**(WHERE·LIKE·ORDER BY·GROUP BY·DISTINCT)을 훑는다 — COLLATION 을 검색(LIKE)에만 적용하고 같은 컬럼의 ORDER BY 를 놓친 사례(5단계 실측에서 발견, RR-0012).
 - 테스트 `@DisplayName` 의 REQ 번호는 brief §8 제목과 대조한다(8단계 추적표 원천).
 - 서비스 코드 소유는 backend-developer 이므로 `convert` 에서는 **Mapper 인터페이스·XML·DTO·Mapper 테스트·매핑표**만 만들고, 서비스가 호출해야 할 시그니처를 보고에 명시한다. `workspace/<project>/state.yaml` 은 직접 수정하지 않는다.
 

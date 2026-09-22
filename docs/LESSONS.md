@@ -226,4 +226,12 @@
 | stage4 notice 검토 | `pnpm test -- --run <경로>` 의 `--` 가 vitest 필터를 무효화(전체 실행) — 프로필·pipeline-core 예시가 틀렸음(F-17 실측 재현) | 모든 pnpm 예시에서 `--` 제거, 프로필에 금지 명시 |
 | stage4 notice 검토 | 운영 QueryClient `retry: 1` 이 404 도 재시도 → AS-IS 즉시 오류 화면과 1초 차이 | 프로필: 단건 조회 404 재시도 제외 |
 | stage4 notice 검토 | `meta.silent` 누락이 admin(목록)·user(목록) 두 slice 에서 반복 — 상세는 맞고 목록만 빠짐 | §D-0: alert 렌더 컴포넌트의 query 전수 grep |
+## 2026-09-22 — secu-sample stage5 (domain-notice, 환경 구축)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage5 domain-notice | 31분·277k 토큰·92 tool call: MySQL 8.4 도커 + jar 2개 + Playwright 환경 구축, 시나리오 39(a17/q13/c8+1 미실행) 전부 통과, SQL A 15/15 커버, 4분류표 미증명 9건 중 8건 실측 증명(GROUP_CONCAT 절단·init-sql·세션 TZ·socketTimeout×2·ShedLock 단일 실행·DB_PASSWORD 미설정 exit) | 정상. 환경 스크립트는 다음 slice 가 재사용 |
+| stage5 domain-notice | 특성화 테스트를 실 DB 로 돌리려다 `-am` 이 common 테스트를 끌고 와 `tb_user` 를 지움(RR-0013) — 테스트 자체의 데이터 파괴성 | 스킬 §2 실측 (b): slice 패키지 제한 + COUNT 확인. common 테스트 격리는 RR |
+| stage5 domain-notice | surefire `-Dtest` 점 표기가 0건 매칭인데 성공으로 지나감 | 스킬 §2 실측 (a) |
+| stage5 domain-notice | COLLATION 근거 부족 S-1 이 "검색" 만 다뤘는데 **정렬**(TITLE ORDER BY)도 ai_ci 로 AS-IS BINARY 와 달라짐을 5단계 실측이 발견 → RR-0012 | migration-sql 카탈로그 COLLATION 태그에 "정렬도 영향" 명시 |
 
