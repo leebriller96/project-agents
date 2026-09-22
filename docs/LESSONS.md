@@ -267,5 +267,5 @@
 |---|---|---|
 | refactor common | 38분·394k 토큰·160 tool call: 보안 RR 7건(정제기 3자 동일 목록 44태그, 로그 인젝션, Secure 쿠키, 지수 지연, 테스트 자격증명 공용화, vitest 4 이행) 전부 반영, 228→246 tests. vitest 3→4 메이저 이행이 2줄 변경(`vitest/runtime`, `viteEnvironment`)으로 끝남 | 프로필(에이전트가 직접 갱신) |
 | refactor common | Bash 도구 heredoc 의 역슬래시 소실로 3회 깨짐(logback·Java·python) — 이번 세션 4번째 | 메모리 규칙 강화: 역슬래시·정규식 포함 편집은 Bash 금지, Edit/Write 만 |
-| refactor common | `.gitignore` `!예외` 줄 뒤 주석이 패턴에 포함돼 무효(실측), `MockHttpServletResponse` 는 SameSite 를 헤더에 안 씀 | 프로필 |
+| refactor common | `.gitignore` `!예외` 줄 뒤 주석이 패턴에 포함돼 무효(실측), `MockHttpServletResponse` 는 SameSite 를 헤더에 안 씀 | 프로필 || refactor domain-notice | namespace 간 include 의 중첩 refid 가 포함하는 쪽 namespace 로 풀려 38건 오류 — 같은 id 가 있으면 조용히 별칭이 바뀌는 함정 | migration-sql §2-3 규칙 3건 |
 

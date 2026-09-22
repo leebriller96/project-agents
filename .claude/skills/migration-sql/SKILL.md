@@ -111,6 +111,12 @@ statement 마다 사용된 구문을 태깅하고 아래 규칙으로 변환한�
 | `COLLATION` | 문자열 비교·LIKE·ORDER BY 의 대소문자/악센트 구분 (Oracle BINARY vs MySQL `_ai_ci`) | 검색 키워드·정렬 컬럼이 영문/혼합이면 결과 집합·순서 차이. `_bin` 또는 `_as_cs` collation 지정 여부를 brief §12 로 결정하고 fixture(대소문자 혼합) 로 검증 |
 | `SESSION_TZ` | `SYSDATE`/`NOW()`·날짜 비교의 세션 타임존 | JDBC `connectionTimeZone`/`serverTimezone` 을 Asia/Seoul 로 고정, 배치 실행 시각(예: 00:10) 과 `CURDATE()` 경계 fixture |
 
+
+### 2-3. Mapper XML 구조 실측 규칙 (2026-09-22 추가)
+- **namespace 간 `<include>` 의 중첩 refid 는 FQ 로**: A 네임스페이스의 fragment 안에 `<include refid="notDeleted"/>` 가 있으면 B 에서 include 할 때 B 네임스페이스로 풀린다 — 같은 id 가 B 에 있으면 다른 별칭의 fragment 로 **조용히** 바뀐다. 공유 fragment 의 중첩 refid 는 `com.x.NoticeMapper.notDeleted` 처럼 FQ 로 쓴다.
+- `@Param` 단건 statement 의 fail-fast(필수 파라미터 null 검사)는 `<bind value="@FQCN@requireX(x)"/>` OGNL 정적 호출로(`${}` 는 잔존 검사에 걸림).
+- 테이블당 Mapper 1개 원칙: 다른 테이블을 갱신하는 연쇄(삭제 시 첨부 del_yn)는 그 테이블 Mapper 의 statement 로 분리하고 트랜잭션 경계는 서비스가 갖는다(다중 테이블 UPDATE 는 H2 게이트 불가).
+
 ## 3. 변환 절차 (stage2 B-2, sql-migrator)
 
 statement 하나마다:
