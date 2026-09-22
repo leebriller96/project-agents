@@ -197,4 +197,11 @@
 | refactor 검토 | "GET 3개 401/403 누락" RR 을 처리하면서 같은 계약의 POST/DELETE 401 누락은 그대로 — RR 범위 밖이라도 같은 기준으로 전체를 훑어야 | stage2 §D: 같은 종류 누락은 계약 전체 엔드포인트를 대조 |
 | refactor 검토 | `check_test_ids.py` 가 추적표 약어(`SvcT`)·`Test.Nested.method`·`reject*` 를 못 읽어 60건 중 5건만 대조하고 "불일치 0"(공허) | 도구: 범례 2형식 파싱·중첩 경로·접두 와일드카드 지원 → 70/70·87/87. reviewer 는 "인용 토큰 수" 가 문서 인용 수와 비슷한지 먼저 확인 |
 | refactor 검토 | RR-0007 을 3 에이전트가 나눠 처리한 뒤 yaml 을 닫지 않음 — 오케스트레이터 누락 | `/refactor` 5항 분할 규칙에 "오케스트레이터가 같은 회차에 닫고 note 기록" 이미 명시. reviewer 체크에 "RR status ↔ 작업 트리" 대조 추가 || refactor 검토 반영 | 지시(`@Size(max)`+`@Schema(minLength=1)`)대로 하니 계약이 `minLength: 0` 으로 회귀 — swagger-core 가 `@Size` 존재 시 `@Schema.minLength` 를 무조건 덮어씀(javap 확인). developer 가 `@Length(max)`(Hibernate) 로 우회 | 프로필에 실측 기록. 오케스트레이터 지시도 라이브러리 동작 단정이었음(재발) |
+## 2026-09-22 — secu-sample stage4 골격 (pnpm 워크스페이스)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage4 골격 | 36분·329k 토큰·117 tool call. pnpm 12 의 `minimumReleaseAge`·`allowBuilds` 가 설치를 두 번 막음, 최신 메이저가 전부 지정 버전 초과, corepack EPERM, Windows 대소문자 파일명 충돌 | 프로필 "알려진 주의" 에 실측 조합·pnpm 12 규칙 기록 → 다음 골격에서 재발 없음 |
+| stage4 골격 | 내 프롬프트의 서버 포트(18080/81)가 틀렸고 에이전트가 yml 실측(18090/91)으로 바로잡음 — 오케스트레이터가 사실을 단정해 지시한 3번째 사례(정제기·swagger·포트) | 규칙: 프롬프트에는 "실측할 파일 경로" 를 주고 값은 단정하지 않는다(pipeline-core §6 developer 프롬프트 규칙) |
+| stage4 골격 | auth 계약에 login/me 의 401 응답·문구 미기술 → FE 가 오류 문구를 추정할 수 없어 RR-0008(4→2) | 정상 경로(계약 부족 → RR) |
 

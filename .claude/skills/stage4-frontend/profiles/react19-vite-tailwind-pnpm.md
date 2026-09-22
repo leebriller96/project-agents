@@ -31,6 +31,13 @@
 - CSRF 재시도(403 → 토큰 갱신 → 1회 재시도) 테스트 필수. 메뉴 가드는 허용 목록 유무 각 1건.
 - ftl 근거 화면은 **ftl 의 조건 분기(`<#if>`) 마다** 렌더 테스트 1건(AS-IS 동작 보존의 FE 측 근거).
 
+## 알려진 주의 (실측 2026-09-22, secu-sample 골격)
+- 실측 조합: React 19.3 / react-router 7.18 / TanStack Query 5.103 / RHF 7.88 + zod 4.6 / zustand 5 / axios 1.20 / DOMPurify 3.4(`Config` named import) / Vite 7.3 + plugin-react 5.2(6 은 Vite 8 전용) / TS 5.9 / Tailwind 3.4 / vitest 3.2 + jsdom 26 + msw 2.15 / ESLint 9 + typescript-eslint 8.70 / openapi-typescript 7.13 / pnpm 12.5. 최신 메이저(react-router 8·Vite 8·vitest 5·TS 7·Tailwind 4·ESLint 10)는 지정 메이저를 넘으므로 **지정 메이저 내 최신**으로 고정하고 `pnpm-workspace.yaml` `catalog:` 로 단일 관리.
+- **pnpm 12**: `minimumReleaseAge`(기본 24h) 가 갓 배포된 버전을 거부하고 제외 목록을 yaml 에 자동 기록 → 직전 버전으로 내리고 하위 의존은 `overrides` 고정. `allowBuilds` 없으면 esbuild·msw postinstall 차단(`ERR_PNPM_IGNORED_BUILDS`) → 명시 승인. `corepack enable` 이 EPERM 이면 `corepack pnpm …` 직접 호출. 루트 스크립트에 `--` 를 넘기면 스크립트 인자로 들어가므로 gen:api 스크립트가 `--` 를 무시하게.
+- Vite dev 프록시 포트는 지시가 아니라 `server/*/src/main/resources/application-local.yml` 실측값(예 18090/18091).
+- react-refresh 규칙: 순수 함수·상수는 컴포넌트 파일에서 분리. Windows 는 파일명 대소문자만 다른 두 파일이 충돌(`ClockContext.tsx`/`clockContext.ts`) → 이름을 다르게.
+- 골격이 만드는 `features/sample` 은 첫 slice 가 들어오면 삭제(공통 후보 F-05).
+
 ## 알려진 주의
 - React 19: `forwardRef` 불필요, `use()`·Actions 는 팀 규약 확정 전엔 안 씀(근거 부족). react-router 7(데이터 라우터) 기본.
 - Vite 7 + vitest 3: `react-ts.md` 의 jsdom 문제 동일. pnpm 은 `shamefully-hoist` 없이 워크스페이스 의존 명시.
