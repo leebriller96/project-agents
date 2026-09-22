@@ -279,5 +279,5 @@
 | 단계 | 현상 | 조치 |
 |---|---|---|
 | stage5 r2 domain-notice | 28분: 39→50 시나리오(신규 11·갱신 1·회귀 확인 37), 실패 0. 재실행 규칙(r1/r2 병기·갱신 근거 = RR note)이 잘 동작. 신규 low 2(seed 동시 기동 경쟁, Flyway 가 프로파일 가드보다 먼저) | 스킬 §2 r2 실측 |
-| stage5 r2 | `.env.local` 필수화(RR-0029) 후 첫 실행 — 폴백 없음이 실측으로 확인, `APP_PROXY_INTERNAL_IPS` 는 local yml 리터럴로 기동 | — |
+| stage5 r2 | `.env.local` 필수화(RR-0029) 후 첫 실행 — 폴백 없음이 실측으로 확인, `APP_PROXY_INTERNAL_IPS` 는 local yml 리터럴로 기동 | — || stage5 r2 notice | 30분: 58→68 시나리오(갱신 11·신규 14·회귀 47), 전부 통과. 초기 실패 5건은 전부 테스터 오류(시나리오 간 조회수 간섭, XFF 신뢰 주소). 서비스 결함 0, RR 1(FE gen 타입 stale) | 스킬 §2: 인메모리 상태·XFF 대조 주소·Playwright reporter |
 
