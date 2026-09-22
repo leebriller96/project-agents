@@ -18,6 +18,7 @@ argument-hint: "[RR-0001,RR-0002 | slice:<id> | stage:<n> | layer:<backend/mappe
    - `target_stage: 2` → `backend-developer` 를 `refactor <RR-id 목록>` 작업으로 호출 → `backend-reviewer` → FAIL 시 재호출 최대 2회.
    - `target_stage: 3` → `common-refactorer` → `backend-reviewer`(common).
    - `target_stage: 4` → `frontend-developer` 를 `refactor <RR-id 목록>` 으로 호출 → `frontend-reviewer`.
+   병렬 호출 프롬프트에는 **C-번호 대역(공통 후보)·F-번호 대역** 을 반드시 적는다(빠뜨려 충돌 2회).
    각 호출 전 해당 RR 을 `in_progress` 로 바꾼다(`python tools/rr.py set <id> in_progress`).
    - slice 소유 문서만 고치는 RR(예 매핑표 근거 부족 보강)은 공용 묶음이 아니라 **그 slice 묶음**에 배정한다(경계 원칙 — 문서라도).
    - 여러 slice·공용 파일에 걸친 **문서 RR**(추적표·4분류표 정합 묶음)은 항목을 소유 slice 별로 쪼개 각 developer/common-refactorer 프롬프트에 배정하고, 전부 끝난 뒤 오케스트레이터가 RR 을 닫는다(한 파일을 두 에이전트가 만지지 않게).

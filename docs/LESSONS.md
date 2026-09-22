@@ -268,5 +268,6 @@
 | refactor common | 38분·394k 토큰·160 tool call: 보안 RR 7건(정제기 3자 동일 목록 44태그, 로그 인젝션, Secure 쿠키, 지수 지연, 테스트 자격증명 공용화, vitest 4 이행) 전부 반영, 228→246 tests. vitest 3→4 메이저 이행이 2줄 변경(`vitest/runtime`, `viteEnvironment`)으로 끝남 | 프로필(에이전트가 직접 갱신) |
 | refactor common | Bash 도구 heredoc 의 역슬래시 소실로 3회 깨짐(logback·Java·python) — 이번 세션 4번째 | 메모리 규칙 강화: 역슬래시·정규식 포함 편집은 Bash 금지, Edit/Write 만 |
 | refactor common | `.gitignore` `!예외` 줄 뒤 주석이 패턴에 포함돼 무효(실측), `MockHttpServletResponse` 는 SameSite 를 헤더에 안 씀 | 프로필 || refactor domain-notice | namespace 간 include 의 중첩 refid 가 포함하는 쪽 namespace 로 풀려 38건 오류 — 같은 id 가 있으면 조용히 별칭이 바뀌는 함정 | migration-sql §2-3 규칙 3건 || refactor notice-admin | 확장자 우회 케이스 7종·매직바이트·파일명 정규화 전부 테스트(84 tests). surefire `-Dtest='패키지.*'` 가 조용히 0건 매칭(EXIT 0) — 이번 세션 2번째 같은 함정(도메인·admin) | 프로필에 명시(슬래시 패턴/클래스명 나열 + Tests run 확인) |
-| refactor 병렬 | 두 developer 가 같은 스크래치패드 경로를 써서 패치 스크립트가 덮어써짐 | pipeline-core §6: 임시 파일에 slice 접두어 |
+| refactor 병렬 | 두 developer 가 같은 스크래치패드 경로를 써서 패치 스크립트가 덮어써짐 | pipeline-core §6: 임시 파일에 slice 접두어 || refactor notice | RR-0021 지시(비로그인 미게시 첨부 목록 404)가 골격 테스트(200 고정)와 충돌 → developer 가 규약 우선으로 빈 배열 채택. 노출 판별 동등 | 정상. 오케스트레이터가 골격 테스트 전제를 확인 안 한 사례 |
+| refactor 병렬 | 두 developer 가 C-16 을 동시에 씀(notice 가 C-17 로 회피) — 오케스트레이터가 프롬프트에 C-번호 대역을 **안 적음**(규칙은 있음) | `/refactor`·`/stage2` 프롬프트 템플릿에 "C-대역: …" 필수 줄 추가 |
 
