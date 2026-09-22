@@ -204,4 +204,12 @@
 | stage4 골격 | 36분·329k 토큰·117 tool call. pnpm 12 의 `minimumReleaseAge`·`allowBuilds` 가 설치를 두 번 막음, 최신 메이저가 전부 지정 버전 초과, corepack EPERM, Windows 대소문자 파일명 충돌 | 프로필 "알려진 주의" 에 실측 조합·pnpm 12 규칙 기록 → 다음 골격에서 재발 없음 |
 | stage4 골격 | 내 프롬프트의 서버 포트(18080/81)가 틀렸고 에이전트가 yml 실측(18090/91)으로 바로잡음 — 오케스트레이터가 사실을 단정해 지시한 3번째 사례(정제기·swagger·포트) | 규칙: 프롬프트에는 "실측할 파일 경로" 를 주고 값은 단정하지 않는다(pipeline-core §6 developer 프롬프트 규칙) |
 | stage4 골격 | auth 계약에 login/me 의 401 응답·문구 미기술 → FE 가 오류 문구를 추정할 수 없어 RR-0008(4→2) | 정상 경로(계약 부족 → RR) |
+## 2026-09-22 — secu-sample stage4 W1 (notice-admin admin 앱)
+
+| 단계 | 현상 | 조치 |
+|---|---|---|
+| stage4 notice-admin | 36분·372k 토큰. ftl 분기 21 ↔ 테스트 대응표, 122 tests. 계약 부족 1(관리자 상세 첨부 다운로드 API 없음 → RR-0009 medium) — 2단계가 admin 상세의 첨부 다운로드를 빠뜨린 것을 FE 가 잡음(사용자 앱 API 를 admin 이 못 씀) | 정상 경로. 교훈: slices.yaml 의 apis 가 "첨부 목록" 만 있고 다운로드가 없었음 → stage1 slice-planner 는 첨부 표시가 있는 화면에 다운로드 API 를 자동 포함 |
+| stage4 notice-admin | 에디터 TextAlign 이 SafeHtml 에서 `style` 제거로 표시 안 됨(실측) → developer 가 제외하고 F-25 | 프로필: 허용 마크 3자 동일 원칙 + 실측 규칙 |
+| stage4 notice-admin | RHF 체크박스 `value="Y"`, zod 4 refine 미평가, msw+jsdom FormData, react-hooks 7 이름 규칙, date input — 실측 5건 | 프로필 "알려진 주의" |
+| stage4 병렬 | 두 FE developer 가 `common-candidates.md` frontend 섹션에 F-1x/F-2x 대역으로 충돌 없이 기록 — 대역 배정 규칙 효과 확인 | 정상 |
 

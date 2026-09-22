@@ -17,7 +17,7 @@ description: 1단계 업무 분류 — PROJECT_BRIEF(및 AS-IS 인벤토리)를 
 
 1. **엔티티 응집도**: 같이 변경되는 엔티티(주문·주문상품)는 한 slice. 여러 slice 가 쓰는 엔티티(사용자·코드)는 소유 slice 를 하나 정하고 나머지는 `depends_on`.
 2. **화면 흐름**: 하나의 사용자 여정(메뉴 트리 한 갈래)이 한 slice 에 들어가도록.
-3. **AS-IS 경계**(migration): AS-IS 패키지/메뉴 구조를 1차 후보로 쓰되, 응집도 기준으로 재조정한다. slice 의 `asis` 항목에 **프로그램(컨트롤러·ftl)·테이블·SQL namespace·공통 클래스 사용** 을 전부 적고, `ASIS_FUNCTION_CONTRACTS.md` 의 모든 행이 어느 slice 에 들어갔는지 검증한다(못 넣은 행은 unassigned). TO-BE 가 user/admin 앱을 분리하면 slice 마다 **소유 앱**(user|admin) 을 명시한다.
+3. **AS-IS 경계**(migration): AS-IS 패키지/메뉴 구조를 1차 후보로 쓰되, 응집도 기준으로 재조정한다. slice 의 `asis` 항목에 **프로그램(컨트롤러·ftl)·테이블·SQL namespace·공통 클래스 사용** 을 전부 적고, `ASIS_FUNCTION_CONTRACTS.md` 의 모든 행이 어느 slice 에 들어갔는지 검증한다(못 넣은 행은 unassigned). TO-BE 가 user/admin 앱을 분리하면 slice 마다 **소유 앱**(user|admin) 을 명시한다. 앱이 분리되면 한 앱의 화면이 다른 앱의 API 를 쓸 수 없으므로, 첨부 표시·다운로드처럼 **양쪽 화면에 같이 있는 부수 기능은 각 slice 의 apis 에 각각** 넣는다(admin 상세 첨부 다운로드 누락 사례).
 4. **크기**: slice 하나가 API 5~20개, 화면 3~10개 정도. 넘으면 하위 slice 로 나눈다(`order-basic`, `order-return`).
    경험치: API 11개 slice 가 2단계에서 테스트 포함 파일 30개·에이전트 24분이었다. API 15개를 넘기면 순환 의존이 없는 한 하위 slice 분할을 우선 검토한다.
 5. **공통 slice**: 인증/권한, 공통코드, 파일, 알림처럼 모두가 쓰는 것은 `common-*` 접두어로 만들고 priority 를 가장 낮은 번호로 둔다.

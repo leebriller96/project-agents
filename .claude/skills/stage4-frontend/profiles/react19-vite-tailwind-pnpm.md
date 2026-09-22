@@ -36,6 +36,10 @@
 - **pnpm 12**: `minimumReleaseAge`(기본 24h) 가 갓 배포된 버전을 거부하고 제외 목록을 yaml 에 자동 기록 → 직전 버전으로 내리고 하위 의존은 `overrides` 고정. `allowBuilds` 없으면 esbuild·msw postinstall 차단(`ERR_PNPM_IGNORED_BUILDS`) → 명시 승인. `corepack enable` 이 EPERM 이면 `corepack pnpm …` 직접 호출. 루트 스크립트에 `--` 를 넘기면 스크립트 인자로 들어가므로 gen:api 스크립트가 `--` 를 무시하게.
 - Vite dev 프록시 포트는 지시가 아니라 `server/*/src/main/resources/application-local.yml` 실측값(예 18090/18091).
 - react-refresh 규칙: 순수 함수·상수는 컴포넌트 파일에서 분리. Windows 는 파일명 대소문자만 다른 두 파일이 충돌(`ClockContext.tsx`/`clockContext.ts`) → 이름을 다르게.
+- **RHF 체크박스**: `<input type="checkbox" value="Y">` 는 RHF 값이 boolean 이 아니게 되어 zod 가 조용히 실패 → value 속성 없이 boolean 으로 두고 전송 시 `Y/N` 변환. **zod 4** 객체 `refine`(종료≥시작 등)은 필드 오류가 있으면 평가되지 않음 → 교차 검증 테스트는 필드가 전부 유효한 입력으로. **date input** 은 `user.type` 이 무효 → `fireEvent.change`.
+- **msw + jsdom FormData**: jsdom 의 `FormData` 를 msw 가 multipart 로 못 읽음 → 테스트 setup 에서 Node `FormData/Blob/File` 로 스텁(골격 `shared/test` 헬퍼로). jsdom 에 `Range` 없음(Tiptap) → 폴리필.
+- react-hooks 7 규칙: `use` 로 시작하는 순수 함수명은 hooks 규칙에 걸림(`useYnLabel`→`usageLabel`), `set-state-in-effect` 는 `key` 재마운트로 회피.
+- **리치텍스트 허용 마크는 3자 동일**(서버 정제기 = FE SafeHtml = 에디터 확장) — 하나라도 다르면 "저장은 되는데 표시가 지워지는" 결함(예: `style` 정렬). 에디터 확장을 넣기 전에 SafeHtml 이 그 속성을 통과시키는지 실측.
 - 골격이 만드는 `features/sample` 은 첫 slice 가 들어오면 삭제(공통 후보 F-05).
 
 ## 알려진 주의
