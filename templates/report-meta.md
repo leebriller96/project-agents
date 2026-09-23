@@ -45,6 +45,13 @@
     {"what": "조회수 갱신을 REQUIRES_NEW 로 분리 — 커넥션을 2개 점유한다",
      "axis": "concurrency", "covered_by": "NoticeViewConcurrencyTest#poolOfOne"}
   ],
+  "discrimination": [
+    {"target": "HOL-01 / WorkdayCalendarServiceTest#holidaysBetweenIncludesWeekendHolidays",
+     "method": "mutation", "scope": "server/common-holiday 모듈 전체",
+     "mutation": "holidaysBetween 이 주말 휴일을 필터링하도록 변경",
+     "failures": 2, "evidence": "reports/discrimination/common-holiday_r2/TEST-*.xml",
+     "restored": "grep MUTATION 0건 + 65건 재통과"}
+  ],
   "cost": {"duration_min": 40, "tool_calls": 96, "tokens_k": 210}
 }
 pa-meta:end -->
@@ -72,6 +79,8 @@ pa-meta:end -->
 | `common_candidates[]` | `common-candidates.md` 에 추가한 C-번호 |
 | `not_executed[]` | 실행하지 못한 검증과 이유. 여기 적은 것 중 다음 단계가 닫아야 하는 것은 `open_items` 로도 올린다 |
 | `risk_surface[]` | **이 변경이 무엇을 깨뜨릴 수 있는가** + 어느 축의 문제인가 + 무엇으로 덮었는가(`covered_by`, 없으면 `"미검증"`). `/refactor` 레포트에 필수 — 리팩토링이 새 결함을 낳은 실측(REQUIRES_NEW) 때문 |
+| `discrimination[]` | **판별력 실측 기록**(§14-5·6). `target`(무엇의 판별력인가) · `method` · `scope`(**실행 범위 — 모듈 전체가 기준**) · `failures`(재현 실패 건수) · `evidence`(실패 실행의 surefire XML 사본 경로) · `restored`(되돌림 확인). 실패 실행은 `gates[]` 에 싣지 않는다 — `gate-proof` 가 "실패를 통과로 기재" 로 읽는다 |
+| `discrimination[].method` | `pre_fix_repro`(테스트를 먼저 넣어 실패 확인) \| `mutation`(구현에 결함 주입) \| `absent_pre_fix`(수정 전에는 판별 수단이 없어 단언을 **쓸 수조차 없었다**) \| `other`.<br>**`absent_pre_fix` 는 `failures: 0` 이 정상이지만 `harm_evidence`(해악이 실재함을 증명하는 통과 단언)와 `mutation`(수정 후 결함 주입 기록)을 **둘 다** 요구한다** — 재현 불가가 판별력 면제로 쓰이면 규격이 자리끼움 숫자를 부른다(실측: `failures:1` 로 적고 통과한 사례) |
 | `cost` | `{duration_min, tool_calls, tokens_k}`. 회차 간 비용 비교 근거. 모르면 아는 것만 적는다 |
 
 ## 검사 규칙 요약 (`tools/gate.py`)
@@ -84,7 +93,7 @@ pa-meta:end -->
 | `coverage-axis` | slice 의 `traits` 가 요구하는 검증 축이 닫히지도, 예약(open item)되지도 않은 채 넘어감 |
 | `traceability` | 요구사항 ID 가 테스트까지 이어지지 않음(8단계 추적표의 끊긴 연결), 계약 파일 부재 |
 | `open-items` | high 이상 미확인 항목이 RR 연결·사람 승인 없이 완료 처리됨, 이 단계가 닫기로 한 항목의 누락 |
-| `cost-record` | 비용 기록 누락(경고), `risk_surface` 형식 오류 |
+| `cost-record` | 비용 기록 누락(경고), `risk_surface`·`discrimination` 형식 오류. 판별력 실측의 **실행 범위·실패 건수·XML 사본**이 비면 잡는다 |
 | `state-consistency` | 레포트 result 와 `state.yaml` 상태의 모순 |
 | `secret-scan` | 레포트에 비밀번호·토큰·키·개인정보 원문 노출 |
 

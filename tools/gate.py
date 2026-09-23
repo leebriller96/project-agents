@@ -475,16 +475,24 @@ def hook_open_items(ctx):
                     ok = False
                 if not ok:
                     f.append(fail(f"{fld}", f"accepted 의 expiry({exp or '없음'}) 가 없거나 지났다"))
-    # 이번 단계·slice 가 닫기로 한 항목이 레포트에서 언급되지 않은 경우
+    # 이번 단계·slice 가 닫기로 한 항목이 레포트에서 언급되지 않은 경우.
+    # 같은 단계라도 레포트는 slice 마다 나뉘므로, 이름이 정확히 일치하는 항목만 누락으로 본다.
+    # slice 가 특정되지 않은 항목(all·공란)은 어느 레포트가 닫을지 알 수 없어 건수만 알린다.
     stage, sl = meta.get("stage"), meta.get("slice")
     listed = {it.get("id") for it in items if isinstance(it, dict)}
+    pending_other = 0
     for oid, rec in store.items():
-        if rec.get("status") != "open":
+        if rec.get("status") != "open" or str(rec.get("target_stage")) != str(stage) or oid in listed:
             continue
-        if str(rec.get("target_stage")) == str(stage) and (not sl or rec.get("slice") in (sl, None, "", "all")):
-            if oid not in listed:
-                f.append(warn("open_items", f"{oid} 는 이 단계가 닫기로 한 항목인데 레포트에 없다",
-                              "처리했으면 resolved 로, 남았으면 메타에 싣는다"))
+        if sl and rec.get("slice") == sl:
+            f.append(warn("open_items", f"{oid} 는 이 단계·이 slice 가 닫기로 한 항목인데 레포트에 없다",
+                          "처리했으면 resolved 로, 남았으면 메타에 싣는다"))
+        else:
+            pending_other += 1
+    if pending_other:
+        f.append(warn("open_items",
+                      f"이 단계가 닫기로 한 항목 {pending_other}건이 아직 열려 있다(다른 slice 몫이거나 미배정)",
+                      f"python tools/gate.py oi list --status open --target {stage} 로 확인한다"))
     if not isinstance(meta.get("rr_ids"), list):
         f.append(warn("rr_ids", "rr_ids 배열이 없다"))
     else:
@@ -509,6 +517,9 @@ def hook_state_consistency(ctx):
     expect = {"done": "done", "done_with_gaps": "done", "blocked": "blocked", "failed": "blocked"}.get(meta.get("result"))
     key_by_stage = {0: "stage0_ingest", 1: "stage1_slicing", 3: "stage3_common", 5: "stage5_integration",
                     6: "stage6_security", 7: "stage7_qa", 8: "stage8_deliverables"}
+    if sl in ("scaffold", "scaffold-fe"):   # 골격 레포트는 slices 가 아니라 stages 를 본다
+        key_by_stage.update({2: "stage2_scaffold", 4: "stage4_scaffold"})
+        sl = None
     actual = None
     if sl and isinstance(st.get("slices"), dict) and sl in st["slices"]:
         node = st["slices"][sl] or {}
@@ -685,6 +696,46 @@ def hook_cost_record(ctx):
                 f.append(fail(f"cost.{k}", f"{k} 는 숫자여야 한다"))
         if cost.get("duration_min") is None:
             f.append(warn("cost.duration_min", "소요 시간이 없다"))
+    # 판별력 실측(mutation·수정 전 재현) 기록 — 산문에만 남으면 기계 추적이 안 된다(실측: 범위를 한 클래스로 좁혀
+    # 보고한 것을 reviewer 가 잡았다). gates[] 에 실으면 gate-proof 가 "실패를 통과로 기재" 로 읽으므로 별도 칸이다.
+    disc = meta.get("discrimination")
+    if disc is not None:
+        if not isinstance(disc, list):
+            f.append(fail("discrimination", "discrimination 은 배열이어야 한다"))
+        else:
+            for i, d in enumerate(disc):
+                fld = f"discrimination[{i}]"
+                if not isinstance(d, dict):
+                    f.append(fail(fld, "항목은 객체여야 한다"))
+                    continue
+                if not str(d.get("target", "")).strip():
+                    f.append(fail(f"{fld}.target", "무엇의 판별력을 증명했는지(테스트·지적 id) 적는다"))
+                method = d.get("method")
+                if method not in ("mutation", "pre_fix_repro", "absent_pre_fix", "other"):
+                    f.append(fail(f"{fld}.method", "method 는 mutation | pre_fix_repro | absent_pre_fix | other"))
+                if not str(d.get("scope", "")).strip():
+                    f.append(fail(f"{fld}.scope", "실행 범위(모듈·클래스)를 적는다 — 범위를 좁혀 일반화한 오보가 실측됐다",
+                                  "모듈 전체(-pl <모듈> test)로 1회 실행하는 것이 기준이다"))
+                # absent_pre_fix = 수정 전에는 판별 수단(메서드·오류코드)이 없어 재현 단언을 쓸 수조차 없던 경우.
+                # 이때만 failures 0 을 허용하되, 해악의 실재 증거와 mutation 을 둘 다 요구한다 —
+                # "재현 불가" 가 판별력 면제로 쓰이면 규격이 자리끼움 숫자를 부른다(실측: failures:1 로 적고 통과).
+                if method == "absent_pre_fix":
+                    if d.get("failures") not in (0, None):
+                        f.append(warn(f"{fld}.failures", "absent_pre_fix 는 failures 0 이 정상이다"))
+                    if not str(d.get("harm_evidence", "")).strip():
+                        f.append(fail(f"{fld}.harm_evidence",
+                                      "결함의 해악이 실재함을 증명하는 통과 단언(예: FK 위반 재현)을 적는다"))
+                    if not str(d.get("mutation", "")).strip():
+                        f.append(fail(f"{fld}.mutation",
+                                      "수정 후 구현에 결함을 주입해 새 테스트가 잡는지 확인한 기록을 적는다",
+                                      "absent_pre_fix 는 mutation 을 면제하지 않는다 — 재현이 불가능하면 mutation 이 의무다"))
+                elif not isinstance(d.get("failures"), int) or d["failures"] <= 0:
+                    f.append(fail(f"{fld}.failures", "재현 실패 건수(1 이상)를 적는다 — 0 이면 판별력을 증명하지 못했다"))
+                if not str(d.get("evidence", "")).strip():
+                    f.append(warn(f"{fld}.evidence", "실패 실행의 surefire XML 사본 경로를 남긴다",
+                                  "최종 실행이 XML 을 덮어써 독립 검증이 불가능했다(실측)"))
+                if not str(d.get("restored", "")).strip():
+                    f.append(warn(f"{fld}.restored", "되돌림 확인 방법(grep·재통과 건수)을 적는다"))
     risks = meta.get("risk_surface")
     if risks is not None:
         if not isinstance(risks, list):

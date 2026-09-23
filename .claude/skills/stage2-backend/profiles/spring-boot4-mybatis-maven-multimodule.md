@@ -82,3 +82,19 @@
 - H2 `MODE=MySQL` 은 `SET SESSION <mysql 변수>`(`group_concat_max_len` 등) 를 거부 → `hikari.connection-init-sql` 은 운영 yml 에 두고 `application-test.yml` 에서 `""`(빈 문자열 — HikariCP 7 은 `validate()` 에서 `""`→null 처리, yml `key:` 만 두면 override 안 됨) 로 덮고 `test-mysql` 프로파일이 재설정.
 - 공용 클래스 생성자에 인자를 추가할 때 기존 생성자를 남기고 `@Autowired` 를 새 생성자에 두면 slice 테스트 무수정으로 동작 보존.
 - Maven 멀티모듈 병렬 developer: 각 slice 는 자기 모듈의 자기 패키지·XML·Flyway 대역만. 부모 POM·common·`mvnw` 는 공용. 전체 `./mvnw test` 는 웨이브 종료 후 1회.
+
+## 알려진 주의 (2026-09-23, sample3 규모 축 21 slice 실측)
+
+- **DDL 식별자 대소문자**: DDL 을 대문자(`TB_CODE`)로 쓰고 Mapper SQL 을 소문자(`tb_code`)로 쓰면
+  Windows·H2 에서는 통과하지만 **Linux MySQL(`lower_case_table_names=0`)에서 전 slice 쿼리가 실패한다.**
+  골격 `CONVENTIONS.md` 에 표기를 한쪽으로 고정하고, 리뷰 시 DDL ↔ Mapper 표기 일치를 대조한다(RR-0002 실측).
+- **Flyway 버전 충돌**: 병렬 웨이브에서 분 단위 타임스탬프는 충돌한다. 버전에 slice 고유 번호를 넣는다(pipeline-core §6-4).
+  `db/migration` 공유 때문에 한 slice 의 중복 버전이 **무관한 모듈의 스프링 컨텍스트까지 실패**시킨다.
+- **`copy-resources` 는 삭제를 전파하지 않는다**: 마이그레이션을 `target/test-classes` 로 복사하는 구성에서
+  원본을 rename 하면 옛 복사본이 남아 같은 충돌이 계속된다. 골격이 복사 전 정리(또는 `prune` 스크립트)를 제공한다.
+- **공용 메뉴 권한 설정**: 메뉴 기반 인가(`app.security.menus`)를 골격이 쓰면 slice 가 추가한 메뉴 코드가
+  운영 설정에 없어 **쓰기 API 전체가 403** 이 된다. slice 는 공용 설정을 고칠 수 없으므로 공통 후보로 올리고
+  3단계(또는 오케스트레이터)가 일괄 반영한다.
+- **메서드 파라미터 검증**: `@RequestParam` 에 직접 제약을 걸면 Spring 6.1+ 는 `HandlerMethodValidationException` 을 던져
+  `BindException` 만 처리하는 핸들러를 지나쳐 500 이 된다. 조건 객체(`@ModelAttribute`)로 받거나 핸들러를 확장한다.
+- **성공 상태 코드 규약**: POST 201 / PUT·DELETE 200 처럼 성공 상태를 골격 규약에 미리 적어 두지 않으면 slice 마다 갈린다.
