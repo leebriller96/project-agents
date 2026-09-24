@@ -731,9 +731,44 @@ def hook_cost_record(ctx):
                                       "absent_pre_fix 는 mutation 을 면제하지 않는다 — 재현이 불가능하면 mutation 이 의무다"))
                 elif not isinstance(d.get("failures"), int) or d["failures"] <= 0:
                     f.append(fail(f"{fld}.failures", "재현 실패 건수(1 이상)를 적는다 — 0 이면 판별력을 증명하지 못했다"))
-                if not str(d.get("evidence", "")).strip():
+                ev = str(d.get("evidence", "")).strip()
+                if not ev:
                     f.append(warn(f"{fld}.evidence", "실패 실행의 surefire XML 사본 경로를 남긴다",
                                   "최종 실행이 XML 을 덮어써 독립 검증이 불가능했다(실측)"))
+                else:
+                    # evidence 의 XML 을 실제로 읽어 declared failures·tests 와 대조한다.
+                    # scope 를 "모듈 전체" 로 적고 단일 클래스만 돌린 오보가 두 회차 연속 실측됐다(§14-6).
+                    tests, fails, found = 0, 0, 0
+                    for token in re.split(r"[,\s]+", ev):
+                        token = token.strip().rstrip(",")
+                        if not token or not token.endswith(".xml") and "*" not in token:
+                            continue
+                        base = token if os.path.isabs(token) else os.path.join(ROOT, token)
+                        for xml in sorted(glob.glob(base)):
+                            try:
+                                text = open(xml, encoding="utf-8", errors="replace").read(4000)
+                            except OSError:
+                                continue
+                            found += 1
+                            mt = re.search(r'tests="(\d+)"', text)
+                            mf = re.search(r'failures="(\d+)"', text)
+                            me = re.search(r'errors="(\d+)"', text)
+                            tests += int(mt.group(1)) if mt else 0
+                            fails += (int(mf.group(1)) if mf else 0) + (int(me.group(1)) if me else 0)
+                    if not found:
+                        f.append(warn(f"{fld}.evidence", f"XML 사본을 찾지 못했다: {ev[:60]}",
+                                      "경로를 repo 기준 상대경로로 적는다"))
+                    else:
+                        declared = d.get("failures")
+                        if isinstance(declared, int) and declared > 0 and fails != declared:
+                            f.append(fail(f"{fld}.failures",
+                                          f"선언한 실패 {declared}건 ≠ XML 실측 {fails}건 (사본 {found}개)",
+                                          "실패 실행의 XML 사본과 선언을 일치시킨다"))
+                        scope = str(d.get("scope", ""))
+                        if "전체" in scope and str(tests) not in scope:
+                            f.append(warn(f"{fld}.scope",
+                                          f"scope 에 '전체' 라고 적혔는데 XML 사본의 테스트 수는 {tests}건이다",
+                                          "모듈 전체로 돌렸다면 그 건수를 scope 에 적는다 — 단일 클래스 결과를 전체로 일반화한 오보가 2회 실측됐다"))
                 if not str(d.get("restored", "")).strip():
                     f.append(warn(f"{fld}.restored", "되돌림 확인 방법(grep·재통과 건수)을 적는다"))
     risks = meta.get("risk_surface")
