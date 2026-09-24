@@ -478,3 +478,39 @@ reviewer 판정: **오검출하는 검사는 우회 습관을 만들고, 그러�
   웨이브2 착수 전 오케스트레이터 결정 사항.
 - 새 기계 검사 2개의 **오검출 표면이 "아직 존재하지 않는 코드" 에만 있어** 현재 테스트로는 영원히 초록이다(reviewer 지적).
 - 운영 배치를 켰는데(`app.schedule.enabled: true`) **실패가 로그 외에 관측되지 않는다.** `lockAtMostFor=PT5M` 의 근거도 소요시간이 아니다.
+
+## 2026-09-24 (저녁) — real-db 축 실측 (RR-0003 종료, Docker 기동)
+
+Docker Desktop 을 켜고 `-Pmysql`(mysql:8.4 testcontainers)로 3 slice + 골격을 돌렸다. **299건 전부 통과, 실패 0.**
+(domain-org 100 · common-code 66 · common-holiday 65 · 골격 68)
+
+### 이 실행이 증명한 것 — 게이트 층의 값이 여기서 나왔다
+
+| 확인 | 안 고쳤다면 |
+|---|---|
+| **소문자 식별자 통일**(RR-0002/ORG-06) | Linux MySQL(`lower_case_table_names=0`)에서 **전 쿼리가 `table doesn't exist`** — 299건이 통째로 실패했을 것이다 |
+| **FK 제약명 자식 기준**(CC-02) | 스키마 전역 유일 제약 충돌로 migrate 전체 실패 |
+| `updateSnapshot` 의 `CASE` 가드(OI-0107) | 3단계가 넣은 CLOSE 가드가 MySQL 에서 작동 |
+| 시점 조회 SQL(`MIN`+상관 서브쿼리·`DATE` 비교·`CHAR(1)` 패딩) | reviewer 가 3회차에 걸쳐 잡은 시간축 결함 6건의 수정이 **H2 착시가 아니었다** |
+| seed `ON DUPLICATE KEY UPDATE`·utf8mb4 한글 | — |
+
+**두 결함(식별자 대소문자·FK 제약명)은 H2 로는 원리적으로 드러나지 않는다.** `real-db` 축을 축으로 세우고
+"닫히지 않았으면 예약" 규칙을 만든 것이 정확히 이 지점을 겨냥한 것이었고, 실측이 그 판단을 확인했다.
+
+### 환경 실측 (다음 회차의 조건)
+
+- `mysql:8.4` 이미지가 이미 캐시돼 있어 pull 불필요 — 없으면 1.12GB 다운로드가 선행된다
+- **RAM 여유 0.3GB 에서도 돌았다.** 컨테이너가 테스트 클래스마다 뜨고 내려가는 구조라 순간 점유가 낮다.
+  다만 Docker Desktop 자체가 WSL2 로 2.1GB(`vmmemWSL`)를 먹으므로 **게임·브라우저를 닫아야 여유가 생긴다**(실측: MapleStory 1.5GB)
+- slice 별 순차 실행(`-pl server/<slice> -am test -Pmysql`)이 안전하다. 전체를 한 번에 돌리면 컨테이너가 겹친다
+- `-o`(오프라인)를 붙이면 사내망·느린 네트워크에서 Maven 메타데이터 조회를 건너뛴다
+- Docker Desktop 기동은 `Start-Process` 로 되지만 데몬 준비까지 **40~60초** 걸린다. `docker info` 로 폴링해야 한다
+  (`com.docker.service` 는 Stopped 로 보여도 데몬은 뜬다 — 서비스 상태로 판단하면 틀린다)
+
+### 남은 미검증 (이 축으로도 닫히지 않는 것)
+
+- **cron 실제 트리거·ShedLock 다중 인스턴스 중복 방지**(OI-0115) — 스케줄 시각을 발생시켜야 한다
+- **부하·동시성**(OI-0098·0121) — 부서 500·이력 10만행, `lockAtMostFor` 초과 시나리오
+- 배치 실패의 관측 경로(OI-0123)
+
+열린 RR **0건**이 됐다(4/4 done). 확인 필요 항목 99건은 전부 닫을 단계가 예약돼 있다.
